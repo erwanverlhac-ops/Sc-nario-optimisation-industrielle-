@@ -3,774 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FABIE - Suite Industrielle Complète</title>
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #e74c3c;
-            --highlight: #3498db;
-            --success: #27ae60;
-            --bg-gray: #f4f7f6;
-            --panel-width: 340px;
-            --scale: 30px; /* 30px = 1 mètre */
-        }
-
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-gray); color: #333; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* --- NAVIGATION PRINCIPALE --- */
-        .main-nav { background: var(--primary); color: white; padding: 0 20px; height: 50px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        .nav-links button { background: none; border: none; color: #bdc3c7; font-weight: bold; font-size: 14px; cursor: pointer; padding: 10px 15px; }
-        .nav-links button.active { color: white; border-bottom: 3px solid var(--accent); }
-        .nav-links button:hover { color: white; }
-        
-        /* --- PAGES SYSTEM --- */
-        .page-section { display: none; flex: 1; height: calc(100vh - 50px); overflow: hidden; }
-        .page-section.active { display: flex; }
-
-        /* --- DASHBOARD PAGE --- */
-        #page-dashboard { flex-direction: column; padding: 40px; align-items: center; overflow-y: auto; }
-        .dash-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 800px; width: 100%; text-align: center; }
-        .dash-stats { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
-        .stat-box { background: #f8f9fa; padding: 20px; border-radius: 8px; min-width: 150px; border: 1px solid #ddd; }
-        .stat-number { font-size: 2em; font-weight: bold; color: var(--highlight); }
-
-        /* --- EDITOR PAGE --- */
-        #page-editor { flex-direction: column; }
-        
-        .workshop-tabs {
-            background: #e0e0e0; display: flex; gap: 2px; padding: 5px 10px 0 10px; border-bottom: 1px solid #ccc; align-items: flex-end;
-        }
-        .tab {
-            padding: 8px 15px; background: #dcdcdc; cursor: pointer; border-radius: 5px 5px 0 0; font-size: 13px; font-weight: bold; color: #555;
-            border: 1px solid transparent; user-select: none;
-        }
-        .tab.active { background: white; color: var(--primary); border-top: 2px solid var(--highlight); }
-        .tab-add { background: var(--success); color: white; }
-
-        .editor-layout { display: flex; flex: 1; overflow: hidden; }
-        .main-view { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow: auto; background: #eaeded; position: relative; }
-        
-        /* --- WORKSHOP CONTAINER --- */
-        .workshop-wrapper {
-            background: white; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            position: relative;
-            margin-bottom: 100px; /* Espace pour le scroll */
-            transition: width 0.3s, height 0.3s;
-        }
-        
-        /* GRILLE ET MURS */
-        .grid-bg {
-            width: 100%; height: 100%;
-            background-image: linear-gradient(#ddd 1px, transparent 1px), linear-gradient(90deg, #ddd 1px, transparent 1px);
-            background-size: 30px 30px; /* Echelle visuelle */
-            border: 5px solid #333;
-        }
-
-        /* --- MACHINES & OBJETS --- */
-        .machine {
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            font-size: 11px; text-align: center; cursor: grab; user-select: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 20; 
-            background: var(--highlight); color: white; border: 2px solid #2980b9; border-radius: 4px;
-        }
-        .machine:active { cursor: grabbing; z-index: 100; transform: scale(1.02); }
-        .machine.person { border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .machine.palette { background: #d35400; border-color: #a04000; }
-        .machine.scale-machine { background: #27ae60; border-color: #1e8449; border-style: dashed; }
-        .machine.waypoint { background: #8e44ad; border-radius: 50%; border: 2px solid #6c3483; font-size: 0; }
-        .machine.waypoint::after { content: "+"; font-size: 14px; font-weight: bold; }
-        .machine.pillar { background: black; border: 1px solid #333; }
-        
-        .resize-handle {
-            width: 10px; height: 10px; background: #444; position: absolute; right: 0; bottom: 0; 
-            cursor: se-resize; clip-path: polygon(100% 0, 100% 100%, 0 100%);
-        }
-
-        /* --- SVG TRAJETS (CORRECTIF) --- */
-        svg { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; z-index: 10; /* Au dessus de la grille, sous les machines */
-        }
-        path { 
-            fill: none; stroke-width: 2.5; stroke-dasharray: 8, 4; stroke-linecap: round; 
-            animation: dash 40s linear infinite; opacity: 0.9; 
-        }
-        @keyframes dash { to { stroke-dashoffset: -1000; } }
-
-        /* --- BARRES D'OUTILS --- */
-        .toolbar {
-            background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; z-index: 50;
-        }
-        
-        .dims-inputs { display: flex; align-items: center; gap: 5px; background: #f0f0f0; padding: 5px 10px; border-radius: 4px; margin-right: 10px; border: 1px solid #ccc;}
-        .dims-inputs input { width: 40px; text-align: center; border: 1px solid #bbb; border-radius: 3px; }
-
-        button.btn-tool { padding: 6px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; background: #ecf0f1; color: #333; border: 1px solid #bdc3c7;}
-        button.btn-tool:hover { background: #dfe6e9; }
-        button.btn-primary { background: var(--highlight); color: white; border: none; }
-        
-        /* --- PANNEAUX LATERAUX --- */
-        .sidebar {
-            width: var(--panel-width); background: white; border-left: 1px solid #ddd;
-            display: flex; flex-direction: column; z-index: 100;
-        }
-        .sidebar-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; display: flex; justify-content: space-between; }
-        .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
-
-        /* CONFIG CARDS */
-        .op-card { background: white; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
-        .op-header { padding: 8px; color: white; font-weight: bold; display: flex; justify-content: space-between; }
-        .op-body { padding: 10px; background: #fafafa; }
-        .task-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
-        .task-row input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; }
-        
-        /* LOGIN */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44,62,80,0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 30px; border-radius: 8px; width: 300px; text-align: center; }
-    </style>
+    <title>FABIE - Simulateur Multi-Ateliers</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="loginOverlay">
+    <div id="login-screen">
         <div class="login-box">
-            <h2 style="color:var(--primary); margin-top:0;">🏭 Accès FABIE</h2>
-            <input type="text" id="userInput" placeholder="Identifiant" style="width:100%; padding:10px; margin:10px 0; box-sizing:border-box;">
-            <input type="password" id="passInput" placeholder="Mot de passe" style="width:100%; padding:10px; margin:10px 0; box-sizing:border-box;">
-            <button onclick="login()" style="width:100%; padding:10px; background:var(--highlight); color:white; border:none; border-radius:4px; cursor:pointer;">Entrer</button>
-            <p id="loginErr" style="color:red; display:none; font-size:12px;">Erreur mot de passe</p>
+            <h2>🏭 Accès FABIE</h2>
+            <div class="input-group">
+                <label>Identifiant</label>
+                <input type="text" id="username" placeholder="Votre nom">
+            </div>
+            <div class="input-group">
+                <label>Mot de passe</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+            <button onclick="app.login()">Entrer</button>
+            <p id="login-error" class="error-msg">Mot de passe incorrect</p>
         </div>
     </div>
 
-    <nav class="main-nav">
-        <div style="font-size:18px; font-weight:bold;">Simulateur <span style="color:#3498db">FABIE</span> <span style="font-size:12px; opacity:0.7;">v3.0 Multi-Ateliers</span></div>
-        <div class="nav-links">
-            <button onclick="showPage('dashboard')" id="nav-dash" class="active">📊 Tableau de Bord</button>
-            <button onclick="showPage('editor')" id="nav-edit">✏️ Éditeur & Ateliers</button>
-        </div>
-        <div id="userDisplay" style="font-size:12px; background:rgba(255,255,255,0.1); padding:5px 10px; border-radius:15px;">👤 Invité</div>
-    </nav>
-
-    <section id="page-dashboard" class="page-section active">
-        <div class="dash-card">
-            <h2>Bienvenue sur votre espace de simulation</h2>
-            <p>Gérez vos scénarios, analysez les coûts globaux et exportez vos données.</p>
-            
-            <div class="dash-stats">
-                <div class="stat-box">
-                    <div class="stat-number" id="dash-scenarios">0</div>
-                    <div>Scénarios</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="dash-operators">0</div>
-                    <div>Opérateurs</div>
-                </div>
-            </div>
-
-            <div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:left;">
-                <h3>📁 Mes Scénarios Sauvegardés</h3>
-                <div id="scenarioList" style="max-height:200px; overflow-y:auto;"></div>
-                <div style="margin-top:10px; display:flex; gap:10px;">
-                    <button class="btn-tool btn-primary" onclick="newScenario()">+ Nouveau</button>
-                    <button class="btn-tool" onclick="exportJSON()">📤 Exporter (Fichier)</button>
-                    <button class="btn-tool" onclick="document.getElementById('importFile').click()">📥 Importer (Fichier)</button>
-                    <input type="file" id="importFile" style="display:none" onchange="importJSON(this)">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="page-editor" class="page-section">
+    <div id="app-interface" style="display:none;">
         
-        <div class="workshop-tabs" id="tabsContainer">
+        <nav class="navbar">
+            <div class="logo">Simulateur <span>FABIE</span></div>
+            <div class="nav-actions">
+                <span id="user-display">👤 Invité</span>
+                <button class="btn-logout" onclick="location.reload()">Déconnexion</button>
             </div>
+        </nav>
 
-        <div class="editor-layout">
-            <div class="main-view">
+        <div class="main-container">
+            <aside class="sidebar-left">
+                <div class="panel-section">
+                    <h3>📂 Scénarios</h3>
+                    <div class="scenario-controls">
+                        <button onclick="app.newScenario()" class="btn-primary">+ Nouveau</button>
+                        <button onclick="app.exportData()">💾 Exporter</button>
+                        <input type="file" id="import-input" hidden onchange="app.importData(this)">
+                        <button onclick="document.getElementById('import-input').click()">📂 Importer</button>
+                    </div>
+                    <div id="scenario-list" class="list-container"></div>
+                </div>
                 
-                <div class="toolbar">
-                    <div class="dims-inputs" title="Dimensions de l'atelier courant">
-                        📏 <input type="number" id="roomW" value="20" onchange="resizeRoom()"> m 
-                        x <input type="number" id="roomH" value="12" onchange="resizeRoom()"> m
-                    </div>
-
-                    <div style="width:1px; height:20px; background:#ccc; margin:0 5px;"></div>
-
-                    <button class="btn-tool" onclick="addMachine('M')">🏭 Machine</button>
-                    <button class="btn-tool" onclick="addMachine('Pal', 'palette')">📦 Palette</button>
-                    <button class="btn-tool" onclick="addMachine('Ech', 'scale-machine')">🪜 Échelle</button>
-                    <button class="btn-tool" onclick="addMachine('Pil', 'pillar')">⬛ Pilier</button>
-                    <button class="btn-tool" onclick="addMachine('Pt', 'waypoint')">📍 Point</button>
-                    
-                    <div style="width:1px; height:20px; background:#ccc; margin:0 5px;"></div>
-
-                    <button class="btn-tool btn-primary" onclick="addPerson()">👷 Opérateur</button>
-                    <button class="btn-tool" style="color:#e74c3c; border-color:#e74c3c;" onclick="resetCurrentWorkshop()">🗑️ Vider Atelier</button>
-                    <button class="btn-tool" style="background:#27ae60; color:white;" onclick="saveCurrentScenario()">💾 Sauvegarder</button>
-                </div>
-
-                <div class="workshop-wrapper" id="workshopWrapper" style="width:600px; height:360px;">
-                    <div class="grid-bg"></div>
-                    <svg id="connections"></svg>
-                    <div id="machinesContainer"></div>
-                </div>
-
-            </div>
-
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <span>⚙️ Gammes & Coûts</span>
-                    <div style="display:flex; align-items:center; gap:5px; font-weight:normal; font-size:12px;">
-                        T.Ref: <input type="number" id="globalRefHours" value="7" style="width:30px; text-align:center;" onchange="renderStats()">h
-                    </div>
-                </div>
-                <div class="sidebar-content" id="configList"></div>
-                
-                <div class="sidebar-header" style="border-top:1px solid #ddd; background:#ecf0f1;">
-                    <span>📊 Résultats Globaux</span>
-                </div>
-                <div class="sidebar-content" id="statsContent" style="background:#fff;"></div>
-            </div>
-        </div>
-    </section>
-
-    <script>
-        // --- VARIABLES GLOBALES ---
-        const PIXELS_PER_METER = 30;
-        const OP_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c'];
-        
-        let currentUser = "Invité";
-        let activeScenarioId = null;
-        let currentWorkshopIndex = 0;
-        let recordingState = null; // { opId, taskId }
-
-        // Structure de Données Complète
-        // scenario = { id, name, globalHours, workshops: [ { name, width, height, items: [] } ], operators: { opId: { name, color, hourlyCost, tasks: [] } } }
-        let currentData = {
-            id: 'sc_init',
-            name: 'Nouveau Scénario',
-            globalHours: 7,
-            workshops: [
-                { name: "Atelier Principal", width: 20, height: 12, items: [] }
-            ],
-            operators: {}
-        };
-
-        // --- AUTH & INIT ---
-        function login() {
-            const p = document.getElementById('passInput').value;
-            if(p === "FABIE2026") {
-                currentUser = document.getElementById('userInput').value || "Utilisateur";
-                document.getElementById('userDisplay').innerText = "👤 " + currentUser;
-                document.getElementById('loginOverlay').style.display = 'none';
-                updateDashboard();
-            } else {
-                document.getElementById('loginErr').style.display = 'block';
-            }
-        }
-
-        // --- GESTION NAVIGATION ---
-        function showPage(pageId) {
-            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            document.querySelectorAll('.nav-links button').forEach(el => el.classList.remove('active'));
-            document.getElementById('nav-' + (pageId === 'dashboard' ? 'dash' : 'edit')).classList.add('active');
-            
-            if(pageId === 'editor') loadWorkshopView();
-            if(pageId === 'dashboard') updateDashboard();
-        }
-
-        // --- LOGIQUE MULTI-ATELIERS ---
-        function loadWorkshopView() {
-            const tabs = document.getElementById('tabsContainer');
-            tabs.innerHTML = '';
-            
-            // Générer les onglets
-            currentData.workshops.forEach((ws, idx) => {
-                const btn = document.createElement('div');
-                btn.className = `tab ${idx === currentWorkshopIndex ? 'active' : ''}`;
-                btn.innerText = ws.name;
-                btn.onclick = () => switchWorkshop(idx);
-                // Double click pour renommer l'atelier
-                btn.ondblclick = () => {
-                    const newName = prompt("Nom de l'atelier :", ws.name);
-                    if(newName) { ws.name = newName; loadWorkshopView(); }
-                };
-                tabs.appendChild(btn);
-            });
-
-            // Bouton Ajout Atelier
-            const addBtn = document.createElement('div');
-            addBtn.className = 'tab tab-add';
-            addBtn.innerText = "+";
-            addBtn.title = "Ajouter un atelier";
-            addBtn.onclick = () => {
-                currentData.workshops.push({ name: "Atelier " + (currentData.workshops.length + 1), width: 15, height: 10, items: [] });
-                switchWorkshop(currentData.workshops.length - 1);
-            };
-            tabs.appendChild(addBtn);
-
-            // Charger le contenu de l'atelier actif
-            const activeWS = currentData.workshops[currentWorkshopIndex];
-            
-            // Mise à jour dimensions inputs
-            document.getElementById('roomW').value = activeWS.width;
-            document.getElementById('roomH').value = activeWS.height;
-            updateRoomVisuals(activeWS.width, activeWS.height);
-
-            // Vider et remplir le DOM
-            const container = document.getElementById('machinesContainer');
-            container.innerHTML = '';
-            document.getElementById('connections').innerHTML = ''; // Clear SVG
-
-            // Restaurer les items de cet atelier
-            activeWS.items.forEach(item => {
-                createMachineDOM(item.id, item.type, item.x, item.y, item.text, item.w, item.h, item.color);
-            });
-
-            // Re-dessiner les opérateurs (qui sont globaux, mais on doit voir leurs gammes)
-            renderConfigPanel();
-            renderStats(); // Dessine aussi les traits SVG pour l'atelier courant
-        }
-
-        function switchWorkshop(index) {
-            // Sauvegarder l'état actuel du DOM vers la mémoire avant de changer
-            saveDomToMemory();
-            currentWorkshopIndex = index;
-            loadWorkshopView();
-        }
-
-        function saveDomToMemory() {
-            const items = [];
-            document.querySelectorAll('#machinesContainer .machine').forEach(el => {
-                items.push({
-                    id: el.id,
-                    type: el.dataset.type,
-                    x: parseInt(el.style.left),
-                    y: parseInt(el.style.top),
-                    w: parseInt(el.style.width),
-                    h: parseInt(el.style.height),
-                    text: el.innerText,
-                    color: el.style.backgroundColor
-                });
-            });
-            currentData.workshops[currentWorkshopIndex].items = items;
-        }
-
-        function resizeRoom() {
-            const w = parseFloat(document.getElementById('roomW').value);
-            const h = parseFloat(document.getElementById('roomH').value);
-            currentData.workshops[currentWorkshopIndex].width = w;
-            currentData.workshops[currentWorkshopIndex].height = h;
-            updateRoomVisuals(w, h);
-            renderStats(); // Redessine les trajets si l'échelle change (visuellement)
-        }
-
-        function updateRoomVisuals(w, h) {
-            const wrapper = document.getElementById('workshopWrapper');
-            wrapper.style.width = (w * PIXELS_PER_METER) + 'px';
-            wrapper.style.height = (h * PIXELS_PER_METER) + 'px';
-        }
-
-        // --- GESTION OBJETS (DOM) ---
-        function createMachineDOM(id, type, x, y, text, w, h, color) {
-            const div = document.createElement('div');
-            div.className = `machine ${type || ''}`;
-            div.id = id;
-            div.dataset.type = type || '';
-            div.innerText = text;
-            div.style.left = x + 'px';
-            div.style.top = y + 'px';
-            div.style.width = w + 'px';
-            div.style.height = h + 'px';
-            if(color) div.style.backgroundColor = color;
-
-            // Events
-            div.addEventListener('mousedown', initDrag);
-            div.onclick = (e) => handleRecordClick(e, id);
-            
-            // Resize handler
-            if(!type?.includes('waypoint')) {
-                const resizer = document.createElement('div');
-                resizer.className = 'resize-handle';
-                resizer.onmousedown = (e) => initResize(e, div);
-                div.appendChild(resizer);
-            }
-
-            document.getElementById('machinesContainer').appendChild(div);
-            return div;
-        }
-
-        function addMachine(prefix, type='', w=45, h=30) {
-            const id = prefix + '_' + Date.now();
-            if(type.includes('palette')) { w=36; h=24; }
-            if(type.includes('pillar') || type.includes('waypoint')) { w=15; h=15; }
-            createMachineDOM(id, type, 50, 50, (type.includes('waypoint')?"":prefix), w, h, null);
-        }
-
-        function addPerson() {
-            const id = 'Op_' + Date.now();
-            const idx = Object.keys(currentData.operators).length;
-            const color = OP_COLORS[idx % OP_COLORS.length];
-            const name = "Op " + (idx + 1);
-            
-            // Ajoute aux données globales
-            currentData.operators[id] = { name: name, color: color, hourlyCost: 25, tasks: [] };
-            
-            // Ajoute visuellement dans l'atelier courant (point de départ)
-            createMachineDOM(id, 'person', 50, 50, name, 24, 24, color);
-            
-            renderConfigPanel();
-        }
-
-        // --- DRAG & DROP SYSTEM ---
-        let dragEl = null, resizeEl = null;
-        let startX, startY, startLeft, startTop, startW, startH;
-
-        function initDrag(e) {
-            if(e.target.className.includes('resize')) return;
-            if(recordingState) return;
-            dragEl = e.currentTarget;
-            startX = e.clientX; startY = e.clientY;
-            startLeft = parseInt(dragEl.style.left); startTop = parseInt(dragEl.style.top);
-            document.addEventListener('mousemove', doDrag);
-            document.addEventListener('mouseup', stopDrag);
-        }
-
-        function doDrag(e) {
-            if(!dragEl) return;
-            dragEl.style.left = (startLeft + e.clientX - startX) + 'px';
-            dragEl.style.top = (startTop + e.clientY - startY) + 'px';
-            renderStats(); // Mise à jour temps réel des traits
-        }
-
-        function stopDrag() {
-            // Check suppression (si hors zone ou sur un bouton poubelle fictif - ici on garde simple)
-            dragEl = null;
-            document.removeEventListener('mousemove', doDrag);
-            document.removeEventListener('mouseup', stopDrag);
-            renderStats();
-        }
-
-        function initResize(e, el) {
-            e.stopPropagation();
-            resizeEl = el;
-            startX = e.clientX; startY = e.clientY;
-            startW = parseInt(el.style.width); startH = parseInt(el.style.height);
-            document.addEventListener('mousemove', doResize);
-            document.addEventListener('mouseup', stopResize);
-        }
-
-        function doResize(e) {
-            if(!resizeEl) return;
-            resizeEl.style.width = Math.max(15, startW + e.clientX - startX) + 'px';
-            resizeEl.style.height = Math.max(15, startH + e.clientY - startY) + 'px';
-        }
-        function stopResize() {
-            resizeEl = null;
-            document.removeEventListener('mousemove', doResize);
-            document.removeEventListener('mouseup', stopResize);
-        }
-
-        // --- LOGIQUE GAMMES & CONFIG ---
-        function renderConfigPanel() {
-            const container = document.getElementById('configList');
-            container.innerHTML = '';
-
-            for(const [opId, op] of Object.entries(currentData.operators)) {
-                const card = document.createElement('div');
-                card.className = 'op-card';
-                card.innerHTML = `
-                    <div class="op-header" style="background:${op.color}">
-                        <span contenteditable="true" onblur="updateOpName('${opId}', this.innerText)">${op.name}</span>
-                        <button onclick="deleteOp('${opId}')" style="background:none;border:none;color:white;cursor:pointer;">×</button>
-                    </div>
-                    <div class="op-body">
-                        <div style="margin-bottom:5px; font-size:12px;">
-                            Coût: <input type="number" value="${op.hourlyCost}" onchange="currentData.operators['${opId}'].hourlyCost=this.value; renderStats()" style="width:40px"> €/h
+                <div class="panel-section">
+                    <h3>🏭 Ateliers (Onglets)</h3>
+                    <div id="workshop-list" class="list-container workshops">
                         </div>
-                        <div id="taskList-${opId}"></div>
-                        <button onclick="addTask('${opId}')" style="width:100%; margin-top:5px;">+ Tâche</button>
-                    </div>
-                `;
-                container.appendChild(card);
-                
-                op.tasks.forEach(task => renderTaskRow(opId, task));
-            }
-        }
-
-        function renderTaskRow(opId, task) {
-            const div = document.createElement('div');
-            div.className = 'task-row';
-            const isRec = recordingState && recordingState.taskId === task.id;
-            
-            div.innerHTML = `
-                <input type="text" value="${task.name}" onchange="updateTask('${opId}','${task.id}', 'name', this.value)" style="flex:1">
-                <input type="number" value="${task.time}" onchange="updateTask('${opId}','${task.id}', 'time', this.value)" style="width:30px" title="Temps fixe (s)">s
-                <input type="number" value="${task.freq}" onchange="updateTask('${opId}','${task.id}', 'freq', this.value)" style="width:30px" title="Répétitions">x
-                <button onclick="toggleRecord('${opId}','${task.id}')" style="background:${isRec?'#e74c3c':'white'}; color:${isRec?'white':'black'}">${isRec ? '●' : '📍'}</button>
-                <button onclick="deleteTask('${opId}','${task.id}')" style="color:red;">🗑️</button>
-            `;
-            document.getElementById(`taskList-${opId}`).appendChild(div);
-        }
-
-        function addTask(opId) {
-            currentData.operators[opId].tasks.push({
-                id: 't_' + Date.now(),
-                name: 'Tâche',
-                time: 10,
-                freq: 1,
-                steps: [] // { wsIndex, itemId }
-            });
-            renderConfigPanel();
-        }
-
-        function updateTask(opId, tId, field, val) {
-            const t = currentData.operators[opId].tasks.find(x => x.id === tId);
-            if(t) { t[field] = (field==='name'?val:parseFloat(val)); renderStats(); }
-        }
-
-        function toggleRecord(opId, taskId) {
-            if(recordingState) {
-                recordingState = null;
-            } else {
-                recordingState = { opId, taskId };
-            }
-            renderConfigPanel(); // Met à jour les boutons
-        }
-
-        function handleRecordClick(e, itemId) {
-            if(!recordingState) return;
-            const t = currentData.operators[recordingState.opId].tasks.find(x => x.id === recordingState.taskId);
-            if(t) {
-                // On enregistre l'index de l'atelier courant pour savoir où dessiner le trait
-                t.steps.push({ wsIndex: currentWorkshopIndex, itemId: itemId });
-                renderStats();
-            }
-        }
-
-        function deleteTask(opId, tId) {
-            currentData.operators[opId].tasks = currentData.operators[opId].tasks.filter(t => t.id !== tId);
-            renderConfigPanel(); renderStats();
-        }
-        
-        function deleteOp(opId) {
-            if(confirm('Supprimer opérateur ?')) {
-                delete currentData.operators[opId];
-                // Supprimer visuel s'il est dans l'atelier courant
-                const el = document.getElementById(opId);
-                if(el) el.remove();
-                renderConfigPanel(); renderStats();
-            }
-        }
-        
-        function updateOpName(id, txt) { currentData.operators[id].name = txt; renderStats(); }
-
-        // --- MOTEUR DE CALCUL & DESSIN (SVG) ---
-        function renderStats() {
-            const svg = document.getElementById('connections');
-            svg.innerHTML = ''; // Clear SVG
-            const statsDiv = document.getElementById('statsContent');
-            statsDiv.innerHTML = '';
-
-            let totalScenarioTime = 0;
-            let totalScenarioCost = 0;
-            const refTime = (parseFloat(document.getElementById('globalRefHours').value) || 7) * 3600;
-
-            for(const [opId, op] of Object.entries(currentData.operators)) {
-                let opTime = 0;
-                let opDist = 0;
-
-                op.tasks.forEach(task => {
-                    // 1. Calcul Temps Fixe
-                    opTime += (task.time * task.freq);
-
-                    // 2. Calcul Trajets & Dessin
-                    if(task.steps.length > 1) {
-                        let pathD = "";
-                        let prevEl = null;
-
-                        for(let i=0; i<task.steps.length; i++) {
-                            const step = task.steps[i];
-                            
-                            // Si l'étape est dans l'atelier COURANT, on essaie de la trouver
-                            let el = null;
-                            if(step.wsIndex === currentWorkshopIndex) {
-                                el = document.getElementById(step.itemId);
-                            } else {
-                                // L'étape est dans un autre atelier. 
-                                // Pour le calcul de distance, on devrait idéalement charger les coordonnées mémoire.
-                                // Pour la SIMPLICITÉ graphique ici : on ne dessine le trait que si les 2 points sont dans l'atelier visible.
-                                // Pour le calcul : on ignore la distance inter-atelier pour le moment ou on simule.
-                            }
-
-                            if(el && prevEl) {
-                                // Dessin SVG
-                                const x1 = parseInt(prevEl.style.left) + parseInt(prevEl.style.width)/2;
-                                const y1 = parseInt(prevEl.style.top) + parseInt(prevEl.style.height)/2;
-                                const x2 = parseInt(el.style.left) + parseInt(el.style.width)/2;
-                                const y2 = parseInt(el.style.top) + parseInt(el.style.height)/2;
-
-                                pathD += ` M ${x1} ${y1} L ${x2} ${y2}`;
-                                
-                                // Distance
-                                const distPx = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
-                                const distM = distPx / PIXELS_PER_METER;
-                                opDist += (distM * task.freq);
-                                opTime += ((distM / 1.4) * task.freq); // 1.4 m/s marche
-                            }
-                            if(el) prevEl = el;
-                        }
-
-                        if(pathD) {
-                            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                            path.setAttribute("d", pathD);
-                            path.style.stroke = op.color;
-                            svg.appendChild(path);
-                        }
-                    }
-                });
-
-                const opCost = (opTime / 3600) * op.hourlyCost;
-                totalScenarioTime += opTime;
-                totalScenarioCost += opCost;
-                
-                // Affichage Stat Opérateur
-                const statHTML = `
-                    <div style="border-left:4px solid ${op.color}; padding:5px; margin-bottom:10px; background:#fafafa;">
-                        <strong>${op.name}</strong><br>
-                        Temps: ${(opTime/60).toFixed(1)} min<br>
-                        Coût: ${opCost.toFixed(2)} €
-                    </div>
-                `;
-                statsDiv.innerHTML += statHTML;
-            }
-
-            // Résumé Global
-            const totalHTML = `
-                <div style="background:#2c3e50; color:white; padding:10px; border-radius:4px; margin-bottom:15px;">
-                    <div style="font-size:14px;">TOTAL GENERAL</div>
-                    <div style="font-size:18px; font-weight:bold;">${(totalScenarioTime/3600).toFixed(2)} Heures</div>
-                    <div style="font-size:18px; color:#f1c40f; font-weight:bold;">${totalScenarioCost.toFixed(2)} €</div>
+                    <button onclick="app.addWorkshop()" class="btn-secondary" style="width:100%; margin-top:5px;">+ Ajouter Atelier</button>
                 </div>
-            `;
-            statsDiv.innerHTML = totalHTML + statsDiv.innerHTML;
-        }
+            </aside>
 
-        // --- SCENARIO & SAUVEGARDE ---
-        
-        function getSavedScenarios() {
-            return JSON.parse(localStorage.getItem('fabie_scenarios_v3') || '[]');
-        }
-
-        function updateDashboard() {
-            const list = getSavedScenarios();
-            document.getElementById('dash-scenarios').innerText = list.length;
-            document.getElementById('dash-operators').innerText = "—"; 
-
-            const container = document.getElementById('scenarioList');
-            container.innerHTML = '';
-            
-            list.forEach((sc, idx) => {
-                const div = document.createElement('div');
-                div.style.padding = "10px";
-                div.style.borderBottom = "1px solid #eee";
-                div.style.display = "flex";
-                div.style.justifyContent = "space-between";
-                div.innerHTML = `
-                    <span><strong>${sc.name}</strong> (${new Date(sc.date).toLocaleDateString()})</span>
-                    <div>
-                        <button onclick="loadScenario(${idx})" style="cursor:pointer;">📂 Ouvrir</button>
-                        <button onclick="deleteScenario(${idx})" style="color:red; cursor:pointer;">🗑️</button>
+            <main class="editor-area">
+                <div class="toolbar">
+                    <div class="group-dims">
+                        <label>Dim (m):</label>
+                        <input type="number" id="room-width" value="20" onchange="app.resizeRoom()"> x 
+                        <input type="number" id="room-height" value="12" onchange="app.resizeRoom()">
                     </div>
-                `;
-                container.appendChild(div);
-            });
-        }
+                    <div class="separator"></div>
+                    <div class="group-tools">
+                        <button onclick="app.addItem('machine')">🏭 Machine</button>
+                        <button onclick="app.addItem('palette')">📦 Palette</button>
+                        <button onclick="app.addItem('scale')">🪜 Échelle</button>
+                        <button onclick="app.addItem('pillar')">⬛ Pilier</button>
+                        <button onclick="app.addItem('waypoint')">📍 Point</button>
+                    </div>
+                    <div class="separator"></div>
+                    <button onclick="app.addOperator()" class="btn-operator">👷 Opérateur</button>
+                    <div id="trash-zone" class="trash">🗑️ Glisser ici</div>
+                </div>
 
-        function newScenario() {
-            currentData = { 
-                id: 'sc_' + Date.now(), 
-                name: "Nouveau Scénario", 
-                globalHours: 7, 
-                workshops: [{name:"Atelier 1", width:20, height:12, items:[]}], 
-                operators: {} 
-            };
-            currentWorkshopIndex = 0;
-            showPage('editor');
-        }
+                <div id="viewport">
+                    <div id="workshop-container">
+                        <div class="grid-background"></div>
+                        <svg id="svg-layer"></svg>
+                        <div id="items-layer"></div>
+                    </div>
+                </div>
+            </main>
 
-        function saveCurrentScenario() {
-            saveDomToMemory(); // Important : sauver ce qu'il y a à l'écran
-            const list = getSavedScenarios();
-            
-            // Check if exist
-            const existingIdx = list.findIndex(s => s.id === currentData.id);
-            const saveObj = { ...currentData, date: Date.now() };
-            
-            if(existingIdx >= 0) {
-                list[existingIdx] = saveObj;
-            } else {
-                list.push(saveObj);
-            }
-            
-            localStorage.setItem('fabie_scenarios_v3', JSON.stringify(list));
-            alert("Sauvegardé !");
-        }
+            <aside class="sidebar-right">
+                <div class="panel-header">⚙️ Gammes Opératoires</div>
+                <div id="operators-list" class="config-container"></div>
+                
+                <div class="panel-header stats-header">📊 Analyse Coûts</div>
+                <div class="global-inputs">
+                    Temps Ref (h): <input type="number" id="global-hours" value="7" onchange="app.updateStats()">
+                </div>
+                <div id="stats-output" class="stats-container"></div>
+            </aside>
+        </div>
+    </div>
 
-        function loadScenario(idx) {
-            const list = getSavedScenarios();
-            currentData = list[idx];
-            currentWorkshopIndex = 0;
-            showPage('editor');
-        }
-
-        function deleteScenario(idx) {
-            if(confirm("Supprimer ?")) {
-                const list = getSavedScenarios();
-                list.splice(idx, 1);
-                localStorage.setItem('fabie_scenarios_v3', JSON.stringify(list));
-                updateDashboard();
-            }
-        }
-
-        function resetCurrentWorkshop() {
-            if(confirm("Vider l'atelier courant ?")) {
-                currentData.workshops[currentWorkshopIndex].items = [];
-                // On garde les opérateurs (globaux) mais on efface les objets
-                loadWorkshopView();
-            }
-        }
-
-        // --- IMPORT / EXPORT FICHIER ---
-        function exportJSON() {
-            const list = getSavedScenarios();
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(list));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "fabie_backup.json");
-            document.body.appendChild(dl); dl.click(); dl.remove();
-        }
-
-        function importJSON(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    localStorage.setItem('fabie_scenarios_v3', JSON.stringify(data));
-                    updateDashboard();
-                    alert("Import réussi !");
-                } catch(e) { alert("Erreur fichier"); }
-            };
-            reader.readAsText(file);
-        }
-
-        // Init au chargement
-        showPage('dashboard'); // On commence par le dashboard (qui est sous loginOverlay)
-
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
