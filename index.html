@@ -183,6 +183,8 @@
         button:active { transform: scale(0.95); }
 
         .btn-add { background: var(--box-bg); color: white; }
+        .btn-add-entry { background: #16a085; color: white; } /* Bouton ajout entrée */
+        .btn-add-exit { background: #d35400; color: white; } /* Bouton ajout sortie */
         .btn-add-person { background: #e74c3c; color: white; } 
         .btn-add-palette { background: var(--palette-bg); color: white; }
         .btn-add-scale { background: var(--scale-bg); color: white; }
@@ -433,6 +435,8 @@
                 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
 
+                <button class="btn-add-entry" onclick="addEntry()">+ Entrée</button>
+                <button class="btn-add-exit" onclick="addExit()">+ Sortie</button>
                 <button class="btn-add" onclick="addMachine()">+ Machine</button>
                 <button class="btn-add-palette" onclick="addPalette()">+ Palette</button>
                 <button class="btn-add-scale" onclick="addScale()">+ Échelle</button>
@@ -1382,6 +1386,8 @@
             workshop.appendChild(div); initMachine(div); return div;
         }
         function addMachine() { createObj("obj", "M" + (document.querySelectorAll('.machine:not(.person):not(.waypoint):not(.pillar):not(.palette):not(.scale-machine)').length + 1), 45, 30); saveCurrentScenario(); }
+        function addEntry() { createObj("obj", "Entrée", 45, 30); saveCurrentScenario(); }
+        function addExit() { createObj("obj", "Sortie", 45, 30); saveCurrentScenario(); }
         function addPalette() { const d = createObj("obj", "Pal", 36, 24); d.classList.add("palette"); d.textContent="Palette"; saveCurrentScenario(); }
         function addScale() { const d = createObj("obj", "Ech", 24, 24); d.classList.add("scale-machine"); d.textContent="Échelle"; saveCurrentScenario(); }
         function addPillar() { const d = createObj("obj", "", 15, 15); d.classList.add("pillar"); d.title="Pilier"; saveCurrentScenario(); }
