@@ -396,7 +396,7 @@
             if (pass === "FABIE2026") {
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('mainWrapper').style.filter = 'none';
-                document.getElementById('mainWrapper').style.pointerEvents = 'all';
+                document.getElementById('mainWrapper').style.pointerEvents = 'auto';
                 // Charge les scénarios du localStorage si existent
                 loadScenariosFromStorage();
             } else {
@@ -429,7 +429,7 @@
         let currentScenarioId = null;
 
         function loadScenariosFromStorage() {
-            const saved = localStorage.getItem('fabie_scenarios_v2');
+            const saved = localStorage.getItem('fabie_scenarios_v3');
             if (saved) {
                 scenarios = JSON.parse(saved);
                 // Si on a des scénarios, on charge le premier, sinon init
@@ -447,7 +447,7 @@
         }
 
         function saveScenariosToStorage() {
-            localStorage.setItem('fabie_scenarios_v2', JSON.stringify(scenarios));
+            localStorage.setItem('fabie_scenarios_v3', JSON.stringify(scenarios));
         }
 
         function initInitialScenario() {
@@ -691,7 +691,8 @@
 
             activeItem = e.currentTarget; 
             initialX = e.clientX; initialY = e.clientY;
-            initialLeft = parseInt(activeItem.style.left); initialTop = parseInt(activeItem.style.top);
+            initialLeft = parseInt(activeItem.style.left) || 0; 
+            initialTop = parseInt(activeItem.style.top) || 0;
 
             document.addEventListener('mousemove', drag);
             document.addEventListener('mouseup', dragEnd);
@@ -1090,7 +1091,13 @@
         function createObj(idPrefix, name, w, h, x=50, y=50) {
             const div = document.createElement('div'); div.className = 'machine'; div.textContent = name;
             div.style.left = x+'px'; div.style.top = y+'px'; div.style.width = w + 'px'; div.style.height = h + 'px';
-            div.id = idPrefix + (idPrefix.includes('obj') ? '' : '-' + Date.now() + Math.random().toString(36).substr(2, 9));
+            
+            if (idPrefix === "m1" || idPrefix === "m3") {
+                div.id = idPrefix;
+            } else {
+                div.id = 'obj-' + Date.now() + Math.random().toString(36).substr(2, 9);
+            }
+            
             workshop.appendChild(div); initMachine(div); return div;
         }
         function addMachine() { createObj("obj", "M" + (document.querySelectorAll('.machine:not(.person):not(.waypoint):not(.pillar):not(.palette):not(.scale-machine)').length + 1), 45, 30); saveCurrentScenario(); }
