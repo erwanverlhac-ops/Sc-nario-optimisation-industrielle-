@@ -22,7 +22,7 @@
             --room-w: 19.9;  
             --room-h: 11.74; 
             --panel-width: 320px;
-            --config-width: 340px; /* Nouvelle variable pour le panneau de droite */
+            --config-width: 340px; /* Largeur dynamique du panneau de droite */
         }
 
         body {
@@ -84,6 +84,29 @@
             overflow-y: auto;
         }
 
+        /* --- REDIMENSIONNEMENT X (Panneau Droite) --- */
+        .resizer-x {
+            width: 6px;
+            background: #e0e0e0;
+            cursor: col-resize;
+            z-index: 30;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .resizer-x:hover, .resizer-x.resizing { background: #3498db; }
+
+        /* --- REDIMENSIONNEMENT Y (Panneau Bas) --- */
+        .resizer-y {
+            height: 6px;
+            background: #e0e0e0;
+            cursor: row-resize;
+            z-index: 30;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            display: none; /* Rendu visible par JS */
+        }
+        .resizer-y:hover, .resizer-y.resizing { background: #3498db; }
+
         /* --- COLONNE DROITE (GAMMES OPÉRATOIRES) --- */
         .config-sidebar {
             width: var(--config-width);
@@ -108,7 +131,7 @@
             height: 280px;
             background: white;
             border-top: 1px solid #ddd;
-            display: none; /* Sera mis à 'flex' par JS */
+            display: none; 
             flex-direction: column;
             box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
             z-index: 20;
@@ -131,6 +154,7 @@
             overflow-y: auto;
             position: relative;
             background: #f4f7f6;
+            min-width: 400px;
         }
 
         header { text-align: center; margin-bottom: 10px; flex-shrink: 0; }
@@ -318,8 +342,9 @@
             <p>Le paramètre <b>Répétition</b> multiplie automatiquement vos données (temps fixe, trajet, gâteaux emballés) selon la logique suivante :</p>
             <ul style="padding-left: 20px; background: #f8f9fa; padding: 15px 15px 15px 35px; border-radius: 5px; border-left: 3px solid #3498db;">
                 <li style="margin-bottom: 8px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
-                <li style="margin-bottom: 8px;"><b>/ Grille :</b> La valeur saisie est multipliée par <b>17</b> (grilles) et par l'<b>Objectif d'Échelles</b>.</li>
-                <li><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
+                <li style="margin-bottom: 8px;"><b>/ Grille :</b> Si un objectif <b>Gâteaux / Grille</b> est défini, il est divisé par le nombre de <b>Gâteaux par action (🎂)</b>, puis multiplié par 17 (grilles) et l'Objectif d'Échelles. Sinon, la quantité est multipliée par 17 et par l'Objectif d'Échelles.</li>
+                <li style="margin-bottom: 8px;"><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
+                <li><b>/ Palette :</b> L'objectif <b>Gâteaux / Palette</b> est divisé par le nombre de <b>Gâteaux emballés par action (🎂)</b>, puis le tout est multiplié par la quantité saisie. <br><i>Ex: Si 1 palette = 1000 gâteaux et 1 action = 10 gâteaux, l'action sera calculée 100 fois.</i></li>
             </ul>
             <button onclick="document.getElementById('calcInfoModalOverlay').style.display='none'" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
         </div>
@@ -409,7 +434,10 @@
             </div>
         </div>
 
-        <!-- COLONNE DROITE (Anciennement Bas): GAMMES OPÉRATOIRES -->
+        <!-- RESIZER HORIZONTAL (Droite) -->
+        <div class="resizer-x" id="resizerX"></div>
+
+        <!-- COLONNE DROITE: GAMMES OPÉRATOIRES -->
         <div class="config-sidebar" id="configPanel">
             <div class="panel-header">⚙️ Gammes Opératoires</div>
             <div class="config-list-col" id="configList">
@@ -418,7 +446,10 @@
         </div>
     </div>
 
-    <!-- PANNEAU BAS (Anciennement Droite): ANALYSE CHARGE -->
+    <!-- RESIZER VERTICAL (Bas) -->
+    <div class="resizer-y" id="resizerY"></div>
+
+    <!-- PANNEAU BAS: ANALYSE CHARGE -->
     <div class="stats-bottom-panel" id="statsPanel">
         <div class="panel-header">
             <span>📊 Analyse Charge & Coûts</span>
@@ -430,6 +461,54 @@
     </div>
 
     <script>
+        // --- RESIZERS LOGIC ---
+        const resizerX = document.getElementById('resizerX');
+        const resizerY = document.getElementById('resizerY');
+        let isResizingX = false;
+        let isResizingY = false;
+
+        resizerX.addEventListener('mousedown', (e) => {
+            isResizingX = true;
+            resizerX.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            document.getElementById('mainWrapper').style.pointerEvents = 'none'; // Empêche iframe/svg de bloquer la souris
+        });
+
+        resizerY.addEventListener('mousedown', (e) => {
+            isResizingY = true;
+            resizerY.classList.add('resizing');
+            document.body.style.cursor = 'row-resize';
+            document.getElementById('mainWrapper').style.pointerEvents = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isResizingX) {
+                let newWidth = document.body.clientWidth - e.clientX;
+                newWidth = Math.max(250, Math.min(newWidth, 800)); // Limites min/max
+                document.documentElement.style.setProperty('--config-width', `${newWidth}px`);
+            }
+            if (isResizingY) {
+                let newHeight = document.body.clientHeight - e.clientY;
+                newHeight = Math.max(150, Math.min(newHeight, 800));
+                document.getElementById('statsPanel').style.height = `${newHeight}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizingX) {
+                isResizingX = false;
+                resizerX.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.getElementById('mainWrapper').style.pointerEvents = 'auto';
+            }
+            if (isResizingY) {
+                isResizingY = false;
+                resizerY.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.getElementById('mainWrapper').style.pointerEvents = 'auto';
+            }
+        });
+
         // --- BULLE D'INFO ---
         function showCalcInfo() {
             document.getElementById('calcInfoModalOverlay').style.display = 'flex';
@@ -479,7 +558,7 @@
         let currentScenarioId = null;
 
         function loadScenariosFromStorage() {
-            const saved = localStorage.getItem('fabie_scenarios_v3');
+            const saved = localStorage.getItem('fabie_scenarios_v4');
             if (saved) {
                 scenarios = JSON.parse(saved);
                 const keys = Object.keys(scenarios);
@@ -496,7 +575,7 @@
         }
 
         function saveScenariosToStorage() {
-            localStorage.setItem('fabie_scenarios_v3', JSON.stringify(scenarios));
+            localStorage.setItem('fabie_scenarios_v4', JSON.stringify(scenarios));
         }
 
         function initInitialScenario() {
@@ -828,7 +907,7 @@
 
         // --- GESTION GAMMES (SIDEBAR DROITE) ---
         function addConfigCard(opId, opName, color) {
-            operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, tasks: [] };
+            operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, cakesPerGrid: 30, cakesPerPalette: 1000, tasks: [] };
             rebuildConfigUI();
             addTask(opId, "Remplir grille", 10, 'per_grid');
         }
@@ -844,6 +923,22 @@
         function updateHourlyRate(opId, val) {
             if(operatorData[opId]) {
                 operatorData[opId].hourlyRate = parseFloat(val) || 0;
+                saveCurrentScenario();
+                calculateAndDraw();
+            }
+        }
+
+        function updateOperatorCakes(opId, val) {
+            if(operatorData[opId]) {
+                operatorData[opId].cakesPerPalette = parseFloat(val) || 0;
+                saveCurrentScenario();
+                calculateAndDraw();
+            }
+        }
+
+        function updateOperatorCakesGrid(opId, val) {
+            if(operatorData[opId]) {
+                operatorData[opId].cakesPerGrid = parseFloat(val) || 0;
                 saveCurrentScenario();
                 calculateAndDraw();
             }
@@ -896,6 +991,7 @@
                     const selTotal = task.freqType === 'total' ? 'selected' : '';
                     const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
                     const selRack = task.freqType === 'per_rack' ? 'selected' : '';
+                    const selPalette = task.freqType === 'per_palette' ? 'selected' : '';
                     const btnClass = task.steps.length > 0 ? 'btn-record has-path' : 'btn-record';
                     const btnText = task.steps.length > 0 ? '✅ OK' : '📍 Trajet';
 
@@ -915,6 +1011,7 @@
                                     <option value="total" ${selTotal}>/ Jour</option>
                                     <option value="per_grid" ${selGrid}>/ Grille</option>
                                     <option value="per_rack" ${selRack}>/ Échelle</option>
+                                    <option value="per_palette" ${selPalette}>/ Palette</option>
                                 </select>
                             </div>
                             <div class="action-controls">
@@ -933,6 +1030,18 @@
                             <div>
                                 <input type="number" value="${data.targetRacks}" min="1" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateTargetRacks('${opId}', this.value)">
                                 Échelles
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong title="Nombre de gâteaux par grille">🧇 Gâteaux / Grille:</strong>
+                            <div>
+                                <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakesGrid('${opId}', this.value)">
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong title="Gâteaux nécessaires pour compléter une palette">📦 Gâteaux / Palette:</strong>
+                            <div>
+                                <input type="number" value="${data.cakesPerPalette || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakes('${opId}', this.value)">
                             </div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1018,9 +1127,30 @@
                     hasAnyData = true;
                     
                     let taskCycles = 1;
-                    if (task.freqType === 'per_grid') taskCycles = task.freqValue * 17 * targetRacks;
-                    else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
-                    else taskCycles = task.freqValue;
+                    const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
+
+                    if (task.freqType === 'per_grid') {
+                        const targetGridCakes = data.cakesPerGrid || 0;
+                        if (targetGridCakes > 0 && cpa > 0) {
+                            taskCycles = (targetGridCakes / cpa) * 17 * targetRacks * task.freqValue;
+                        } else {
+                            taskCycles = task.freqValue * 17 * targetRacks;
+                        }
+                    }
+                    else if (task.freqType === 'per_rack') {
+                        taskCycles = task.freqValue * targetRacks;
+                    }
+                    else if (task.freqType === 'per_palette') {
+                        const targetPalCakes = data.cakesPerPalette || 0;
+                        if (targetPalCakes > 0 && cpa > 0) {
+                            taskCycles = (targetPalCakes / cpa) * task.freqValue;
+                        } else {
+                            taskCycles = task.freqValue;
+                        }
+                    }
+                    else {
+                        taskCycles = task.freqValue;
+                    }
 
                     const taskCakes = (task.cakesPerAction || 0) * taskCycles;
                     opTotalCakes += taskCakes;
@@ -1036,9 +1166,9 @@
                         tasksHtml += `
                             <div class="task-detail" style="color:#777">
                                 <div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">
-                                    ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles} = ${formatTime(taskTotalTime)}</span>
+                                    ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTotalTime)}</span>
                                 </div>
-                                <div style="font-size: 11px;">${task.time}s fixe / act. | 🎂 ${taskCakes}</div>
+                                <div style="font-size: 11px;">${task.time}s fixe / act. | 🎂 ${Math.round(taskCakes)}</div>
                             </div>`;
                         return;
                     }
@@ -1084,10 +1214,10 @@
                     tasksHtml += `
                         <div class="task-detail">
                             <div style="font-weight:bold; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">
-                                ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles} = ${formatTime(taskTotalTime)}</span>
+                                ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTotalTime)}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>🚶 Trajet (${distM.toFixed(1)}m) :</span> <span>${formatTime(walkT)} / act.</span></div>
-                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(task.time)} / act. | 🎂 ${taskCakes}</span></div>
+                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(task.time)} / act. | 🎂 ${Math.round(taskCakes)}</span></div>
                         </div>`;
                 });
 
@@ -1117,7 +1247,7 @@
                         <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(totalDistMeters/1000).toFixed(2)} km</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Trajet Total:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Emballés:</span> <span>${opTotalCakes}</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Emballés:</span> <span>${Math.round(opTotalCakes)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO:</span> <span>${laborCost.toFixed(2)} €</span></div>
                         
                         <div style="margin-top:10px;">
@@ -1142,13 +1272,17 @@
                 globalCard.innerHTML = `
                     <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL ATELIER</div>
                     <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Cumulé:</span> <span>${formatTime(grandTotalTime)}</span></div>
-                    <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Gâteaux Total:</span> <span>${grandTotalCakes} 🎂</span></div>
+                    <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Gâteaux Total:</span> <span>${Math.round(grandTotalCakes)} 🎂</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total Prod:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
                 `;
                 statsContent.appendChild(globalCard);
+                
+                // On affiche aussi les resizers
+                document.getElementById('resizerY').style.display = 'block';
+            } else {
+                document.getElementById('resizerY').style.display = 'none';
             }
 
-            // Affichage du panneau d'Analyse (en bas) si on a des datas
             statsPanel.style.display = hasAnyData ? 'flex' : 'none';
         }
 
@@ -1218,13 +1352,24 @@
             calculateAndDraw(); 
         }
 
-        function closeStats() { document.getElementById('statsPanel').style.display = 'none'; }
+        function closeStats() { 
+            document.getElementById('statsPanel').style.display = 'none'; 
+            document.getElementById('resizerY').style.display = 'none';
+        }
         
         function toggleConfigPanel() {
-            const panel = document.getElementById('configPanel'); const btn = document.getElementById('btnToggleConfig');
+            const panel = document.getElementById('configPanel'); 
+            const btn = document.getElementById('btnToggleConfig');
+            const rX = document.getElementById('resizerX');
+
             panel.classList.toggle('collapsed');
-            if (panel.classList.contains('collapsed')) btn.innerHTML = '👁️ Afficher Gammes';
-            else btn.innerHTML = '👁️ Cacher Gammes';
+            if (panel.classList.contains('collapsed')) {
+                btn.innerHTML = '👁️ Afficher Gammes';
+                rX.style.display = 'none';
+            } else {
+                btn.innerHTML = '👁️ Cacher Gammes';
+                rX.style.display = 'block';
+            }
         }
 
         function addBadge(el, index, color) {
