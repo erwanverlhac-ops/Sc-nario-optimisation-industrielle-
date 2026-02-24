@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Atelier FABIE - Gestion Scénarios</title>
+    <title>Simulateur Atelier FABIE - Complet</title>
     <style>
         :root {
             --grid-color: #cccccc;
             --wall-color: #333;
             --box-bg: #3498db;
             --box-border: #2980b9;
+            --palette-bg: #d35400;
+            --scale-bg: #27ae60;
+            --waypoint-bg: #8e44ad;
+            --pillar-bg: #000000;
             --accent: #e74c3c;
             --text: #2c3e50;
             --scale: 30px; 
             --room-w: 19.9;  
             --room-h: 11.74; 
-            --panel-width: 320px; /* Un peu plus large pour la liste */
+            --panel-width: 300px;
         }
 
         body {
@@ -44,109 +48,53 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
             width: 320px;
         }
-        .login-box h2 { margin-top: 0; color: var(--box-bg); margin-bottom: 20px; }
-        .login-field { margin-bottom: 15px; text-align: left; }
-        .login-field label { font-size: 12px; font-weight: bold; color: #777; display: block; margin-bottom: 5px; }
-        .login-box input {
-            width: 100%; padding: 12px;
-            box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;
-            font-size: 14px;
-        }
-        .login-btn {
-            background: var(--box-bg); color: white; border: none;
-            padding: 12px 20px; border-radius: 6px; cursor: pointer;
-            font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px;
-            transition: background 0.2s;
-        }
-        .login-btn:hover { background: var(--box-border); }
-
-        /* --- LAYOUT GLOBAL --- */
-        .main-wrapper {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        /* --- PANNEAU SCÉNARIOS (GAUCHE) --- */
+        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .login-btn { background: var(--box-bg); color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        /* --- SIDEBAR SCENARIOS --- */
         .scenario-sidebar {
-            position: fixed; top: 0; left: 0; height: 100%;
-            width: var(--panel-width);
-            background: white;
-            border-right: 1px solid #ddd;
-            z-index: 500;
+            position: fixed; top: 0; left: 0; height: 100%; width: 320px;
+            background: white; border-right: 1px solid #ddd; z-index: 500;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
+            transform: translateX(-100%); transition: transform 0.3s ease;
             display: flex; flex-direction: column;
         }
         .scenario-sidebar.open { transform: translateX(0); }
-        
-        .sc-header {
-            padding: 15px; background: var(--box-bg); color: white;
-            display: flex; justify-content: space-between; align-items: center;
-            font-weight: bold;
-        }
+        .sc-header { padding: 15px; background: var(--box-bg); color: white; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .sc-list { flex: 1; overflow-y: auto; padding: 10px; background: #f9f9f9; }
-        
-        .sc-card {
-            background: white; border: 1px solid #e0e0e0; border-radius: 6px;
-            padding: 10px; margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            transition: all 0.2s; position: relative;
-        }
-        .sc-card:hover { border-color: var(--box-bg); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        .sc-card.active { border: 2px solid var(--box-bg); background: #f0f8ff; }
+        .sc-card { background: white; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 4px; cursor: pointer; }
+        .sc-card:hover { border-color: var(--box-bg); }
+        .sc-card.active { border: 2px solid var(--box-bg); background: #eaf2f8; }
+        .sc-actions { display: flex; gap: 5px; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px; }
 
-        .sc-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #333; }
-        .sc-meta { font-size: 11px; color: #777; margin-bottom: 8px; display: flex; justify-content: space-between; }
-        
-        .sc-actions { display: flex; gap: 5px; border-top: 1px solid #eee; padding-top: 8px; }
-        .btn-sc { 
-            flex: 1; padding: 4px; font-size: 10px; cursor: pointer; 
-            border: 1px solid #ddd; background: white; border-radius: 4px; color: #555;
-            display: flex; justify-content: center; align-items: center; gap: 3px;
-        }
-        .btn-sc:hover { background: #eee; color: #333; }
-        .btn-sc.load { color: var(--box-bg); border-color: var(--box-bg); font-weight: bold; }
-        .btn-sc.delete { color: var(--accent); border-color: #ffcdd2; }
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; width: 100%; }
 
-        /* --- COLONNE CENTRALE --- */
+        /* --- PANNEAU DU BAS (CONFIG) --- */
+        .bottom-panel {
+            height: 280px; background: white; border-top: 1px solid #ddd;
+            display: flex; flex-direction: column; box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+            z-index: 20; flex-shrink: 0; width: 100%;
+        }
+        .bottom-panel.collapsed { display: none; }
+
+        /* --- COLONNE CENTRALE (ATELIER) --- */
         .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-            overflow-y: auto;
-            position: relative;
-            background: #f4f7f6;
-            transition: margin-left 0.3s;
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            padding: 10px; overflow-y: auto; position: relative; background: #f4f7f6;
         }
 
-        /* --- COLONNE STATS (DROITE) --- */
+        /* --- COLONNE DROITE (STATS) --- */
         .stats-sidebar {
-            width: 300px;
-            background: white;
-            border-left: 1px solid #ddd;
-            display: flex; flex-direction: column;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-            z-index: 20; flex-shrink: 0;
-            display: none; height: 100vh; overflow-y: auto;
+            width: var(--panel-width); background: white; border-left: 1px solid #ddd;
+            display: flex; flex-direction: column; box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            z-index: 20; flex-shrink: 0; display: none; height: 100vh; overflow-y: auto;
         }
 
-        header { text-align: center; margin-bottom: 10px; flex-shrink: 0; display:flex; justify-content:center; align-items:center; position: relative; width: 100%; }
+        header { text-align: center; margin-bottom: 10px; flex-shrink: 0; position: relative; width: 100%; display: flex; justify-content: center; align-items: center;}
         h1 { font-size: 1.3rem; margin: 5px 0; color: var(--text); font-weight: 600; }
-        
-        .user-badge {
-            position: absolute; right: 20px; top: 5px;
-            background: white; padding: 5px 10px; border-radius: 20px;
-            font-size: 12px; font-weight: bold; color: var(--box-bg);
-            border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: flex; align-items: center; gap: 5px;
-        }
+        .user-badge { position: absolute; right: 10px; font-size: 12px; background: white; padding: 4px 8px; border-radius: 12px; border: 1px solid #ddd; }
 
-        /* TOP BAR */
+        /* BANNIÈRE CONTROLS */
         .top-bar {
             background: white; padding: 8px 15px; border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
@@ -154,13 +102,64 @@
             position: relative; z-index: 100; width: fit-content; flex-shrink: 0;
         }
 
-        /* ELEMENTS */
-        button { padding: 6px 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 12px; }
+        .trash-zone {
+            display: flex; align-items: center; justify-content: center;
+            background-color: #ffebee; border: 2px dashed #e57373; color: #c62828;
+            padding: 5px 15px; border-radius: 5px; font-weight: bold;
+            transition: all 0.2s; cursor: default; font-size: 0.9rem;
+        }
+        .trash-zone.drag-over { background-color: #c62828; color: white; transform: scale(1.05); }
+
+        button {
+            padding: 6px 10px; border: none; border-radius: 5px; font-weight: bold;
+            cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; gap: 5px; font-size: 12px;
+        }
+        button:active { transform: scale(0.95); }
+
         .btn-add { background: var(--box-bg); color: white; }
         .btn-add-person { background: #e74c3c; color: white; } 
-        .btn-menu { background: #2c3e50; color: white; }
-        .btn-save-new { background: #27ae60; color: white; }
+        .btn-add-palette { background: var(--palette-bg); color: white; }
+        .btn-add-scale { background: var(--scale-bg); color: white; }
+        .btn-add-waypoint { background: var(--waypoint-bg); color: white; }
+        .btn-add-pillar { background: var(--pillar-bg); color: white; }
+        .btn-clear { background: #95a5a6; color: white; }
+        .btn-menu { background: #34495e; color: white; }
+        .btn-save { background: #27ae60; color: white; }
 
+        /* PANNEAUX */
+        .panel-header { padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: var(--text); font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 10px; }
+        .config-list { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 15px; flex: 1; padding: 10px; background: #fafafa; }
+
+        .op-config-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 0; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 320px; max-width: 340px; display: flex; flex-direction: column; }
+        .op-stat-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #ccc; background: #fafafa; padding: 10px; }
+        .op-config-header { padding: 8px 12px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .op-config-body { padding: 10px; overflow-y: auto; flex: 1; }
+        
+        .action-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+        .action-row:last-child { border-bottom: none; }
+        .action-inputs { display: flex; gap: 5px; width: 100%; align-items: center; }
+        .action-row input[type="text"] { flex: 1; padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; min-width: 50px; }
+        .action-row input[type="number"] { padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; text-align: center; }
+        .action-row input.time-input { width: 45px; flex-shrink: 0; } 
+        .action-row input.cycles-input { width: 40px; flex-shrink: 0; } 
+        .action-row select { padding: 4px; font-size: 11px; border: 1px solid #ddd; border-radius: 3px; flex-shrink: 0; }
+        .action-controls { display: flex; gap: 5px; width: 100%; justify-content: flex-end; margin-top: 2px; }
+        
+        .btn-record { background: white; border: 1px solid #ccc; color: #555; flex: 1; justify-content: center; font-size: 11px; }
+        .btn-record.recording { background: #ffebee; color: #e74c3c; border-color: #e74c3c; animation: pulse 1.5s infinite; }
+        .btn-record.has-path { background: #e8f5e9; color: #27ae60; border-color: #27ae60; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+        .btn-add-action { background: #f1f2f6; color: #333; width: 100%; justify-content: center; margin-top: 5px; border: 1px dashed #ccc;}
+        .btn-delete-action { background: white; border: 1px solid #ffcdd2; color: #e74c3c; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        /* ATELIER & OBJETS (COULEURS RESTAURÉES) */
         .workshop-container {
             position: relative;
             width: calc(var(--room-w) * var(--scale)); 
@@ -170,6 +169,7 @@
             background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: calc(var(--scale) * 1.5) calc(var(--scale) * 1.5); 
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: visible; 
             margin-bottom: 50px;
         }
 
@@ -177,42 +177,37 @@
             position: absolute; background: rgba(52, 152, 219, 0.9);
             border: 2px solid var(--box-border); border-radius: 4px; color: white;
             display: flex; align-items: center; justify-content: center;
-            font-size: 12px; cursor: grab; user-select: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10;
+            font-size: 12px; text-align: center; cursor: grab; user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; min-width: 20px; min-height: 20px;
         }
-        .machine.person { border-radius: 50%; font-size: 10px; border: 2px solid white; }
-        .machine.palette { background: rgba(211, 84, 0, 0.8); border-color: #a04000; }
-        .machine.scale-machine { background: rgba(39, 174, 96, 0.9); border-color: #1e8449; border-style: dashed; }
-        .machine.editing { cursor: text; background: white !important; color: #333 !important; border-color: var(--accent) !important; z-index: 50; }
         
+        /* RESTAURATION DES CLASSES COULEURS */
+        .machine.person { border-radius: 50%; font-size: 10px; border: 2px solid white; }
+        .machine.palette { background: rgba(211, 84, 0, 0.8); border-color: #a04000; border-radius: 2px; }
+        .machine.scale-machine { background: rgba(39, 174, 96, 0.9); border-color: #1e8449; border-style: dashed; }
+        .machine.waypoint { background: rgba(142, 68, 173, 0.6); border: 2px solid var(--waypoint-bg); border-radius: 50%; font-size: 0; }
+        .machine.waypoint::after { content: "+"; font-size: 14px; color: white; font-weight: bold; }
+        .machine.pillar { background: #000000; border: 2px solid #333; color: white; border-radius: 0; }
+        .machine.selected { box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.8); }
+        .machine.editing { cursor: text; background: white !important; color: #333 !important; border-color: var(--accent) !important; z-index: 50; }
+        .machine:active { cursor: grabbing; z-index: 1000 !important; }
+
         .resize-handle {
-            width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0; cursor: se-resize;
+            width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0; cursor: se-resize; z-index: 15;
             clip-path: polygon(100% 0, 100% 100%, 0 100%);
         }
 
-        /* SVG TRAJETS */
-        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        path { fill: none; stroke-width: 3; stroke-dasharray: 5; opacity: 0.8; }
-
-        /* BOTTOM PANEL */
-        .bottom-panel {
-            height: 280px; background: white; border-top: 1px solid #ddd;
-            display: flex; flex-direction: column; z-index: 20; width: 100%;
-        }
-        .bottom-panel.collapsed { display: none; }
-        .config-list { display: flex; overflow-x: auto; gap: 15px; padding: 10px; background: #fafafa; flex: 1; }
-        .op-config-card { background: white; border: 1px solid #e0e0e0; min-width: 320px; display: flex; flex-direction: column; border-radius: 6px; }
-        .action-row { display: flex; flex-direction: column; gap: 5px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 8px; }
-        .action-inputs { display: flex; gap: 5px; align-items: center; }
-        
-        .btn-record { background: white; border: 1px solid #ccc; flex: 1; font-size: 11px; }
-        .btn-record.recording { background: #ffebee; color: #e74c3c; border-color: #e74c3c; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
-
         /* STATS */
-        .op-stat-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 15px; padding: 10px; border-left: 4px solid #ccc; }
+        .op-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
+        .task-detail { font-size: 0.85em; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 5px; margin-bottom: 5px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 2px; align-items: center; }
+        .step-badge { position: absolute; top: -8px; right: -8px; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 100; border: 1px solid white; }
         .progress-bar-bg { background: #eee; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
-        .progress-bar-fill { height: 100%; transition: width 0.3s ease; }
+        .progress-bar-fill { height: 100%; transition: width 0.3s ease, background-color 0.3s ease; }
+
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        path { fill: none; stroke-width: 3; stroke-dasharray: 5; animation: dash 30s linear infinite; opacity: 0.8; }
+        @keyframes dash { to { stroke-dashoffset: -1000; } }
     </style>
 </head>
 <body>
@@ -220,16 +215,16 @@
     <div id="loginOverlay">
         <div class="login-box">
             <h2>🔒 Accès FABIE</h2>
-            <div class="login-field">
-                <label>Identifiant (Votre Prénom/Nom)</label>
-                <input type="text" id="usernameInput" placeholder="Ex: Erwan V.">
+            <div style="text-align:left; margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold; color:#777;">Identifiant</label>
+                <input type="text" id="usernameInput" placeholder="Ex: Erwan">
             </div>
-            <div class="login-field">
-                <label>Mot de passe</label>
+            <div style="text-align:left; margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold; color:#777;">Mot de passe</label>
                 <input type="password" id="passwordInput" placeholder="••••••••">
             </div>
             <button class="login-btn" onclick="checkLogin()">Connexion</button>
-            <p id="loginError" style="color:#ff6b6b; font-size:13px; display:none; margin-top:10px;">⚠️ Mot de passe incorrect.</p>
+            <p id="loginError" style="color:#e74c3c; font-size:13px; display:none; margin-top:10px;">Mot de passe incorrect</p>
         </div>
     </div>
 
@@ -238,30 +233,24 @@
             <span>🗂️ Mes Scénarios</span>
             <button onclick="toggleScenarioPanel()" style="background:transparent; border:1px solid white; color:white;">✖</button>
         </div>
-        <div style="padding: 10px; background: #fff; border-bottom: 1px solid #eee;">
-            <button class="btn-save-new" onclick="saveNewScenario()" style="width:100%; justify-content:center;">+ Créer Nouveau Scénario</button>
-            <div style="font-size:11px; color:#777; margin-top:5px; text-align:center;">Sauvegarde automatique dans le navigateur</div>
+        <div style="padding:10px;">
+            <button onclick="saveNewScenario()" class="btn-save" style="width:100%; justify-content:center;">+ Nouveau Scénario</button>
         </div>
-        <div class="sc-list" id="scenarioList">
-            </div>
-        <div style="padding:10px; border-top:1px solid #eee; text-align:center;">
-             <button onclick="exportJSON()" style="width:100%; background:#95a5a6; color:white; justify-content:center;">💾 Export Backup (Fichier)</button>
-             <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importJSON(this)">
-             <button onclick="document.getElementById('fileInput').click()" style="width:100%; background:#fff; color:#555; border:1px solid #ddd; justify-content:center; margin-top:5px;">📂 Import Fichier</button>
-        </div>
+        <div class="sc-list" id="scenarioList"></div>
     </div>
 
     <div class="main-wrapper">
         <div class="main-content">
             <header>
                 <h1>Simulateur Atelier FABIE</h1>
-                <div class="user-badge" id="userDisplay" style="display:none;">
-                    👤 <span id="userNameSpan">Invité</span>
-                </div>
+                <div class="user-badge" id="userBadge" style="display:none;">👤 <span id="userNameDisplay">User</span></div>
             </header>
 
             <div class="top-bar">
                 <button class="btn-menu" onclick="toggleScenarioPanel()">☰ Scénarios</button>
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
+
+                <div id="trashBin" class="trash-zone">🗑️ Corbeille</div>
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
 
                 <button class="btn-add" onclick="addMachine()">+ Machine</button>
@@ -273,52 +262,57 @@
                 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
                 
+                <button class="btn-save" onclick="quickSave()">💾 Sauvegarder</button>
                 <button class="btn-clear" onclick="resetAll()">Tout Effacer</button>
                 <button onclick="toggleConfigPanel()" id="btnToggleConfig" style="background: #7f8c8d; color: white;">👁️ Cacher Gammes</button>
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
                 
-                <div style="display:flex; align-items:center; gap:3px;">
+                <div style="display:flex; align-items:center; gap:3px;" title="Temps de travail global">
                     <label style="font-size:12px; font-weight:bold; color:#555;">T. Ref:</label>
-                    <input type="number" id="globalWorkHours" value="7" min="0" onchange="calculateAndDraw()" style="width:35px; text-align:center;">h
+                    <input type="number" id="globalWorkHours" value="7" min="0" onchange="calculateAndDraw()" style="width:40px; padding:4px; font-size:12px; border:1px solid #ddd; border-radius:4px; text-align:center;">
                 </div>
             </div>
 
             <div class="workshop-container" id="workshop">
                 <svg id="connections"></svg>
-                </div>
+                <div class="machine" style="left: 30px; top: 250px; width: 45px; height: 30px;" id="m1">Entrée</div>
+                <div class="machine" style="left: 500px; top: 30px; width: 45px; height: 30px;" id="m3">Sortie</div>
+            </div>
         </div>
 
         <div class="stats-sidebar" id="statsPanel">
-            <div class="panel-header" style="padding:10px; background:#f8f9fa; font-weight:bold; display:flex; justify-content:space-between;">
+            <div class="panel-header">
                 <span>📊 Analyse Charge</span>
-                <button onclick="document.getElementById('statsPanel').style.display='none'">×</button>
+                <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px;">×</button>
             </div>
             <div class="panel-body" id="statsContent"></div>
         </div>
     </div>
 
     <div class="bottom-panel">
-        <div class="panel-header" style="padding:10px; background:#f8f9fa; font-weight:bold;">⚙️ Gammes Opératoires</div>
-        <div class="config-list" id="configList"></div>
+        <div class="panel-header">⚙️ Gammes Opératoires</div>
+        <div class="config-list" id="configList">
+            <div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">
+                1. Ajoutez un opérateur.<br>2. Créez ses tâches.<br>3. Cliquez "Trajet" pour tracer.
+            </div>
+        </div>
     </div>
 
-    <div id="trashBin" style="position:fixed; bottom:-100px;"></div>
-
     <script>
-        // --- 1. GESTION DU LOGIN & SESSION ---
-        let currentUser = "Utilisateur";
+        // --- LOGIN ---
+        let currentUser = "Guest";
+        let activeScenarioId = null;
 
         function checkLogin() {
             const user = document.getElementById('usernameInput').value;
             const pass = document.getElementById('passwordInput').value;
-            
-            if(pass === "FABIE2026" && user.trim() !== "") { 
-                currentUser = user;
-                document.getElementById('userNameSpan').textContent = currentUser;
-                document.getElementById('userDisplay').style.display = 'flex';
+            if(pass === "FABIE2026") {
+                currentUser = user || "Utilisateur";
                 document.getElementById('loginOverlay').style.display = 'none';
-                loadScenariosFromStorage(); // Charger la liste
+                document.getElementById('userBadge').style.display = 'block';
+                document.getElementById('userNameDisplay').textContent = currentUser;
+                loadScenariosFromStorage();
             } else {
                 document.getElementById('loginError').style.display = 'block';
             }
@@ -328,8 +322,9 @@
         const workshop = document.getElementById('workshop');
         const svg = document.getElementById('connections');
         const statsPanel = document.getElementById('statsPanel');
+        const statsContent = document.getElementById('statsContent');
+        const trashBin = document.getElementById('trashBin');
         const configList = document.getElementById('configList');
-        const scenarioListDiv = document.getElementById('scenarioList');
         
         const PIXELS_PER_METER = 30; 
         const WALKING_SPEED_M_S = 1.4;
@@ -337,377 +332,430 @@
         
         let operatorData = {}; 
         let recordingState = null; 
-        let activeScenarioId = null; // ID du scénario en cours
 
-        // --- INIT ---
-        createMachineElement('m1', 'Entrée', 30, 250, 45, 30, 'machine');
-        createMachineElement('m3', 'Sortie', 500, 30, 45, 30, 'machine');
+        // --- INIT & DRAG (AVEC LOGIQUE CORBEILLE RESTAURÉE) ---
+        let activeItem = null;
+        let initialX, initialY, initialLeft, initialTop;
 
-        // --- GESTION SCENARIOS (LOCALSTORAGE) ---
-        
+        document.querySelectorAll('.machine').forEach(initMachine);
+
+        function initMachine(item) {
+            setupDrag(item);
+            makeResizable(item);
+            item.ondblclick = function(e) { if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') makeEditable(this); };
+        }
+
+        function setupDrag(item) {
+            item.addEventListener('mousedown', dragStart);
+            item.addEventListener('click', (e) => { if(recordingState) handleFluxClick(item); });
+        }
+
+        function dragStart(e) {
+            if (recordingState) return; 
+            if (e.target.isContentEditable || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.classList.contains('resize-handle')) return;
+
+            activeItem = e.currentTarget; 
+            initialX = e.clientX; initialY = e.clientY;
+            initialLeft = parseInt(activeItem.style.left); initialTop = parseInt(activeItem.style.top);
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+        }
+
+        function drag(e) {
+            if (!activeItem) return;
+            e.preventDefault();
+            activeItem.style.left = (initialLeft + e.clientX - initialX) + "px";
+            activeItem.style.top = (initialTop + e.clientY - initialY) + "px";
+            
+            const trashRect = trashBin.getBoundingClientRect();
+            const itemRect = activeItem.getBoundingClientRect();
+            if (isOverlap(trashRect, itemRect)) trashBin.classList.add('drag-over');
+            else trashBin.classList.remove('drag-over');
+
+            calculateAndDraw();
+        }
+
+        function dragEnd() {
+            if (activeItem) {
+                const trashRect = trashBin.getBoundingClientRect();
+                const itemRect = activeItem.getBoundingClientRect();
+                if (isOverlap(trashRect, itemRect)) deleteItem(activeItem);
+            }
+            trashBin.classList.remove('drag-over');
+            activeItem = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', dragEnd);
+        }
+
+        function isOverlap(rect1, rect2) {
+            return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
+        }
+
+        function deleteItem(item) {
+            const id = item.id;
+            if (item.classList.contains('person')) {
+                delete operatorData[id];
+                const configCard = document.getElementById('config-' + id);
+                if (configCard) configCard.remove();
+                if(Object.keys(operatorData).length === 0) configList.innerHTML = '<div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">Ajoutez un opérateur...</div>';
+            } else {
+                for (const opId in operatorData) {
+                    operatorData[opId].tasks.forEach(task => { task.steps = task.steps.filter(step => step !== item); });
+                }
+            }
+            item.remove();
+            calculateAndDraw();
+        }
+
+        // --- SCENARIO MANAGEMENT ---
         function toggleScenarioPanel() {
             document.getElementById('scenarioSidebar').classList.toggle('open');
         }
 
-        function getSavedScenarios() {
-            const stored = localStorage.getItem('fabie_scenarios');
-            return stored ? JSON.parse(stored) : [];
+        function getScenarios() {
+            const s = localStorage.getItem('fabie_scenarios');
+            return s ? JSON.parse(s) : [];
         }
 
-        function saveScenariosToStorage(scenarios) {
-            localStorage.setItem('fabie_scenarios', JSON.stringify(scenarios));
-            renderScenarioList();
+        function saveScenarios(list) {
+            localStorage.setItem('fabie_scenarios', JSON.stringify(list));
+            loadScenariosFromStorage();
         }
 
-        function captureCurrentState() {
-            const machinesLayout = [];
+        function captureState() {
+            const layout = [];
             document.querySelectorAll('.machine').forEach(el => {
-                machinesLayout.push({
+                layout.push({
                     id: el.id,
                     text: el.childNodes[0]?.nodeType === 3 ? el.childNodes[0].textContent : '',
-                    left: parseInt(el.style.left),
-                    top: parseInt(el.style.top),
-                    width: parseInt(el.style.width),
-                    height: parseInt(el.style.height),
-                    className: el.className,
-                    bgColor: el.style.backgroundColor
+                    left: parseInt(el.style.left), top: parseInt(el.style.top),
+                    width: parseInt(el.style.width), height: parseInt(el.style.height),
+                    className: el.className, bgColor: el.style.backgroundColor
                 });
             });
-
-            // Conversion data opérateurs pour stockage (ID refs)
-            const serializableOpData = JSON.parse(JSON.stringify(operatorData));
-            for(const opId in serializableOpData) {
-                serializableOpData[opId].tasks.forEach((task, index) => {
-                    task.steps = operatorData[opId].tasks[index].steps.map(step => step.id);
+            // Conversion Op Data pour sauvegarde (IDs)
+            const opExport = JSON.parse(JSON.stringify(operatorData));
+            for(let opId in opExport) {
+                opExport[opId].tasks.forEach((t, i) => {
+                    t.steps = operatorData[opId].tasks[i].steps.map(s => s.id);
                 });
             }
+            return { layout, operators: opExport, globalHours: document.getElementById('globalWorkHours').value };
+        }
 
-            return {
-                layout: machinesLayout,
-                operators: serializableOpData,
-                globalHours: document.getElementById('globalWorkHours').value
-            };
+        function quickSave() {
+            if(activeScenarioId) {
+                const list = getScenarios();
+                const sc = list.find(s => s.id === activeScenarioId);
+                if(sc) {
+                    sc.data = captureState();
+                    sc.date = new Date().toLocaleString();
+                    saveScenarios(list);
+                    alert("Scénario mis à jour !");
+                } else { saveNewScenario(); }
+            } else { saveNewScenario(); }
         }
 
         function saveNewScenario() {
-            const name = prompt("Nom du nouveau scénario :", "Scénario " + new Date().toLocaleTimeString());
+            const name = prompt("Nom du scénario :", "Scénario " + new Date().toLocaleTimeString());
             if(!name) return;
-
-            const scenarios = getSavedScenarios();
-            const newId = 'sc_' + Date.now();
-            
-            scenarios.push({
-                id: newId,
-                name: name,
-                author: currentUser,
-                date: new Date().toLocaleString(),
-                data: captureCurrentState()
-            });
-
-            saveScenariosToStorage(scenarios);
-            activeScenarioId = newId;
-            alert(`Scénario "${name}" sauvegardé !`);
+            const list = getScenarios();
+            const id = 'sc_' + Date.now();
+            list.push({ id, name, author: currentUser, date: new Date().toLocaleString(), data: captureState() });
+            saveScenarios(list);
+            activeScenarioId = id;
+            alert("Scénario sauvegardé !");
         }
 
         function loadScenario(id) {
-            const scenarios = getSavedScenarios();
-            const scenario = scenarios.find(s => s.id === id);
-            if(!scenario) return;
+            const list = getScenarios();
+            const sc = list.find(s => s.id === id);
+            if(!sc) return;
+            if(!confirm("Charger ce scénario ?")) return;
 
-            if(!confirm("Charger ce scénario ? (Les modifications non sauvegardées seront perdues)")) return;
-
-            // 1. Reset
             workshop.innerHTML = '<svg id="connections"></svg>';
-            configList.innerHTML = '';
-            operatorData = {};
-            statsPanel.style.display = 'none';
+            operatorData = {}; configList.innerHTML = ''; statsPanel.style.display='none';
 
-            // 2. Load
-            const data = scenario.data;
-            document.getElementById('globalWorkHours').value = data.globalHours || 7;
+            document.getElementById('globalWorkHours').value = sc.data.globalHours || 7;
 
-            data.layout.forEach(item => {
-                const div = createMachineElement(item.id, item.text, item.left, item.top, item.width, item.height, item.className, item.bgColor);
-                if(!item.className.includes('person') && !item.className.includes('waypoint') && div.childNodes[0]) {
-                     div.childNodes[0].textContent = item.text;
-                }
+            sc.data.layout.forEach(item => {
+                const div = document.createElement('div');
+                div.className = item.className; div.id = item.id;
+                div.style.left = item.left + 'px'; div.style.top = item.top + 'px';
+                div.style.width = item.width + 'px'; div.style.height = item.height + 'px';
+                if(item.bgColor) div.style.backgroundColor = item.bgColor;
+                if(!item.className.includes('person') && !item.className.includes('waypoint')) div.textContent = item.text;
+                workshop.appendChild(div);
+                initMachine(div);
             });
 
-            operatorData = data.operators;
-            for(const opId in operatorData) {
-                const opData = operatorData[opId];
-                const opDiv = document.getElementById(opId);
-                const opName = opDiv ? opDiv.textContent : "Opérateur"; // Hack si nom perdu
-                addConfigCard(opId, opName, opData.color); 
-
-                opData.tasks.forEach(task => {
-                    task.steps = task.steps.map(stepId => document.getElementById(stepId)).filter(el => el != null);
+            operatorData = sc.data.operators;
+            for(let opId in operatorData) {
+                const d = operatorData[opId];
+                const el = document.getElementById(opId);
+                addConfigCard(opId, el ? el.textContent : 'Op', d.color);
+                d.tasks.forEach(t => {
+                    t.steps = t.steps.map(sid => document.getElementById(sid)).filter(x => x);
                 });
             }
+            // Re-render tasks
+            for(let opId in operatorData) {
+                document.getElementById('tasks-'+opId).innerHTML = '';
+                operatorData[opId].tasks.forEach(t => renderTaskRow(opId, t));
+            }
 
-            calculateAndDraw();
             activeScenarioId = id;
-            renderScenarioList(); // update active class
-            toggleScenarioPanel(); // fermer le panneau
-        }
-
-        function duplicateScenario(id) {
-            const scenarios = getSavedScenarios();
-            const original = scenarios.find(s => s.id === id);
-            if(!original) return;
-
-            const newId = 'sc_' + Date.now();
-            scenarios.push({
-                id: newId,
-                name: original.name + " (Copie)",
-                author: currentUser,
-                date: new Date().toLocaleString(),
-                data: original.data // Copie des données
-            });
-            saveScenariosToStorage(scenarios);
+            calculateAndDraw();
+            toggleScenarioPanel();
         }
 
         function deleteScenario(id) {
-            if(!confirm("Supprimer définitivement ce scénario ?")) return;
-            let scenarios = getSavedScenarios();
-            scenarios = scenarios.filter(s => s.id !== id);
-            saveScenariosToStorage(scenarios);
+            if(!confirm("Supprimer ?")) return;
+            saveScenarios(getScenarios().filter(s => s.id !== id));
         }
 
-        function renameScenario(id) {
-            let scenarios = getSavedScenarios();
-            const scenario = scenarios.find(s => s.id === id);
-            if(scenario) {
-                const newName = prompt("Nouveau nom :", scenario.name);
-                if(newName) {
-                    scenario.name = newName;
-                    saveScenariosToStorage(scenarios);
-                }
-            }
-        }
-
-        function renderScenarioList() {
-            const scenarios = getSavedScenarios();
-            scenarioListDiv.innerHTML = '';
-            
-            if(scenarios.length === 0) {
-                scenarioListDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Aucun scénario sauvegardé.</div>';
-                return;
-            }
-
-            scenarios.forEach(sc => {
-                const isActive = sc.id === activeScenarioId ? 'active' : '';
-                const card = document.createElement('div');
-                card.className = `sc-card ${isActive}`;
-                card.innerHTML = `
-                    <div class="sc-title">${sc.name}</div>
-                    <div class="sc-meta">
-                        <span>👤 ${sc.author}</span>
-                        <span>📅 ${sc.date.split(' ')[0]}</span>
-                    </div>
+        function loadScenariosFromStorage() {
+            const list = getScenarios();
+            const container = document.getElementById('scenarioList');
+            container.innerHTML = '';
+            if(list.length === 0) container.innerHTML = '<div style="color:#777; text-align:center;">Aucun scénario.</div>';
+            list.forEach(s => {
+                const div = document.createElement('div');
+                div.className = `sc-card ${s.id === activeScenarioId ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div>${s.name} <span style="font-size:10px; color:#777;">(${s.author})</span></div>
                     <div class="sc-actions">
-                        <div class="btn-sc load" onclick="loadScenario('${sc.id}')">📂 Ouvrir</div>
-                        <div class="btn-sc" onclick="renameScenario('${sc.id}')">✏️</div>
-                        <div class="btn-sc" onclick="duplicateScenario('${sc.id}')">📋</div>
-                        <div class="btn-sc delete" onclick="deleteScenario('${sc.id}')">🗑️</div>
+                        <button class="btn-sm" onclick="loadScenario('${s.id}')">📂 Ouvrir</button>
+                        <button class="btn-sm btn-delete-action" onclick="deleteScenario('${s.id}')">🗑️</button>
                     </div>
                 `;
-                scenarioListDiv.appendChild(card);
+                container.appendChild(div);
             });
         }
 
-        function loadScenariosFromStorage() { renderScenarioList(); }
-        
-        // Export Fichier (Backup)
-        function exportJSON() {
-            const data = captureCurrentState();
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "backup_fabie_" + Date.now() + ".json");
-            document.body.appendChild(dl); dl.click(); dl.remove();
+        // --- FACTORIES (AVEC CLASSES COULEURS) ---
+        function createObj(name, w, h) {
+            const div = document.createElement('div'); div.className = 'machine'; div.textContent = name;
+            div.style.left = '50px'; div.style.top = '50px'; div.style.width = w + 'px'; div.style.height = h + 'px';
+            div.id = 'obj-' + Date.now() + Math.random().toString(36).substr(2, 9);
+            workshop.appendChild(div); initMachine(div); return div;
         }
-
-        // Import Fichier (Backup)
-        function importJSON(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    // Création d'un scénario importé
-                    const scenarios = getSavedScenarios();
-                    scenarios.push({
-                        id: 'sc_imp_' + Date.now(),
-                        name: "Import " + file.name,
-                        author: currentUser,
-                        date: new Date().toLocaleString(),
-                        data: data
-                    });
-                    saveScenariosToStorage(scenarios);
-                    alert("Importé dans la liste !");
-                } catch(err) { alert("Erreur fichier"); }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- FACTORIES (MACHINES) ---
-        function createMachineElement(id, text, x, y, w, h, classes, bgColor = null) {
-            const div = document.createElement('div');
-            div.className = classes; div.id = id; div.textContent = text;
-            div.style.left = x + 'px'; div.style.top = y + 'px';
-            div.style.width = w + 'px'; div.style.height = h + 'px';
-            if(bgColor) div.style.backgroundColor = bgColor;
-            workshop.appendChild(div);
-            initMachine(div);
-            return div;
-        }
-
-        function initMachine(item) {
-            item.addEventListener('mousedown', dragStart);
-            makeResizable(item);
-            item.ondblclick = function(e) { if(e.target.tagName !== 'INPUT') makeEditable(this); };
-            item.addEventListener('click', (e) => { if(recordingState) handleFluxClick(item); });
-        }
-
-        // --- DRAG & DROP SIMPLIFIÉ ---
-        let dragItem = null; let offX=0, offY=0;
-        function dragStart(e) {
-            if (recordingState || e.target.classList.contains('resize-handle') || e.target.tagName==='INPUT') return;
-            dragItem = e.currentTarget;
-            const rect = dragItem.getBoundingClientRect();
-            offX = e.clientX - rect.left; offY = e.clientY - rect.top;
-            document.addEventListener('mousemove', dragging);
-            document.addEventListener('mouseup', dragStop);
-        }
-        function dragging(e) {
-            if(!dragItem) return;
-            const containerRect = workshop.getBoundingClientRect();
-            let x = e.clientX - containerRect.left - offX;
-            let y = e.clientY - containerRect.top - offY;
-            dragItem.style.left = x + 'px'; dragItem.style.top = y + 'px';
-            calculateAndDraw();
-        }
-        function dragStop() {
-            dragItem = null;
-            document.removeEventListener('mousemove', dragging);
-            document.removeEventListener('mouseup', dragStop);
-        }
-
-        // --- UTILITAIRES CREATION ---
-        function addMachine() { createMachineElement("M"+Date.now(), "Mach.", 50, 50, 45, 30, 'machine'); }
-        function addPalette() { createMachineElement("Pal"+Date.now(), "Pal.", 50, 50, 36, 24, 'machine palette'); }
-        function addScale() { createMachineElement("Sc"+Date.now(), "Ech.", 50, 50, 24, 24, 'machine scale-machine'); }
-        function addPillar() { createMachineElement("Pil"+Date.now(), "", 50, 50, 15, 15, 'machine pillar'); }
-        function addWaypoint() { createMachineElement("Way"+Date.now(), "", 50, 50, 15, 15, 'machine waypoint'); }
-        
+        function addMachine() { createObj("M" + (document.querySelectorAll('.machine:not(.person):not(.waypoint):not(.pillar):not(.palette):not(.scale-machine)').length + 1), 45, 30); }
+        function addPalette() { const d = createObj("Pal", 36, 24); d.classList.add("palette"); d.textContent="Palette"; }
+        function addScale() { const d = createObj("Ech", 24, 24); d.classList.add("scale-machine"); d.textContent="Échelle"; }
+        function addPillar() { const d = createObj("", 15, 15); d.classList.add("pillar"); d.title="Pilier"; }
+        function addWaypoint() { const d = createObj("", 15, 15); d.classList.add("waypoint"); d.title="Passage"; }
         function addPerson() {
-            const id = "Op_" + Date.now();
-            const index = document.querySelectorAll('.person').length; 
-            const color = OP_COLORS[index % OP_COLORS.length]; 
-            const name = "Op" + (index + 1);
-            const div = createMachineElement(id, name, 50, 50, 24, 24, 'machine person', color);
+            const index = document.querySelectorAll('.person').length; const color = OP_COLORS[index % OP_COLORS.length]; const name = "Op" + (index + 1);
+            const div = createObj(name, 24, 24); div.classList.add('person'); div.style.backgroundColor = color;
             addConfigCard(div.id, name, color);
         }
 
-        // --- GAMMES & LOGIQUE METIER (SIMPLIFIE POUR PLACE) ---
-        // (Copie exacte de la logique précédente pour renderTaskRow, calculateAndDraw, etc.)
-        // Je réintègre les fonctions essentielles ici pour que le code fonctionne seul.
+        // --- LOGIQUE METIER & CALCULS ---
+        function formatTime(seconds) {
+            if (seconds === 0) return "0s";
+            const h = Math.floor(seconds / 3600); const m = Math.floor((seconds % 3600) / 60); const s = Math.floor(seconds % 60);
+            let res = ""; if (h > 0) res += h + "h "; if (m > 0) res += m + "m "; if (s > 0 || res === "") res += s + "s";
+            return res.trim();
+        }
 
         function addConfigCard(opId, opName, color) {
             if(document.getElementById('config-' + opId)) return;
-            const card = document.createElement('div'); card.className = 'op-config-card'; card.id = 'config-' + opId;
-            card.innerHTML = `<div class="sc-header" style="background:${color}; padding:8px;">${opName}</div><div class="config-list" id="tasks-${opId}" style="flex-direction:column; background:white;"></div><button onclick="addTask('${opId}')" style="width:100%; justify-content:center; background:#eee; color:#333;">+ Tâche</button>`;
+            if(configList.querySelector('div')?.textContent.includes('Ajoutez un opérateur')) configList.innerHTML = '';
+            const card = document.createElement('div');
+            card.className = 'op-config-card'; card.id = 'config-' + opId;
+            card.innerHTML = `
+                <div class="op-config-header" style="background-color: ${color}"><span>${opName}</span></div>
+                <div style="padding: 5px 10px; background:#f1f2f6; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+                    <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod:</strong>
+                    <div><input type="number" value="1" min="1" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateTargetRacks('${opId}', this.value)"> Échelles</div>
+                </div>
+                <div class="op-config-body"><div id="tasks-${opId}"></div><button class="btn-sm btn-add-action" onclick="addTask('${opId}')">+ Ajouter Tâche</button></div>
+            `;
             configList.appendChild(card);
-            if(!operatorData[opId]) { operatorData[opId] = { color: color, targetRacks: 1, tasks: [] }; addTask(opId, "Tâche 1"); }
+            if(!operatorData[opId]) { operatorData[opId] = { color: color, targetRacks: 1, tasks: [] }; addTask(opId, "Remplir grille", 10, 'per_grid'); }
         }
 
-        function addTask(opId, name="Tâche") {
-            const task = { id: 't'+Date.now()+Math.random().toString(16).slice(2), name: name, time: 10, freqValue: 1, freqType: 'per_grid', steps: [] };
+        function updateTargetRacks(opId, val) { if(operatorData[opId]) { operatorData[opId].targetRacks = parseInt(val) || 1; calculateAndDraw(); } }
+
+        function addTask(opId, defaultName="Tâche", defaultTime=10, defaultType='total') {
+            const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
+            const task = { id: taskId, name: defaultName, time: defaultTime, freqValue: 1, freqType: defaultType, steps: [] };
             operatorData[opId].tasks.push(task);
             renderTaskRow(opId, task);
         }
 
         function renderTaskRow(opId, task) {
-            const div = document.createElement('div'); div.className = 'action-row'; div.id = 'row-'+task.id;
-            div.innerHTML = `
+            const row = document.createElement('div'); row.className = 'action-row'; row.id = `row-${task.id}`;
+            const selTotal = task.freqType === 'total' ? 'selected' : '';
+            const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
+            const selRack = task.freqType === 'per_rack' ? 'selected' : '';
+            row.innerHTML = `
                 <div class="action-inputs">
-                    <input value="${task.name}" onchange="updTask('${opId}','${task.id}','name',this.value)" style="width:70px;">
-                    <input type="number" value="${task.time}" onchange="updTask('${opId}','${task.id}','time',this.value)" style="width:40px;">s
-                    <button id="btn-rec-${task.id}" class="btn-record" onclick="toggleRecord('${opId}','${task.id}')">📍</button>
-                    <button onclick="delTask('${opId}','${task.id}')" style="color:red;">🗑️</button>
+                    <input type="text" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)">
+                    <input type="number" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)">
+                    <span style="font-size:12px; color:#555;">x</span>
+                    <input type="number" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)">
+                    <select onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)">
+                        <option value="total" ${selTotal}>/ Jour</option><option value="per_grid" ${selGrid}>/ Grille</option><option value="per_rack" ${selRack}>/ Échelle</option>
+                    </select>
+                </div>
+                <div class="action-controls">
+                    <button id="btn-rec-${task.id}" class="btn-record ${task.steps.length>0?'has-path':''}" onclick="toggleRecord('${opId}', '${task.id}')">${task.steps.length>0?'✅ OK':'📍 Trajet'}</button>
+                    <button class="btn-sm btn-delete-action" onclick="deleteTask('${opId}', '${task.id}')">🗑️</button>
                 </div>`;
-            document.getElementById(`tasks-${opId}`).appendChild(div);
+            document.getElementById(`tasks-${opId}`).appendChild(row);
         }
 
-        function updTask(opId, tId, key, val) { 
-            const t = operatorData[opId].tasks.find(x => x.id === tId); 
-            if(t) { t[key] = (key==='time') ? parseFloat(val) : val; calculateAndDraw(); }
-        }
-        function delTask(opId, tId) {
-            operatorData[opId].tasks = operatorData[opId].tasks.filter(t => t.id !== tId);
-            document.getElementById('row-'+tId).remove(); calculateAndDraw();
+        function updateTaskMeta(opId, taskId, field, value) {
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if(task) { task[field] = (field === 'time' || field === 'freqValue') ? parseFloat(value) : value; calculateAndDraw(); }
         }
 
-        function toggleRecord(opId, tId) {
-            if(recordingState) stopRecording();
-            else { recordingState = {opId, tId}; document.getElementById('btn-rec-'+tId).classList.add('recording'); workshop.style.cursor="crosshair"; }
+        function deleteTask(opId, taskId) {
+            if(recordingState && recordingState.taskId === taskId) stopRecording();
+            operatorData[opId].tasks = operatorData[opId].tasks.filter(t => t.id !== taskId);
+            document.getElementById(`row-${taskId}`).remove(); calculateAndDraw();
         }
+
+        function toggleRecord(opId, taskId) {
+            if (recordingState && recordingState.taskId === taskId) { stopRecording(); return; }
+            if (recordingState) stopRecording();
+            recordingState = { opId, taskId };
+            const btn = document.getElementById(`btn-rec-${taskId}`);
+            btn.innerHTML = "🔴 Enreg."; btn.classList.add("recording");
+            workshop.style.cursor = "crosshair";
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if(task) task.steps = [];
+            calculateAndDraw();
+        }
+
         function stopRecording() {
-            if(recordingState) { document.getElementById('btn-rec-'+recordingState.tId).classList.remove('recording'); recordingState=null; workshop.style.cursor="default"; }
+            if (!recordingState) return;
+            const { opId, taskId } = recordingState;
+            const btn = document.getElementById(`btn-rec-${taskId}`);
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            btn.innerHTML = (task && task.steps.length > 0) ? "✅ OK" : "📍 Trajet";
+            btn.classList.remove("recording");
+            if(task && task.steps.length > 0) btn.classList.add("has-path"); else btn.classList.remove("has-path");
+            recordingState = null; workshop.style.cursor = "default";
         }
+
         function handleFluxClick(item) {
-            if(!recordingState) return;
-            const t = operatorData[recordingState.opId].tasks.find(x=>x.id===recordingState.tId);
-            t.steps.push(item); calculateAndDraw();
-        }
-
-        // --- CALCUL RAPIDE (Version compacte pour tenir dans la réponse) ---
-        function calculateAndDraw() {
-            svg.innerHTML = ''; statsContent.innerHTML = '';
-            let hasData = false;
-            for(const opId in operatorData) {
-                const d = operatorData[opId];
-                let dist=0, time=0;
-                d.tasks.forEach(t => {
-                    if(t.steps.length > 1) {
-                        hasData = true;
-                        let path = "";
-                        for(let i=0; i<t.steps.length; i++) {
-                            const el = t.steps[i]; if(!el || !el.isConnected) continue;
-                            const r = el.getBoundingClientRect(); const p = el.parentElement.getBoundingClientRect();
-                            const x = r.left - p.left + r.width/2; const y = r.top - p.top + r.height/2;
-                            path += (i===0?"M":"L") + x + " " + y;
-                            if(i>0) { 
-                                const prev = t.steps[i-1].getBoundingClientRect();
-                                const dx = x - (prev.left-p.left+prev.width/2);
-                                const dy = y - (prev.top-p.top+prev.height/2);
-                                dist += Math.sqrt(dx*dx+dy*dy);
-                            }
-                        }
-                        const pEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                        pEl.setAttribute("d", path); pEl.style.stroke = d.color; svg.appendChild(pEl);
-                    }
-                    time += t.time; // Simplification calcul
-                });
-                
-                if(dist > 0 || time > 0) {
-                    const meters = dist / PIXELS_PER_METER;
-                    const card = document.createElement('div'); card.className='op-stat-card';
-                    card.style.borderLeftColor = d.color;
-                    card.innerHTML = `<div class="sc-title" style="color:${d.color}">${document.getElementById(opId)?.textContent || 'Op'}</div>
-                    <div style="font-size:12px;">Dist: ${meters.toFixed(1)}m</div>`;
-                    statsContent.appendChild(card);
-                }
+            if (!recordingState) return;
+            const { opId, taskId } = recordingState;
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if (task) {
+                if(task.steps.length > 0 && task.steps[task.steps.length-1] === item) return;
+                task.steps.push(item); calculateAndDraw();
             }
-            if(hasData) statsPanel.style.display = 'flex';
         }
 
-        function resetAll() { if(confirm("Effacer tout ?")) { workshop.innerHTML='<svg id="connections"></svg>'; operatorData={}; configList.innerHTML=''; calculateAndDraw(); } }
-        function toggleConfigPanel() { document.querySelector('.bottom-panel').classList.toggle('collapsed'); }
-        function makeResizable(el) { /* Code resize précédent */ }
-        function makeEditable(el) { /* Code edit précédent */ }
+        function calculateAndDraw() {
+            svg.innerHTML = ''; document.querySelectorAll('.step-badge').forEach(b => b.remove()); statsContent.innerHTML = '';
+            let hasAnyData = false;
+            const globalHours = parseInt(document.getElementById('globalWorkHours').value) || 0;
+            const globalTimeSeconds = globalHours * 3600;
+
+            for (const [opId, data] of Object.entries(operatorData)) {
+                if(!document.getElementById(opId)) continue; 
+                const opName = document.getElementById(opId).firstChild.textContent;
+                const targetRacks = data.targetRacks || 1;
+                let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0;
+                const card = document.createElement('div'); card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
+                let tasksHtml = '';
+
+                data.tasks.forEach(task => {
+                    hasAnyData = true;
+                    let taskCycles = 1;
+                    if (task.freqType === 'per_grid') taskCycles = task.freqValue * 17 * targetRacks;
+                    else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
+                    else taskCycles = task.freqValue;
+
+                    if(task.steps.length < 2) {
+                        opTotalFixedTime += task.time * taskCycles;
+                        const taskTotalTime = task.time * taskCycles;
+                        tasksHtml += `<div class="task-detail" style="color:#777"><div style="font-weight:bold; border-bottom:1px solid #eee;">${task.name} <span style="float:right;">x${taskCycles}</span></div><div style="font-size: 11px;">Fixe: ${formatTime(taskTotalTime)}</div></div>`;
+                        return;
+                    }
+                    
+                    let pathString = ""; let taskDistPixels = 0;
+                    const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3;
+
+                    for (let i = 0; i < task.steps.length; i++) {
+                        const el = task.steps[i];
+                        if(!el || !el.isConnected) continue;
+                        const pos = getCenter(el);
+                        if (recordingState && recordingState.taskId === task.id) addBadge(el, i+1, data.color);
+                        if (i === 0) pathString += `M ${pos.x + offset} ${pos.y + offset}`; else pathString += ` L ${pos.x + offset} ${pos.y + offset}`;
+                        if (i > 0) {
+                            const prevPos = getCenter(task.steps[i-1]);
+                            taskDistPixels += Math.sqrt(Math.pow(pos.x - prevPos.x, 2) + Math.pow(pos.y - prevPos.y, 2));
+                        }
+                    }
+                    const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    pathEl.setAttribute("d", pathString); pathEl.style.stroke = data.color;
+                    if(recordingState && recordingState.taskId !== task.id) pathEl.style.opacity = "0.3"; else pathEl.style.opacity = "0.8";
+                    svg.appendChild(pathEl);
+
+                    const distM = (taskDistPixels / PIXELS_PER_METER); const walkT = (distM / WALKING_SPEED_M_S);
+                    opTotalDist += (distM * taskCycles); opTotalWalkTime += (walkT * taskCycles); opTotalFixedTime += (task.time * taskCycles);
+                    tasksHtml += `<div class="task-detail"><div style="font-weight:bold; border-bottom:1px solid #eee;">${task.name} <span style="float:right;">x${taskCycles}</span></div><div style="font-size: 11px;">Trajet: ${formatTime(walkT*taskCycles)}</div></div>`;
+                });
+
+                const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime;
+                let loadPercent = 0, loadColor = "#2ecc71";
+                if (globalTimeSeconds > 0) {
+                    loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100;
+                    if (loadPercent > 100) loadColor = "#e74c3c"; else if (loadPercent > 85) loadColor = "#f39c12";
+                }
+
+                card.innerHTML = `
+                    <div class="op-title" style="color:${data.color}">${opName} <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Éch.</span></div>
+                    ${tasksHtml}
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;">
+                        <div class="stat-row" style="font-weight:bold;"><span>Charge Totale:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
+                        <div style="margin-top:5px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold;"><span>Charge</span><span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div></div>
+                        </div>
+                    </div>`;
+                statsContent.appendChild(card);
+            }
+            statsPanel.style.display = hasAnyData ? 'flex' : 'none';
+        }
+
+        // Utils
+        function addBadge(el, index, color) { const badge = document.createElement('span'); badge.className = 'step-badge'; badge.innerText = index; badge.style.backgroundColor = color; el.appendChild(badge); }
+        function getCenter(el) { return { x: parseInt(el.style.left) + el.offsetWidth/2, y: parseInt(el.style.top) + el.offsetHeight/2 }; }
+        function makeResizable(element) {
+            if(element.querySelector('.resize-handle') || element.classList.contains('waypoint')) return;
+            const handle = document.createElement('div'); handle.className = 'resize-handle'; element.appendChild(handle);
+            handle.addEventListener('mousedown', function(e) {
+                e.stopPropagation(); if(recordingState) return;
+                const startX = e.clientX, startY = e.clientY; const startW = parseInt(getComputedStyle(element).width), startH = parseInt(getComputedStyle(element).height);
+                function doResize(e) { element.style.width = Math.max(15, startW + e.clientX - startX) + 'px'; element.style.height = Math.max(15, startH + e.clientY - startY) + 'px'; calculateAndDraw(); }
+                function stopResize() { document.removeEventListener('mousemove', doResize); document.removeEventListener('mouseup', stopResize); }
+                document.addEventListener('mousemove', doResize); document.addEventListener('mouseup', stopResize);
+            });
+        }
+        function makeEditable(element) {
+            if (recordingState) return;
+            const children = Array.from(element.children); element.contentEditable = true; element.focus(); element.classList.add('editing'); children.forEach(c => c.style.display = 'none');
+            const finish = () => {
+                element.contentEditable = false; element.classList.remove('editing');
+                element.removeEventListener('blur', finish); element.removeEventListener('keydown', keyHandler);
+                children.forEach(c => c.style.display = ''); children.forEach(c => { if(!element.contains(c)) element.appendChild(c); });
+                if(element.classList.contains('person')) { const header = document.querySelector(`#config-${element.id} .op-config-header span`); if(header) header.textContent = element.firstChild.textContent; }
+                calculateAndDraw();
+            };
+            const keyHandler = (e) => { if(e.key === 'Enter') { e.preventDefault(); element.blur(); } };
+            element.addEventListener('blur', finish); element.addEventListener('keydown', keyHandler);
+        }
+        function resetAll() { if(confirm("Tout effacer ?")) { operatorData = {}; recordingState = null; configList.innerHTML = '<div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">Ajoutez un opérateur...</div>'; workshop.innerHTML='<svg id="connections"></svg>'; calculateAndDraw(); } }
+        function closeStats() { statsPanel.style.display = 'none'; }
+        function toggleConfigPanel() { const panel = document.querySelector('.bottom-panel'); panel.classList.toggle('collapsed'); document.getElementById('btnToggleConfig').innerHTML = panel.classList.contains('collapsed') ? '👁️ Afficher Gammes' : '👁️ Cacher Gammes'; }
 
     </script>
 </body>
