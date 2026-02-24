@@ -116,4 +116,857 @@
             display: flex; align-items: center; justify-content: center;
             background-color: #ffebee; border: 2px dashed #e57373; color: #c62828;
             padding: 5px 15px; border-radius: 5px; font-weight: bold;
-            transition: all 0
+            transition: all 0.2s; cursor: default; font-size: 0.9rem;
+        }
+        .trash-zone.drag-over { background-color: #c62828; color: white; transform: scale(1.05); }
+
+        button.action-btn {
+            padding: 6px 10px; border: none; border-radius: 5px; font-weight: bold;
+            cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; gap: 5px; font-size: 12px;
+        }
+        button.action-btn:active { transform: scale(0.95); }
+
+        .btn-add { background: var(--box-bg); color: white; }
+        .btn-add-person { background: #e74c3c; color: white; } 
+        .btn-add-palette { background: var(--palette-bg); color: white; }
+        .btn-add-scale { background: var(--scale-bg); color: white; }
+        .btn-add-waypoint { background: var(--waypoint-bg); color: white; }
+        .btn-add-pillar { background: var(--pillar-bg); color: white; }
+        .btn-clear { background: #95a5a6; color: white; }
+
+        /* PANNEAUX CONFIG */
+        .panel-header {
+            padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee;
+            font-weight: bold; color: var(--text); font-size: 1.1em;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .panel-body { flex: 1; overflow-y: auto; padding: 10px; }
+        
+        .config-list { 
+            display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; 
+            gap: 15px; flex: 1; padding: 10px; background: #fafafa;
+        }
+
+        .op-config-card {
+            background: white; border: 1px solid #e0e0e0; border-radius: 6px;
+            margin-bottom: 0; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-width: 330px; max-width: 350px; display: flex; flex-direction: column;
+        }
+        .op-stat-card {
+            background: white; border: 1px solid #e0e0e0; border-radius: 6px;
+            margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #ccc; padding: 10px;
+        }
+        .op-config-header {
+            padding: 8px 12px; color: white; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .op-config-body { padding: 10px; overflow-y: auto; flex: 1; }
+        
+        .config-row {
+            display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 8px;
+            background: #f1f2f6; padding: 5px; border-radius: 4px; border: 1px solid #e0e0e0;
+        }
+
+        /* ACTIONS */
+        .action-row {
+            display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .action-row:last-child { border-bottom: none; }
+        .action-inputs { display: flex; gap: 5px; width: 100%; align-items: center; }
+        
+        .action-row input[type="text"] { flex: 1; padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; min-width: 50px; }
+        .action-row input[type="number"] { padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; text-align: center; }
+        .action-row select { padding: 4px; font-size: 11px; border: 1px solid #ddd; border-radius: 3px; flex-shrink: 0; }
+        
+        .action-controls { display: flex; gap: 5px; width: 100%; justify-content: flex-end; margin-top: 2px; }
+        
+        .btn-record { background: white; border: 1px solid #ccc; color: #555; flex: 1; justify-content: center; font-size: 11px; cursor: pointer; }
+        .btn-record.recording { background: #ffebee; color: #e74c3c; border-color: #e74c3c; animation: pulse 1.5s infinite; }
+        .btn-record.has-path { background: #e8f5e9; color: #27ae60; border-color: #27ae60; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; border: 1px solid #ddd; background: #eee; cursor: pointer; border-radius: 3px; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        /* ATELIER */
+        .workshop-container {
+            position: relative;
+            width: calc(var(--room-w) * var(--scale)); 
+            height: calc(var(--room-h) * var(--scale));
+            background-color: white;
+            border: 4px solid var(--wall-color);
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: calc(var(--scale) * 1.5) calc(var(--scale) * 1.5); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: visible; 
+            margin-bottom: 50px;
+        }
+
+        .machine {
+            position: absolute;
+            background: rgba(52, 152, 219, 0.9);
+            border: 2px solid var(--box-border);
+            border-radius: 4px;
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; text-align: center;
+            cursor: grab; user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 10;
+            min-width: 20px; min-height: 20px;
+        }
+        
+        .machine.person { border-radius: 50%; font-size: 10px; border: 2px solid white; }
+        .machine.palette { background: rgba(211, 84, 0, 0.8); border-color: #a04000; border-radius: 2px; }
+        .machine.scale-machine { background: rgba(39, 174, 96, 0.9); border-color: #1e8449; border-style: dashed; }
+        .machine.waypoint { background: rgba(142, 68, 173, 0.6); border: 2px solid var(--waypoint-bg); border-radius: 50%; font-size: 0; }
+        .machine.waypoint::after { content: "+"; font-size: 14px; color: white; font-weight: bold; }
+        .machine.pillar { background: #000000; border: 2px solid #333; color: white; border-radius: 0; }
+        .machine.selected { box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.8); }
+        .machine.editing { cursor: text; background: white !important; color: #333 !important; border-color: var(--accent) !important; z-index: 50; }
+        .machine:active { cursor: grabbing; z-index: 1000 !important; }
+
+        .resize-handle {
+            width: 10px; height: 10px; background: #555;
+            position: absolute; right: 0; bottom: 0; cursor: se-resize; z-index: 15;
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        }
+
+        /* STATS DETAIL */
+        .task-detail { font-size: 0.85em; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 5px; margin-bottom: 5px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 2px; align-items: center; }
+        .total-row { border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px; font-weight: bold; color: #2c3e50; }
+        
+        .step-badge {
+            position: absolute; top: -8px; right: -8px; color: white; border-radius: 50%;
+            width: 18px; height: 18px; font-size: 11px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; border: 1px solid white;
+        }
+        
+        .progress-bar-bg { background: #eee; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .progress-bar-fill { height: 100%; transition: width 0.3s ease, background-color 0.3s ease; }
+
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        path { fill: none; stroke-width: 3; stroke-dasharray: 5; animation: dash 30s linear infinite; opacity: 0.8; }
+        @keyframes dash { to { stroke-dashoffset: -1000; } }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="color:var(--box-bg)">FABIE <span style="font-size:0.7em; color:#7f8c8d">Engineering</span></h2>
+            <p>Accès Restreint - Erwan V.</p>
+            <input type="password" id="passwordInput" placeholder="Mot de passe...">
+            <button onclick="checkLogin()">Entrer</button>
+            <div id="loginError" class="error-msg">Mot de passe incorrect</div>
+        </div>
+    </div>
+
+    <div class="scenario-bar">
+        <div><strong>Gestion de Scénarios</strong></div>
+        <div class="scenario-controls">
+            <input type="text" id="scenarioName" value="Scénario 1" style="background:rgba(0,0,0,0.2); border:none; color:white; padding:4px; border-radius:3px;">
+            <button class="scenario-btn" onclick="saveToBrowser()"><i class="fas fa-save"></i> Sauvegarder</button>
+            <select id="savedScenarios" onchange="loadFromBrowser(this.value)" style="font-size:12px; border-radius:3px;">
+                <option value="">-- Charger --</option>
+            </select>
+            <button class="scenario-btn" onclick="duplicateScenario()"><i class="fas fa-copy"></i> Dupliquer</button>
+            <button class="scenario-btn" onclick="exportJson()"><i class="fas fa-download"></i> Exporter JSON</button>
+            <label class="scenario-btn" style="cursor:pointer">
+                <i class="fas fa-upload"></i> Importer
+                <input type="file" class="file-input" id="importFile" accept=".json" onchange="importJson(this)">
+            </label>
+        </div>
+    </div>
+
+    <div class="main-wrapper" id="mainWrapper">
+        <div class="main-content">
+            <header>
+                <h1>Simulateur Atelier FABIE</h1>
+            </header>
+
+            <div class="top-bar">
+                <div id="trashBin" class="trash-zone">🗑️ Corbeille</div>
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
+
+                <button class="action-btn btn-add" onclick="addMachine()">+ Machine</button>
+                <button class="action-btn btn-add-palette" onclick="addPalette()">+ Palette</button>
+                <button class="action-btn btn-add-scale" onclick="addScale()">+ Échelle</button>
+                <button class="action-btn btn-add-pillar" onclick="addPillar()">+ Pilier</button>
+                <button class="action-btn btn-add-waypoint" onclick="addWaypoint()">+ Point</button>
+                <button class="action-btn btn-add-person" onclick="addPerson()">+ Opérateur</button>
+                
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
+                
+                <button class="action-btn btn-clear" onclick="resetAll()">Tout Effacer</button>
+                <button class="action-btn" onclick="toggleConfigPanel()" id="btnToggleConfig" style="background: #7f8c8d; color: white;">👁️ Cacher Gammes</button>
+
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
+                
+                <div style="display:flex; align-items:center; gap:3px;" title="Temps de travail global">
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Temps Ref :</label>
+                    <input type="number" id="globalWorkHours" value="7" min="0" onchange="calculateAndDraw()" style="width:40px; padding:4px; font-size:12px; border:1px solid #ddd; border-radius:4px; text-align:center;"> <span style="font-size:12px; color:#555;">h</span>
+                    <input type="number" id="globalWorkMinutes" value="0" min="0" max="59" onchange="calculateAndDraw()" style="width:40px; padding:4px; font-size:12px; border:1px solid #ddd; border-radius:4px; text-align:center;"> <span style="font-size:12px; color:#555;">m</span>
+                </div>
+            </div>
+
+            <div class="workshop-container" id="workshop">
+                <svg id="connections"></svg>
+                <div class="machine" style="left: 30px; top: 250px; width: 45px; height: 30px;" id="m1">Entrée</div>
+                <div class="machine" style="left: 500px; top: 30px; width: 45px; height: 30px;" id="m3">Sortie</div>
+            </div>
+        </div>
+
+        <div class="stats-sidebar" id="statsPanel">
+            <div class="panel-header">
+                <span>📊 Analyse & Coûts</span>
+                <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px;">×</button>
+            </div>
+            <div class="panel-body" id="statsContent"></div>
+        </div>
+    </div>
+
+    <div class="bottom-panel">
+        <div class="panel-header">⚙️ Gammes Opératoires</div>
+        <div class="config-list" id="configList">
+            <div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">
+                1. Ajoutez un opérateur.<br>
+                2. Définissez son taux horaire.<br>
+                3. Créez ses tâches et tracez les trajets.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTHENTIFICATION ---
+        const loginOverlay = document.getElementById('login-overlay');
+        const mainWrapper = document.getElementById('mainWrapper');
+        const passInput = document.getElementById('passwordInput');
+        const errorMsg = document.getElementById('loginError');
+
+        passInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkLogin();
+        });
+
+        function checkLogin() {
+            if (passInput.value === "FABIE2026") {
+                loginOverlay.style.display = "none";
+                mainWrapper.style.filter = "none";
+                mainWrapper.style.pointerEvents = "all";
+                loadScenarioList(); // Charger la liste des scénarios
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+        // --- VARIABLES GLOBALES ---
+        const workshop = document.getElementById('workshop');
+        const svg = document.getElementById('connections');
+        const statsPanel = document.getElementById('statsPanel');
+        const statsContent = document.getElementById('statsContent');
+        const trashBin = document.getElementById('trashBin');
+        const configList = document.getElementById('configList');
+        
+        const PIXELS_PER_METER = 30; // 30px = 1m
+        const WALKING_SPEED_M_S = 1.4;
+        const OP_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c', '#34495e'];
+        
+        // Structure de données:
+        // operatorData[opId] = { color, targetRacks, hourlyRate, tasks: [...] }
+        let operatorData = {}; 
+        let recordingState = null; 
+        let activeItem = null;
+        let initialX, initialY, initialLeft, initialTop;
+
+        // --- INIT & DRAG & DROP ---
+        document.querySelectorAll('.machine').forEach(initMachine);
+
+        function initMachine(item) {
+            setupDrag(item);
+            makeResizable(item);
+            item.ondblclick = function(e) { 
+                if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') makeEditable(this); 
+            };
+        }
+
+        function setupDrag(item) {
+            item.addEventListener('mousedown', dragStart);
+            item.addEventListener('click', (e) => { if(recordingState) handleFluxClick(item); });
+        }
+
+        function dragStart(e) {
+            if (recordingState) return; 
+            if (e.target.isContentEditable || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.classList.contains('resize-handle')) return;
+
+            activeItem = e.currentTarget; 
+            initialX = e.clientX; initialY = e.clientY;
+            initialLeft = parseInt(activeItem.style.left) || 0; 
+            initialTop = parseInt(activeItem.style.top) || 0;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+        }
+
+        function drag(e) {
+            if (!activeItem) return;
+            e.preventDefault();
+            activeItem.style.left = (initialLeft + e.clientX - initialX) + "px";
+            activeItem.style.top = (initialTop + e.clientY - initialY) + "px";
+            
+            const trashRect = trashBin.getBoundingClientRect();
+            const itemRect = activeItem.getBoundingClientRect();
+            if (isOverlap(trashRect, itemRect)) trashBin.classList.add('drag-over');
+            else trashBin.classList.remove('drag-over');
+
+            calculateAndDraw();
+        }
+
+        function dragEnd() {
+            if (activeItem) {
+                const trashRect = trashBin.getBoundingClientRect();
+                const itemRect = activeItem.getBoundingClientRect();
+                if (isOverlap(trashRect, itemRect)) deleteItem(activeItem);
+            }
+            trashBin.classList.remove('drag-over');
+            activeItem = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', dragEnd);
+        }
+
+        function isOverlap(rect1, rect2) {
+            return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
+        }
+
+        function deleteItem(item) {
+            const id = item.id;
+            if (item.classList.contains('person')) {
+                delete operatorData[id];
+                const configCard = document.getElementById('config-' + id);
+                if (configCard) configCard.remove();
+                if(Object.keys(operatorData).length === 0) configList.innerHTML = '<div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">Ajoutez un opérateur...</div>';
+            } else {
+                for (const opId in operatorData) {
+                    operatorData[opId].tasks.forEach(task => { task.steps = task.steps.filter(step => step !== item); });
+                }
+            }
+            item.remove();
+            calculateAndDraw();
+        }
+
+        // --- GESTION GAMMES & OPERATEURS ---
+
+        function addConfigCard(opId, opName, color) {
+            if(configList.querySelector('div')?.textContent.includes('Ajoutez un opérateur')) configList.innerHTML = '';
+            
+            // Initialisation des données si elles n'existent pas (cas d'un ajout manuel)
+            if(!operatorData[opId]) {
+                 operatorData[opId] = { color: color, targetRacks: 1, hourlyRate: 15.0, tasks: [] };
+            }
+            const data = operatorData[opId]; // Référence
+
+            const card = document.createElement('div');
+            card.className = 'op-config-card';
+            card.id = 'config-' + opId;
+            card.innerHTML = `
+                <div class="op-config-header" style="background-color: ${color}"><span>${opName}</span></div>
+                
+                <div style="padding: 8px; background:#fff;">
+                    <div class="config-row">
+                        <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod (Échelles):</strong>
+                        <input type="number" value="${data.targetRacks}" min="1" style="width:50px;" onchange="updateOpMeta('${opId}', 'targetRacks', this.value)">
+                    </div>
+                    <div class="config-row">
+                        <strong>💶 Taux Horaire (€/h):</strong>
+                        <input type="number" value="${data.hourlyRate}" min="0" step="0.5" style="width:50px;" onchange="updateOpMeta('${opId}', 'hourlyRate', this.value)">
+                    </div>
+                </div>
+
+                <div class="op-config-body">
+                    <div id="tasks-${opId}"></div>
+                    <button class="btn-sm btn-add-action" style="width:100%; margin-top:5px;" onclick="addTask('${opId}')">+ Ajouter Tâche</button>
+                </div>
+            `;
+            configList.appendChild(card);
+            
+            // Recharger les tâches existantes si chargement de scénario, sinon ajouter une par défaut
+            if (data.tasks.length > 0) {
+                data.tasks.forEach(t => renderTaskRow(opId, t));
+            } else {
+                addTask(opId, "Remplir grille", 10, 'per_grid');
+            }
+        }
+
+        function updateOpMeta(opId, field, val) {
+            if(operatorData[opId]) {
+                operatorData[opId][field] = parseFloat(val) || 0;
+                calculateAndDraw();
+            }
+        }
+
+        function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
+            const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
+            
+            operatorData[opId].tasks.push({ 
+                id: taskId, 
+                name: defaultName, 
+                time: defaultTime, 
+                freqValue: 1, 
+                freqType: defaultType, 
+                steps: [] // NOTE: steps stocke les références DOM. Pour save/load, on utilisera les IDs.
+            });
+            
+            const task = operatorData[opId].tasks[operatorData[opId].tasks.length - 1];
+            renderTaskRow(opId, task);
+        }
+
+        function renderTaskRow(opId, task) {
+            const container = document.getElementById(`tasks-${opId}`);
+            const row = document.createElement('div');
+            row.className = 'action-row';
+            row.id = `row-${task.id}`;
+            
+            const selTotal = task.freqType === 'total' ? 'selected' : '';
+            const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
+            const selRack = task.freqType === 'per_rack' ? 'selected' : '';
+
+            row.innerHTML = `
+                <div class="action-inputs">
+                    <input type="text" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)" title="Nom">
+                    <input type="number" value="${task.time}" min="0" class="time-input" style="width:40px" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps (sec)">
+                    <span>x</span>
+                    <input type="number" value="${task.freqValue}" min="1" class="cycles-input" style="width:35px" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)" title="Qté">
+                    <select onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)">
+                        <option value="total" ${selTotal}>/ Jour</option>
+                        <option value="per_grid" ${selGrid}>/ Grille</option>
+                        <option value="per_rack" ${selRack}>/ Échelle</option>
+                    </select>
+                </div>
+                <div class="action-controls">
+                    <button id="btn-rec-${task.id}" class="btn-record ${task.steps && task.steps.length > 0 ? 'has-path' : ''}" onclick="toggleRecord('${opId}', '${task.id}')">
+                        ${task.steps && task.steps.length > 0 ? '✅ OK' : '📍 Trajet'}
+                    </button>
+                    <button class="btn-sm" style="color:#e74c3c" onclick="deleteTask('${opId}', '${task.id}')">🗑️</button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function updateTaskMeta(opId, taskId, field, value) {
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if(task) {
+                if (field === 'time' || field === 'freqValue') task[field] = parseFloat(value) || (field === 'freqValue' ? 1 : 0);
+                else task[field] = value;
+                calculateAndDraw(); 
+            }
+        }
+
+        function deleteTask(opId, taskId) {
+            if(recordingState && recordingState.taskId === taskId) stopRecording();
+            operatorData[opId].tasks = operatorData[opId].tasks.filter(t => t.id !== taskId);
+            document.getElementById(`row-${taskId}`).remove();
+            calculateAndDraw();
+        }
+
+        // --- ENREGISTREMENT TRAJET ---
+
+        function toggleRecord(opId, taskId) {
+            if (recordingState && recordingState.taskId === taskId) { stopRecording(); return; }
+            if (recordingState) stopRecording();
+            recordingState = { opId, taskId };
+            const btn = document.getElementById(`btn-rec-${taskId}`);
+            btn.innerHTML = "🔴 Enreg."; btn.classList.add("recording");
+            workshop.style.cursor = "crosshair";
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if(task) task.steps = [];
+            calculateAndDraw();
+        }
+
+        function stopRecording() {
+            if (!recordingState) return;
+            const { opId, taskId } = recordingState;
+            const btn = document.getElementById(`btn-rec-${taskId}`);
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            btn.innerHTML = (task && task.steps.length > 0) ? "✅ OK" : "📍 Trajet";
+            btn.classList.remove("recording");
+            if(task && task.steps.length > 0) btn.classList.add("has-path"); else btn.classList.remove("has-path");
+            recordingState = null; workshop.style.cursor = "default";
+        }
+
+        function handleFluxClick(item) {
+            if (!recordingState) return;
+            const { opId, taskId } = recordingState;
+            const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if (task) {
+                if(task.steps.length > 0 && task.steps[task.steps.length-1] === item) return;
+                task.steps.push(item);
+                calculateAndDraw();
+            }
+        }
+
+        // --- CALCULS & DESSIN ---
+
+        function formatTime(seconds) {
+            if (seconds === 0) return "0s";
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            let res = "";
+            if (h > 0) res += h + "h ";
+            if (m > 0) res += m + "m ";
+            if (s > 0 || res === "") res += s + "s";
+            return res.trim();
+        }
+
+        function calculateAndDraw() {
+            svg.innerHTML = '';
+            document.querySelectorAll('.step-badge').forEach(b => b.remove());
+            statsContent.innerHTML = '';
+            let hasAnyData = false;
+
+            const globalHours = parseInt(document.getElementById('globalWorkHours').value) || 0;
+            const globalMinutes = parseInt(document.getElementById('globalWorkMinutes').value) || 0;
+            const globalTimeSeconds = (globalHours * 3600) + (globalMinutes * 60);
+
+            for (const [opId, data] of Object.entries(operatorData)) {
+                if(!document.getElementById(opId)) continue; 
+                const opName = document.getElementById(opId).firstChild.textContent;
+                const targetRacks = data.targetRacks || 1;
+                const hourlyRate = data.hourlyRate || 0;
+
+                let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0;
+                const card = document.createElement('div');
+                card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
+                let tasksHtml = '';
+
+                data.tasks.forEach(task => {
+                    hasAnyData = true;
+                    let taskCycles = 1;
+                    if (task.freqType === 'per_grid') taskCycles = task.freqValue * 17 * targetRacks;
+                    else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
+                    else taskCycles = task.freqValue;
+
+                    if(task.steps.length < 2) {
+                        opTotalFixedTime += task.time * taskCycles;
+                        tasksHtml += `<div class="task-detail" style="color:#777"><div>${task.name} <span style="float:right;color:var(--accent)">x${taskCycles}</span></div></div>`;
+                        return;
+                    }
+                    
+                    let pathString = ""; let taskDistPixels = 0;
+                    const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3;
+
+                    for (let i = 0; i < task.steps.length; i++) {
+                        const el = task.steps[i];
+                        // Vérification si élément existe encore dans le DOM
+                        if(!el || !document.body.contains(el)) continue; 
+
+                        const pos = getCenter(el);
+                        if (recordingState && recordingState.taskId === task.id) addBadge(el, i+1, data.color);
+                        if (i === 0) pathString += `M ${pos.x + offset} ${pos.y + offset}`;
+                        else pathString += ` L ${pos.x + offset} ${pos.y + offset}`;
+                        if (i > 0) {
+                            const prevPos = getCenter(task.steps[i-1]);
+                            taskDistPixels += Math.sqrt(Math.pow(pos.x - prevPos.x, 2) + Math.pow(pos.y - prevPos.y, 2));
+                        }
+                    }
+                    const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    pathEl.setAttribute("d", pathString); pathEl.style.stroke = data.color;
+                    if(recordingState && recordingState.taskId !== task.id) pathEl.style.opacity = "0.3"; else pathEl.style.opacity = "0.8";
+                    svg.appendChild(pathEl);
+
+                    const distM = (taskDistPixels / PIXELS_PER_METER);
+                    const walkT = (distM / WALKING_SPEED_M_S);
+                    
+                    opTotalDist += (distM * taskCycles); 
+                    opTotalWalkTime += (walkT * taskCycles); 
+                    opTotalFixedTime += (task.time * taskCycles);
+                    
+                    tasksHtml += `
+                        <div class="task-detail">
+                            <div style="font-weight:bold; color:#2c3e50;">
+                                ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles}</span>
+                            </div>
+                            <div style="font-size:11px; color:#555;">Dist: ${distM.toFixed(1)}m | Fixe: ${task.time}s</div>
+                        </div>`;
+                });
+
+                const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime;
+                const totalCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
+
+                // Taux de charge
+                let loadPercent = 0, loadColor = "#2ecc71";
+                if (globalTimeSeconds > 0) {
+                    loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100;
+                    if (loadPercent > 100) loadColor = "#e74c3c";
+                    else if (loadPercent > 85) loadColor = "#f39c12";
+                }
+
+                card.innerHTML = `
+                    <div class="op-title" style="color:${data.color}">${opName} 
+                        <span style="font-size:12px; color:#555; float:right;">${hourlyRate}€/h</span>
+                    </div>
+                    ${tasksHtml}
+                    <div class="total-row">
+                        <div class="stat-row"><span>Distance:</span> <span>${(opTotalDist/1000).toFixed(2)} km</span></div>
+                        <div class="stat-row"><span>Charge:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="color:#27ae60; font-size:14px;"><span>Coût Estimé:</span> <span>${totalCost.toFixed(2)} €</span></div>
+                        <div style="margin-top:5px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11px;">
+                                <span>Taux de charge</span><span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div></div>
+                        </div>
+                    </div>
+                `;
+                statsContent.appendChild(card);
+            }
+            statsPanel.style.display = hasAnyData ? 'flex' : 'none';
+        }
+
+        // --- SCENARIO MANAGER ---
+
+        function getScenarioState() {
+            // 1. Sauvegarder la disposition des machines
+            const machines = [];
+            document.querySelectorAll('.machine').forEach(el => {
+                machines.push({
+                    id: el.id,
+                    type: el.classList.contains('person') ? 'person' : 
+                          el.classList.contains('palette') ? 'palette' :
+                          el.classList.contains('scale-machine') ? 'scale' :
+                          el.classList.contains('waypoint') ? 'waypoint' :
+                          el.classList.contains('pillar') ? 'pillar' : 'machine',
+                    text: el.innerText,
+                    style: {
+                        left: el.style.left,
+                        top: el.style.top,
+                        width: el.style.width,
+                        height: el.style.height,
+                        bg: el.style.backgroundColor
+                    }
+                });
+            });
+
+            // 2. Nettoyer operatorData pour ne garder que les IDs des steps (pas les objets DOM)
+            const cleanOpData = JSON.parse(JSON.stringify(operatorData));
+            // On a besoin de mapper les steps qui sont des objets DOM vers leurs IDs pour le JSON
+            for(const opId in operatorData) {
+                operatorData[opId].tasks.forEach((task, tIndex) => {
+                     // On remplace le tableau vide du JSON clone par les IDs réels
+                     cleanOpData[opId].tasks[tIndex].steps = task.steps.map(el => el.id);
+                });
+            }
+
+            return {
+                timestamp: Date.now(),
+                machines: machines,
+                operatorData: cleanOpData,
+                globalHours: document.getElementById('globalWorkHours').value,
+                globalMinutes: document.getElementById('globalWorkMinutes').value
+            };
+        }
+
+        function restoreScenario(state) {
+            resetAll(false); // false = ne pas effacer si on écrase tout de suite, mais ici on veut clean
+            
+            // 1. Restaurer Variables Globales
+            if(state.globalHours) document.getElementById('globalWorkHours').value = state.globalHours;
+            if(state.globalMinutes) document.getElementById('globalWorkMinutes').value = state.globalMinutes;
+
+            // 2. Restaurer Machines
+            state.machines.forEach(m => {
+                let el;
+                // Si c'est m1 ou m3 (entrées sorties fixes), on les déplace juste
+                if (m.id === 'm1' || m.id === 'm3') {
+                    el = document.getElementById(m.id);
+                } else {
+                    el = document.createElement('div');
+                    el.id = m.id;
+                    el.className = 'machine';
+                    if (m.type !== 'machine') el.classList.add(m.type);
+                    if (m.type === 'scale') el.classList.add('scale-machine');
+                    workshop.appendChild(el);
+                    initMachine(el);
+                }
+                
+                el.style.left = m.style.left;
+                el.style.top = m.style.top;
+                el.style.width = m.style.width;
+                el.style.height = m.style.height;
+                if(m.style.bg) el.style.backgroundColor = m.style.bg;
+                
+                // Texte / Titre
+                if(m.type === 'waypoint' || m.type === 'pillar') el.title = m.text;
+                else {
+                    // Pour les opérateurs, on enlève le texte du div car il sera mis dans le header config
+                    if(m.type === 'person') el.innerText = ''; 
+                    else el.innerText = m.text;
+                }
+            });
+
+            // 3. Restaurer Données Opérateurs
+            operatorData = state.operatorData;
+            
+            // 4. Relier les steps (IDs -> DOM Elements) et recréer UI
+            for(const opId in operatorData) {
+                const opEl = document.getElementById(opId);
+                const opName = opEl ? m.text : "Opérateur"; // Fallback nom
+                
+                // Retrouver le nom stocké dans machines pour cet ID
+                const machineRef = state.machines.find(m => m.id === opId);
+                const nameToUse = machineRef ? machineRef.text : "Op";
+                
+                // Recréer le panneau config
+                addConfigCard(opId, nameToUse, operatorData[opId].color);
+
+                // Remapper les IDs vers les éléments DOM
+                operatorData[opId].tasks.forEach(task => {
+                    task.steps = task.steps.map(stepId => document.getElementById(stepId)).filter(el => el != null);
+                });
+            }
+
+            calculateAndDraw();
+        }
+
+        // -- LOCAL STORAGE --
+        function saveToBrowser() {
+            const name = document.getElementById('scenarioName').value || "Scénario Sans Nom";
+            const scenarios = JSON.parse(localStorage.getItem('fabie_scenarios') || "{}");
+            scenarios[name] = getScenarioState();
+            localStorage.setItem('fabie_scenarios', JSON.stringify(scenarios));
+            loadScenarioList();
+            alert("Scénario '" + name + "' sauvegardé !");
+        }
+
+        function loadScenarioList() {
+            const select = document.getElementById('savedScenarios');
+            const scenarios = JSON.parse(localStorage.getItem('fabie_scenarios') || "{}");
+            select.innerHTML = '<option value="">-- Charger --</option>';
+            for(const name in scenarios) {
+                const opt = document.createElement('option');
+                opt.value = name; opt.innerText = name;
+                select.appendChild(opt);
+            }
+        }
+
+        function loadFromBrowser(name) {
+            if(!name) return;
+            const scenarios = JSON.parse(localStorage.getItem('fabie_scenarios') || "{}");
+            if(scenarios[name]) {
+                document.getElementById('scenarioName').value = name;
+                restoreScenario(scenarios[name]);
+            }
+        }
+
+        function duplicateScenario() {
+            const currentName = document.getElementById('scenarioName').value;
+            document.getElementById('scenarioName').value = currentName + " (copie)";
+            saveToBrowser();
+        }
+
+        // -- IMPORT / EXPORT JSON --
+        function exportJson() {
+            const state = getScenarioState();
+            const name = document.getElementById('scenarioName').value || "scenario";
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", name + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importJson(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    restoreScenario(state);
+                    alert("Scénario importé avec succès !");
+                } catch(err) {
+                    alert("Erreur lors de l'import du fichier.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset
+        }
+
+        // --- UTILS UI ---
+        function addBadge(el, index, color) {
+            const badge = document.createElement('span'); badge.className = 'step-badge'; badge.innerText = index;
+            badge.style.backgroundColor = color; el.appendChild(badge);
+        }
+        function getCenter(el) { return { x: parseInt(el.style.left) + el.offsetWidth/2, y: parseInt(el.style.top) + el.offsetHeight/2 }; }
+        function createObj(name, w, h) {
+            const div = document.createElement('div'); div.className = 'machine'; div.innerText = name;
+            div.style.left = '50px'; div.style.top = '50px'; div.style.width = w + 'px'; div.style.height = h + 'px';
+            div.id = 'obj-' + Date.now() + Math.random().toString(36).substr(2, 9);
+            workshop.appendChild(div); initMachine(div); return div;
+        }
+        function addMachine() { createObj("M" + (document.querySelectorAll('.machine:not(.person):not(.waypoint):not(.pillar):not(.palette):not(.scale-machine)').length - 1), 45, 30); } // -1 pour exclure les entres sorties
+        function addPalette() { const d = createObj("Palette", 36, 24); d.classList.add("palette"); }
+        function addScale() { const d = createObj("Échelle", 24, 24); d.classList.add("scale-machine"); }
+        function addPillar() { const d = createObj("", 15, 15); d.classList.add("pillar"); d.title="Pilier"; }
+        function addWaypoint() { const d = createObj("", 15, 15); d.classList.add("waypoint"); d.title="Passage"; }
+        function addPerson() {
+            const index = document.querySelectorAll('.person').length; const color = OP_COLORS[index % OP_COLORS.length]; const name = "Op" + (index + 1);
+            const div = createObj(name, 24, 24); div.classList.add('person'); div.style.backgroundColor = color; div.innerText = "";
+            addConfigCard(div.id, name, color);
+        }
+        function makeResizable(element) {
+            if(element.querySelector('.resize-handle') || element.classList.contains('waypoint')) return;
+            const handle = document.createElement('div'); handle.className = 'resize-handle'; element.appendChild(handle);
+            handle.addEventListener('mousedown', function(e) {
+                e.stopPropagation(); if(recordingState) return;
+                const startX = e.clientX, startY = e.clientY; const startW = parseInt(getComputedStyle(element).width), startH = parseInt(getComputedStyle(element).height);
+                function doResize(e) { element.style.width = Math.max(15, startW + e.clientX - startX) + 'px'; element.style.height = Math.max(15, startH + e.clientY - startY) + 'px'; calculateAndDraw(); }
+                function stopResize() { document.removeEventListener('mousemove', doResize); document.removeEventListener('mouseup', stopResize); }
+                document.addEventListener('mousemove', doResize); document.addEventListener('mouseup', stopResize);
+            });
+        }
+        function makeEditable(element) {
+            if (recordingState) return;
+            const children = Array.from(element.children); element.contentEditable = true; element.focus(); element.classList.add('editing'); children.forEach(c => c.style.display = 'none');
+            const finish = () => {
+                element.contentEditable = false; element.classList.remove('editing');
+                element.removeEventListener('blur', finish); element.removeEventListener('keydown', keyHandler);
+                children.forEach(c => c.style.display = ''); children.forEach(c => { if(!element.contains(c)) element.appendChild(c); });
+                // Update name in config
+                if(element.classList.contains('person')) { 
+                    const header = document.querySelector(`#config-${element.id} .op-config-header span`); 
+                    if(header) header.textContent = element.innerText; 
+                }
+                calculateAndDraw();
+            };
+            const keyHandler = (e) => { if(e.key === 'Enter') { e.preventDefault(); element.blur(); } };
+            element.addEventListener('blur', finish); element.addEventListener('keydown', keyHandler);
+        }
+        function resetAll(clearConfig = true) { 
+            // Supprimer tout sauf m1 et m3
+            document.querySelectorAll('.machine').forEach(el => {
+                if(el.id !== 'm1' && el.id !== 'm3') el.remove();
+            });
+            operatorData = {}; recordingState = null; 
+            if(clearConfig) configList.innerHTML = '<div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">Ajoutez un opérateur...</div>'; 
+            calculateAndDraw(); 
+        }
+        function closeStats() { statsPanel.style.display = 'none'; }
+        function toggleConfigPanel() {
+            const panel = document.querySelector('.bottom-panel');
+            const btn = document.getElementById('btnToggleConfig');
+            panel.classList.toggle('collapsed');
+            if (panel.classList.contains('collapsed')) btn.innerHTML = '👁️ Afficher Gammes'; else btn.innerHTML = '👁️ Cacher Gammes';
+        }
+    </script>
+</body>
+</html>
