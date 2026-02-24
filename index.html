@@ -174,7 +174,7 @@
 
         .op-config-card {
             background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 0;
-            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 330px; max-width: 350px; display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 350px; max-width: 370px; display: flex; flex-direction: column;
         }
         .op-stat-card {
             background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 15px;
@@ -195,10 +195,11 @@
         .action-row input[type="text"] { flex: 1; padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; min-width: 50px; }
         .action-row input[type="number"] { padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; text-align: center; }
         .action-row input.time-input { width: 45px; flex-shrink: 0; } 
-        .action-row input.cycles-input { width: 40px; flex-shrink: 0; } 
+        .action-row input.cakes-input { width: 40px; flex-shrink: 0; }
+        .action-row input.cycles-input { width: 45px; flex-shrink: 0; } 
         .action-row select { padding: 4px; font-size: 11px; border: 1px solid #ddd; border-radius: 3px; flex-shrink: 0; }
         
-        .action-controls { display: flex; gap: 5px; width: 100%; justify-content: flex-end; margin-top: 2px; }
+        .action-controls { display: flex; gap: 5px; width: 100%; justify-content: flex-end; margin-top: 4px; }
         
         .btn-record { background: white; border: 1px solid #ccc; color: #555; flex: 1; justify-content: center; font-size: 11px; }
         .btn-record.recording { background: #ffebee; color: #e74c3c; border-color: #e74c3c; animation: pulse 1.5s infinite; }
@@ -639,11 +640,8 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    // Merge or Replace? Ici on remplace pour simplicité ou on merge
-                    // On va merger : ajouter les scénarios importés
                     let count = 0;
                     for (let id in imported) {
-                        // Générer nouvel ID pour éviter conflit
                         const newId = 'import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                         scenarios[newId] = imported[id];
                         count++;
@@ -783,8 +781,9 @@
 
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
             const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
+            // On ajoute cakesPerAction avec une valeur par défaut de 0
             operatorData[opId].tasks.push({ 
-                id: taskId, name: defaultName, time: defaultTime, freqValue: 1, freqType: defaultType, steps: [] 
+                id: taskId, name: defaultName, time: defaultTime, cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] 
             });
             rebuildConfigUI();
             saveCurrentScenario();
@@ -793,7 +792,10 @@
         function updateTaskMeta(opId, taskId, field, value) {
             const task = operatorData[opId].tasks.find(t => t.id === taskId);
             if(task) {
-                if (field === 'time' || field === 'freqValue') task[field] = parseFloat(value) || (field === 'freqValue' ? 1 : 0);
+                if (field === 'time' || field === 'freqValue' || field === 'cakesPerAction') {
+                    task[field] = parseFloat(value) || 0;
+                    if (field === 'freqValue' && !task[field]) task[field] = 1; // Fallback sécurité
+                }
                 else task[field] = value;
                 saveCurrentScenario();
                 calculateAndDraw(); 
@@ -828,12 +830,16 @@
                     const btnClass = task.steps.length > 0 ? 'btn-record has-path' : 'btn-record';
                     const btnText = task.steps.length > 0 ? '✅ OK' : '📍 Trajet';
 
+                    // Nouvelle disposition sur 2 lignes pour intégrer proprement tous les champs
                     tasksHTML += `
                         <div class="action-row" id="row-${task.id}">
-                            <div class="action-inputs">
-                                <input type="text" id="name-${task.id}" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)" title="Nom de la tâche">
-                                <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps (sec)">
-                                <span style="font-size:12px; color:#555;">x</span>
+                            <div class="action-inputs" style="flex-wrap: wrap;">
+                                <input type="text" id="name-${task.id}" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)" style="flex:1; min-width:80px;" title="Nom de la tâche">
+                                <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps (sec)">s
+                                <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés par action">🎂
+                            </div>
+                            <div class="action-inputs" style="margin-top:4px;">
+                                <span style="font-size:12px; color:#555;">Répétition :</span>
                                 <input type="number" id="freqVal-${task.id}" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)" title="Quantité">
                                 <select id="freqType-${task.id}" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)" title="Mode de répétition">
                                     <option value="total" ${selTotal}>/ Jour</option>
@@ -918,9 +924,11 @@
             svgEl.innerHTML = '';
             document.querySelectorAll('.step-badge').forEach(b => b.remove());
             statsContent.innerHTML = '';
+            
             let hasAnyData = false;
             let grandTotalTime = 0;
             let grandTotalCost = 0;
+            let grandTotalCakes = 0;
 
             const globalHours = parseInt(document.getElementById('globalWorkHours').value) || 0;
             const globalMinutes = parseInt(document.getElementById('globalWorkMinutes').value) || 0;
@@ -932,7 +940,7 @@
                 const targetRacks = data.targetRacks || 1;
                 const hourlyRate = data.hourlyRate || 15;
 
-                let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0;
+                let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
                 const card = document.createElement('div');
                 card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
                 let tasksHtml = '';
@@ -944,6 +952,10 @@
                     if (task.freqType === 'per_grid') taskCycles = task.freqValue * 17 * targetRacks;
                     else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
                     else taskCycles = task.freqValue;
+
+                    // Calcul gâteaux pour cette tâche
+                    const taskCakes = (task.cakesPerAction || 0) * taskCycles;
+                    opTotalCakes += taskCakes;
 
                     if(task.steps.length < 2) {
                         // AFFICHER LE BADGE "1" MÊME SI LE TRAJET N'A QU'UNE ÉTAPE
@@ -959,7 +971,7 @@
                                 <div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">
                                     ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles} = ${formatTime(taskTotalTime)}</span>
                                 </div>
-                                <div style="font-size: 11px;">${task.time}s fixe / act. (Pas de trajet)</div>
+                                <div style="font-size: 11px;">${task.time}s fixe / act. | 🎂 ${taskCakes}</div>
                             </div>`;
                         return;
                     }
@@ -1009,7 +1021,7 @@
                                 ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles} = ${formatTime(taskTotalTime)}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>🚶 Trajet (${distM.toFixed(1)}m) :</span> <span>${formatTime(walkT)} / act.</span></div>
-                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(task.time)} / act.</span></div>
+                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(task.time)} / act. | 🎂 ${taskCakes}</span></div>
                         </div>`;
                 });
 
@@ -1018,8 +1030,10 @@
                 const totalWalkTimeSeconds = opTotalWalkTime;
                 
                 const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
+                
                 grandTotalTime += totalWorkTimeSeconds;
                 grandTotalCost += laborCost;
+                grandTotalCakes += opTotalCakes;
 
                 let loadPercent = 0;
                 let loadColor = "#2ecc71"; // Vert
@@ -1038,6 +1052,7 @@
                         <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(totalDistMeters/1000).toFixed(2)} km</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Trajet Total:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Emballés:</span> <span>${opTotalCakes}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO:</span> <span>${laborCost.toFixed(2)} €</span></div>
                         
                         <div style="margin-top:10px;">
@@ -1062,6 +1077,7 @@
                 globalCard.innerHTML = `
                     <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL ATELIER</div>
                     <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Cumulé:</span> <span>${formatTime(grandTotalTime)}</span></div>
+                    <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Gâteaux Total:</span> <span>${grandTotalCakes} 🎂</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total Prod:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
                 `;
                 statsContent.appendChild(globalCard);
