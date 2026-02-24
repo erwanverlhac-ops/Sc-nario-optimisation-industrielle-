@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Atelier FABIE - Version Finale</title>
+    <title>Simulateur FABIE - Costing & Export</title>
     <style>
         :root {
             --grid-color: #cccccc;
@@ -19,7 +19,7 @@
             --scale: 30px; 
             --room-w: 19.9;  
             --room-h: 11.74; 
-            --panel-width: 340px; /* Un peu plus large pour les boutons */
+            --panel-width: 340px;
         }
 
         body {
@@ -69,15 +69,14 @@
         
         .sc-info { margin-bottom: 8px; font-size: 13px; font-weight: bold; }
         .sc-meta { font-size: 11px; color: #777; margin-bottom: 5px; }
-        
         .sc-actions { display: flex; gap: 5px; border-top: 1px solid #eee; padding-top: 5px; }
-        .btn-mini { 
-            padding: 4px 8px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; 
-            background: white; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center;
-        }
+        .btn-mini { padding: 4px 8px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; background: white; cursor: pointer; flex: 1; display: flex; justify-content: center; align-items: center; }
         .btn-mini:hover { background: #f0f0f0; }
         .btn-open { color: var(--box-bg); font-weight: bold; }
         .btn-del { color: var(--accent); }
+
+        .file-actions { padding: 10px; border-top: 1px solid #ddd; background: #f1f1f1; display: flex; gap: 5px; }
+        .btn-file { flex: 1; padding: 8px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px; font-size: 12px; text-align: center;}
 
         .main-wrapper { display: flex; flex: 1; overflow: hidden; width: 100%; }
 
@@ -97,16 +96,23 @@
 
         /* --- COLONNE DROITE (STATS) --- */
         .stats-sidebar {
-            width: 300px; background: white; border-left: 1px solid #ddd;
+            width: 320px; background: white; border-left: 1px solid #ddd;
             display: flex; flex-direction: column; box-shadow: -2px 0 5px rgba(0,0,0,0.05);
             z-index: 20; flex-shrink: 0; display: none; height: 100vh; overflow-y: auto;
         }
+
+        /* GLOBAL SUMMARY CARD */
+        .global-summary {
+            background: #2c3e50; color: white; padding: 15px; margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 3px solid var(--box-bg);
+        }
+        .gs-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
+        .gs-total { font-size: 16px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.3); margin-top: 5px; padding-top: 5px; color: #f1c40f; }
 
         header { text-align: center; margin-bottom: 10px; flex-shrink: 0; position: relative; width: 100%; display: flex; justify-content: center; align-items: center;}
         h1 { font-size: 1.3rem; margin: 5px 0; color: var(--text); font-weight: 600; }
         .user-badge { position: absolute; right: 10px; font-size: 12px; background: white; padding: 4px 8px; border-radius: 12px; border: 1px solid #ddd; }
 
-        /* BANNIÈRE CONTROLS */
         .top-bar {
             background: white; padding: 8px 15px; border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
@@ -138,7 +144,6 @@
         .btn-menu { background: #34495e; color: white; }
         .btn-save { background: #27ae60; color: white; }
 
-        /* PANNEAUX */
         .panel-header { padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: var(--text); font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
         .panel-body { flex: 1; overflow-y: auto; padding: 10px; }
         .config-list { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 15px; flex: 1; padding: 10px; background: #fafafa; }
@@ -171,25 +176,17 @@
             100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
         }
 
-        /* ATELIER & OBJETS */
         .workshop-container {
-            position: relative;
-            width: calc(var(--room-w) * var(--scale)); 
-            height: calc(var(--room-h) * var(--scale));
-            background-color: white;
-            border: 4px solid var(--wall-color);
+            position: relative; width: calc(var(--room-w) * var(--scale)); height: calc(var(--room-h) * var(--scale));
+            background-color: white; border: 4px solid var(--wall-color);
             background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: calc(var(--scale) * 1.5) calc(var(--scale) * 1.5); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            overflow: visible; 
-            margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: visible; margin-bottom: 50px;
         }
 
         .machine {
-            position: absolute; background: rgba(52, 152, 219, 0.9);
-            border: 2px solid var(--box-border); border-radius: 4px; color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; text-align: center; cursor: grab; user-select: none;
+            position: absolute; background: rgba(52, 152, 219, 0.9); border: 2px solid var(--box-border); border-radius: 4px; color: white;
+            display: flex; align-items: center; justify-content: center; font-size: 12px; text-align: center; cursor: grab; user-select: none;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; min-width: 20px; min-height: 20px;
         }
         
@@ -203,24 +200,12 @@
         .machine.editing { cursor: text; background: white !important; color: #333 !important; border-color: var(--accent) !important; z-index: 50; }
         .machine:active { cursor: grabbing; z-index: 1000 !important; }
 
-        .resize-handle {
-            width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0; cursor: se-resize; z-index: 15;
-            clip-path: polygon(100% 0, 100% 100%, 0 100%);
-        }
+        .resize-handle { width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0; cursor: se-resize; z-index: 15; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 
-        /* SVG TRAJETS - POITILLÉS */
         svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        path { 
-            fill: none; 
-            stroke-width: 3; 
-            stroke-dasharray: 10, 5; /* Pointillés */
-            stroke-linecap: round;
-            animation: dash 60s linear infinite; 
-            opacity: 0.8; 
-        }
+        path { fill: none; stroke-width: 3; stroke-dasharray: 10, 5; stroke-linecap: round; animation: dash 60s linear infinite; opacity: 0.8; }
         @keyframes dash { to { stroke-dashoffset: -1000; } }
 
-        /* STATS */
         .op-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
         .task-detail { font-size: 0.85em; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 5px; margin-bottom: 5px; }
         .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 2px; align-items: center; }
@@ -256,6 +241,11 @@
             <button onclick="saveNewScenario()" class="btn-save" style="width:100%; justify-content:center;">+ Nouveau Scénario</button>
         </div>
         <div class="sc-list" id="scenarioList"></div>
+        <div class="file-actions">
+            <button class="btn-file" onclick="exportFile()">📤 Exporter JSON</button>
+            <button class="btn-file" onclick="document.getElementById('importFile').click()">📥 Importer JSON</button>
+            <input type="file" id="importFile" style="display:none;" onchange="importFile(this)" accept=".json">
+        </div>
     </div>
 
     <div class="main-wrapper">
@@ -302,7 +292,7 @@
 
         <div class="stats-sidebar" id="statsPanel">
             <div class="panel-header">
-                <span>📊 Analyse Charge</span>
+                <span>📊 Analyse & Coûts</span>
                 <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px;">×</button>
             </div>
             <div class="panel-body" id="statsContent"></div>
@@ -310,10 +300,10 @@
     </div>
 
     <div class="bottom-panel">
-        <div class="panel-header">⚙️ Gammes Opératoires</div>
+        <div class="panel-header">⚙️ Gammes & Coûts</div>
         <div class="config-list" id="configList">
             <div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">
-                1. Ajoutez un opérateur.<br>2. Créez ses tâches.<br>3. Cliquez "Trajet" pour tracer.
+                1. Ajoutez un opérateur.<br>2. Définissez son coût horaire.<br>3. Créez ses tâches.
             </div>
         </div>
     </div>
@@ -428,19 +418,10 @@
         }
 
         // --- SCENARIO MANAGEMENT ---
-        function toggleScenarioPanel() {
-            document.getElementById('scenarioSidebar').classList.toggle('open');
-        }
+        function toggleScenarioPanel() { document.getElementById('scenarioSidebar').classList.toggle('open'); }
 
-        function getScenarios() {
-            const s = localStorage.getItem('fabie_scenarios');
-            return s ? JSON.parse(s) : [];
-        }
-
-        function saveScenarios(list) {
-            localStorage.setItem('fabie_scenarios', JSON.stringify(list));
-            loadScenariosFromStorage();
-        }
+        function getScenarios() { const s = localStorage.getItem('fabie_scenarios'); return s ? JSON.parse(s) : []; }
+        function saveScenarios(list) { localStorage.setItem('fabie_scenarios', JSON.stringify(list)); loadScenariosFromStorage(); }
 
         function captureState() {
             const layout = [];
@@ -466,12 +447,8 @@
             if(activeScenarioId) {
                 const list = getScenarios();
                 const sc = list.find(s => s.id === activeScenarioId);
-                if(sc) {
-                    sc.data = captureState();
-                    sc.date = new Date().toLocaleString();
-                    saveScenarios(list);
-                    alert("Scénario mis à jour !");
-                } else { saveNewScenario(); }
+                if(sc) { sc.data = captureState(); sc.date = new Date().toLocaleString(); saveScenarios(list); alert("Mis à jour !"); }
+                else { saveNewScenario(); }
             } else { saveNewScenario(); }
         }
 
@@ -483,21 +460,26 @@
             list.push({ id, name, author: currentUser, date: new Date().toLocaleString(), data: captureState() });
             saveScenarios(list);
             activeScenarioId = id;
-            alert("Scénario sauvegardé !");
+            alert("Sauvegardé !");
         }
 
         function loadScenario(id) {
             const list = getScenarios();
             const sc = list.find(s => s.id === id);
             if(!sc) return;
-            if(!confirm("Charger ce scénario ?")) return;
-
+            if(!confirm("Charger ?")) return;
+            restoreState(sc.data);
+            activeScenarioId = id;
+            calculateAndDraw();
+            toggleScenarioPanel();
+        }
+        
+        function restoreState(data) {
             workshop.innerHTML = '<svg id="connections"></svg>';
             operatorData = {}; configList.innerHTML = ''; statsPanel.style.display='none';
+            document.getElementById('globalWorkHours').value = data.globalHours || 7;
 
-            document.getElementById('globalWorkHours').value = sc.data.globalHours || 7;
-
-            sc.data.layout.forEach(item => {
+            data.layout.forEach(item => {
                 const div = document.createElement('div');
                 div.className = item.className; div.id = item.id;
                 div.style.left = item.left + 'px'; div.style.top = item.top + 'px';
@@ -508,7 +490,7 @@
                 initMachine(div);
             });
 
-            operatorData = sc.data.operators;
+            operatorData = data.operators;
             for(let opId in operatorData) {
                 const d = operatorData[opId];
                 const el = document.getElementById(opId);
@@ -521,46 +503,46 @@
                 document.getElementById('tasks-'+opId).innerHTML = '';
                 operatorData[opId].tasks.forEach(t => renderTaskRow(opId, t));
             }
-
-            activeScenarioId = id;
-            calculateAndDraw();
-            toggleScenarioPanel();
         }
 
-        function deleteScenario(id) {
-            if(!confirm("Supprimer ?")) return;
-            saveScenarios(getScenarios().filter(s => s.id !== id));
-        }
-
-        // --- NOUVELLES FONCTIONS : DUPLIQUER & RENOMMER ---
         function duplicateScenario(id) {
-            const list = getScenarios();
-            const original = list.find(s => s.id === id);
+            const list = getScenarios(); const original = list.find(s => s.id === id);
             if(original) {
-                const newId = 'sc_' + Date.now();
-                // Copie profonde des données
-                const newData = JSON.parse(JSON.stringify(original.data));
-                list.push({
-                    id: newId,
-                    name: original.name + " (Copie)",
-                    author: currentUser,
-                    date: new Date().toLocaleString(),
-                    data: newData
-                });
+                list.push({ id: 'sc_' + Date.now(), name: original.name + " (Copie)", author: currentUser, date: new Date().toLocaleString(), data: JSON.parse(JSON.stringify(original.data)) });
                 saveScenarios(list);
             }
         }
-
         function renameScenario(id) {
-            const list = getScenarios();
-            const sc = list.find(s => s.id === id);
-            if(sc) {
-                const newName = prompt("Nouveau nom :", sc.name);
-                if(newName) {
-                    sc.name = newName;
-                    saveScenarios(list);
-                }
-            }
+            const list = getScenarios(); const sc = list.find(s => s.id === id);
+            if(sc) { const n = prompt("Nouveau nom:", sc.name); if(n) { sc.name = n; saveScenarios(list); } }
+        }
+        function deleteScenario(id) { if(confirm("Supprimer ?")) saveScenarios(getScenarios().filter(s => s.id !== id)); }
+
+        // --- FILE IMPORT / EXPORT ---
+        function exportFile() {
+            const data = captureState();
+            const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'scenario_fabie.json'; a.click();
+        }
+
+        function importFile(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(confirm("Importer ce fichier ? (Les données actuelles seront remplacées)")) {
+                        restoreState(data);
+                        calculateAndDraw();
+                        activeScenarioId = null; // Fichier externe = pas lié au localStorage pour l'instant
+                        toggleScenarioPanel();
+                    }
+                } catch(err) { alert("Erreur format fichier"); }
+            };
+            reader.readAsText(file);
+            input.value = '';
         }
 
         function loadScenariosFromStorage() {
@@ -585,7 +567,7 @@
             });
         }
 
-        // --- FACTORIES (AVEC CLASSES COULEURS) ---
+        // --- FACTORIES ---
         function createObj(name, w, h) {
             const div = document.createElement('div'); div.className = 'machine'; div.textContent = name;
             div.style.left = '50px'; div.style.top = '50px'; div.style.width = w + 'px'; div.style.height = h + 'px';
@@ -619,16 +601,17 @@
             card.innerHTML = `
                 <div class="op-config-header" style="background-color: ${color}"><span>${opName}</span></div>
                 <div style="padding: 5px 10px; background:#f1f2f6; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-                    <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod:</strong>
-                    <div><input type="number" value="1" min="1" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateTargetRacks('${opId}', this.value)"> Échelles</div>
+                    <div>🎯 <input type="number" value="${operatorData[opId]?.targetRacks || 1}" min="1" style="width:30px; text-align:center;" onchange="updateTargetRacks('${opId}', this.value)"> Éch.</div>
+                    <div>💶 <input type="number" value="${operatorData[opId]?.hourlyCost || 25}" min="0" style="width:40px; text-align:center;" onchange="updateHourlyCost('${opId}', this.value)"> €/h</div>
                 </div>
                 <div class="op-config-body"><div id="tasks-${opId}"></div><button class="btn-sm btn-add-action" onclick="addTask('${opId}')">+ Ajouter Tâche</button></div>
             `;
             configList.appendChild(card);
-            if(!operatorData[opId]) { operatorData[opId] = { color: color, targetRacks: 1, tasks: [] }; addTask(opId, "Remplir grille", 10, 'per_grid'); }
+            if(!operatorData[opId]) { operatorData[opId] = { color: color, targetRacks: 1, hourlyCost: 25, tasks: [] }; addTask(opId, "Remplir grille", 10, 'per_grid'); }
         }
 
         function updateTargetRacks(opId, val) { if(operatorData[opId]) { operatorData[opId].targetRacks = parseInt(val) || 1; calculateAndDraw(); } }
+        function updateHourlyCost(opId, val) { if(operatorData[opId]) { operatorData[opId].hourlyCost = parseFloat(val) || 0; calculateAndDraw(); } }
 
         function addTask(opId, defaultName="Tâche", defaultTime=10, defaultType='total') {
             const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
@@ -706,13 +689,16 @@
         function calculateAndDraw() {
             svg.innerHTML = ''; document.querySelectorAll('.step-badge').forEach(b => b.remove()); statsContent.innerHTML = '';
             let hasAnyData = false;
+            let globalTotalSeconds = 0;
+            let globalTotalCost = 0;
             const globalHours = parseInt(document.getElementById('globalWorkHours').value) || 0;
-            const globalTimeSeconds = globalHours * 3600;
+            const globalTimeRef = globalHours * 3600;
 
             for (const [opId, data] of Object.entries(operatorData)) {
                 if(!document.getElementById(opId)) continue; 
                 const opName = document.getElementById(opId).firstChild.textContent;
                 const targetRacks = data.targetRacks || 1;
+                const hourlyCost = data.hourlyCost || 0;
                 let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0;
                 const card = document.createElement('div'); card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
                 let tasksHtml = '';
@@ -756,17 +742,22 @@
                 });
 
                 const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime;
+                globalTotalSeconds += totalWorkTimeSeconds;
+                const opCost = (totalWorkTimeSeconds / 3600) * hourlyCost;
+                globalTotalCost += opCost;
+
                 let loadPercent = 0, loadColor = "#2ecc71";
-                if (globalTimeSeconds > 0) {
-                    loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100;
+                if (globalTimeRef > 0) {
+                    loadPercent = (totalWorkTimeSeconds / globalTimeRef) * 100;
                     if (loadPercent > 100) loadColor = "#e74c3c"; else if (loadPercent > 85) loadColor = "#f39c12";
                 }
 
                 card.innerHTML = `
-                    <div class="op-title" style="color:${data.color}">${opName} <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Éch.</span></div>
+                    <div class="op-title" style="color:${data.color}">${opName} <span style="font-size:12px; font-weight:normal; color:#555; float:right;">${hourlyCost}€/h</span></div>
                     ${tasksHtml}
                     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;">
                         <div class="stat-row" style="font-weight:bold;"><span>Charge Totale:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="color:#2980b9;"><span>Coût Est.:</span> <span>${opCost.toFixed(2)} €</span></div>
                         <div style="margin-top:5px;">
                             <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold;"><span>Charge</span><span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span></div>
                             <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div></div>
@@ -774,7 +765,21 @@
                     </div>`;
                 statsContent.appendChild(card);
             }
-            statsPanel.style.display = hasAnyData ? 'flex' : 'none';
+
+            // GLOBAL SUMMARY
+            if(hasAnyData) {
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'global-summary';
+                summaryDiv.innerHTML = `
+                    <div class="gs-row"><span>Temps Total Cumulé:</span> <strong>${formatTime(globalTotalSeconds)}</strong></div>
+                    <div class="gs-row"><span>Effectif Virtuel:</span> <strong>${(globalTotalSeconds / (globalTimeRef || 1)).toFixed(2)} ETP</strong></div>
+                    <div class="gs-total">Coût Total Prod: ${globalTotalCost.toFixed(2)} €</div>
+                `;
+                statsContent.prepend(summaryDiv);
+                statsPanel.style.display = 'flex';
+            } else {
+                statsPanel.style.display = 'none';
+            }
         }
 
         // Utils
