@@ -3,90 +3,547 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FABIE - Simulateur Pro</title>
-    <link rel="stylesheet" href="style.css">
+    <title>FABIE - Simulateur Expert</title>
+    <style>
+        /* --- CSS INTEGRE POUR EVITER LES ERREURS DE LIEN --- */
+        :root {
+            --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --success: #27ae60;
+            --bg: #f4f7f6; --panel-w: 320px;
+            --scale: 30px; /* 1m = 30px */
+        }
+        
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* LOGIN */
+        #login-overlay { position: fixed; inset: 0; background: rgba(44,62,80,0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; width: 300px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .login-box button { width: 100%; padding: 10px; background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; }
+
+        /* LAYOUT */
+        .navbar { height: 50px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; flex-shrink: 0; }
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        
+        /* SIDEBARS */
+        .sidebar { width: var(--panel-w); background: white; display: flex; flex-direction: column; border-right: 1px solid #ddd; z-index: 20; }
+        .sidebar.right { border-left: 1px solid #ddd; border-right: none; }
+        
+        .panel-block { padding: 15px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; max-height: 50%; }
+        .panel-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .list-container { flex: 1; overflow-y: auto; background: #fafafa; border: 1px solid #eee; min-height: 100px; border-radius: 4px; }
+        
+        .list-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
+        .list-item:hover { background: #eef; }
+        .list-item.active { background: var(--accent); color: white; }
+
+        /* VIEWPORT */
+        .viewport { flex: 1; display: flex; flex-direction: column; background: #eaeded; position: relative; }
+        .toolbar { height: 50px; background: white; border-bottom: 1px solid #ccc; display: flex; align-items: center; padding: 0 15px; gap: 10px; z-index: 10; }
+        
+        button.btn-tool { padding: 6px 12px; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        button.btn-tool:hover { background: #e2e6ea; }
+        button.btn-primary { background: var(--success); color: white; border: none; }
+        button.btn-danger { background: var(--danger); color: white; border: none; }
+
+        #canvas-wrapper { flex: 1; overflow: auto; position: relative; display: flex; justify-content: center; padding: 50px; }
+        
+        /* ZONE DE DESSIN */
+        #workshop-area { 
+            position: relative; 
+            background: white; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            /* Dimensions gérées par JS */
+        }
+        
+        .grid-bg { 
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0; 
+            background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px);
+            background-size: var(--scale) var(--scale);
+            border: 2px solid #333; z-index: 0;
+        }
+
+        #svg-layer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
+        #items-layer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 20; }
+
+        /* OBJETS */
+        .item {
+            position: absolute; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold; color: white; background: var(--accent);
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; cursor: grab; user-select: none;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        .item:active { cursor: grabbing; z-index: 100; transform: scale(1.02); }
+        .item.palette { background: #d35400; }
+        .item.scale { background: var(--success); border-style: dashed; }
+        .item.person { border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
+        .item.pillar { background: black; border-radius: 0; }
+        .item.waypoint { background: #8e44ad; border-radius: 50%; font-size: 0; }
+
+        .resize-handle {
+            width: 10px; height: 10px; background: #333; position: absolute; right: 0; bottom: 0;
+            cursor: se-resize; clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        }
+
+        /* SVG LIGNES (DASHED) */
+        path {
+            fill: none; stroke-width: 3px; stroke-dasharray: 10, 5; stroke-linecap: round;
+            animation: dash 60s linear infinite; opacity: 0.8;
+        }
+        @keyframes dash { to { stroke-dashoffset: -1000; } }
+
+        /* STATS & CONFIG */
+        .task-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+        .btn-rec { width: 30px; padding: 2px; }
+        .btn-rec.recording { background: #ffebee; color: red; border-color: red; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        
+        .stat-card { background: white; border-left: 4px solid #ccc; padding: 8px; margin-bottom: 8px; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    </style>
 </head>
 <body>
 
     <div id="login-overlay">
         <div class="login-box">
-            <h2>🏭 Accès FABIE</h2>
-            <input type="text" id="username" placeholder="Identifiant">
-            <input type="password" id="password" placeholder="Mot de passe">
-            <button onclick="app.login()">Connexion</button>
-            <p id="login-msg">Mot de passe incorrect</p>
+            <h2>🏭 FABIE v5.0</h2>
+            <input type="password" id="password" placeholder="Mot de passe (FABIE2026)">
+            <button onclick="APP.login()">Connexion</button>
+            <div id="login-msg" style="color:red; margin-top:10px; display:none;">Erreur mot de passe</div>
         </div>
     </div>
 
-    <div id="main-interface" style="display:none;">
+    <div id="app-ui" style="display:none; height:100vh; flex-direction:column;">
         <nav class="navbar">
-            <div class="brand">Simulateur <span>FABIE</span></div>
-            <div class="user-info">
-                <span id="user-display">Invité</span>
-                <button class="btn-logout" onclick="location.reload()">Quitter</button>
-            </div>
+            <div style="font-weight:bold; font-size:18px;">Simulateur <span>FABIE</span></div>
+            <button onclick="location.reload()" style="background:none; border:1px solid white; color:white;">Déconnexion</button>
         </nav>
 
-        <div class="layout">
-            <aside class="sidebar-left">
-                <div class="panel">
-                    <h3>📂 Scénarios</h3>
-                    <div class="controls">
-                        <button onclick="app.createScenario()" class="btn-new">+ Nouveau</button>
-                        <button onclick="app.downloadJSON()" title="Sauvegarder fichier">💾</button>
-                        <button onclick="document.getElementById('file-upload').click()" title="Ouvrir fichier">📂</button>
-                        <input type="file" id="file-upload" hidden onchange="app.uploadJSON(this)">
+        <div class="main-layout">
+            <aside class="sidebar">
+                <div class="panel-block">
+                    <div class="panel-title">
+                        📂 Scénarios
+                        <div>
+                            <button onclick="APP.exportData()" title="Sauver Fichier" style="padding:2px 5px;">💾</button>
+                            <button onclick="document.getElementById('importInput').click()" title="Ouvrir Fichier" style="padding:2px 5px;">📂</button>
+                            <input type="file" id="importInput" hidden onchange="APP.importData(this)">
+                        </div>
                     </div>
-                    <div id="scenario-list" class="list-box"></div>
+                    <button onclick="APP.newScenario()" class="btn-tool" style="width:100%; margin-bottom:5px;">+ Nouveau Scénario</button>
+                    <div id="list-scenarios" class="list-container"></div>
                 </div>
 
-                <div class="panel">
-                    <h3>🏭 Mes Ateliers</h3>
-                    <div id="workshop-list" class="list-box workshops"></div>
-                    <button onclick="app.addWorkshop()" class="btn-add-ws">+ Ajouter Atelier</button>
+                <div class="panel-block" style="flex:1;">
+                    <div class="panel-title">🏭 Ateliers</div>
+                    <button onclick="APP.addWorkshop()" class="btn-tool" style="width:100%; margin-bottom:5px;">+ Ajouter Atelier</button>
+                    <div id="list-workshops" class="list-container"></div>
                 </div>
             </aside>
 
             <main class="viewport">
                 <div class="toolbar">
-                    <div class="dims">
-                        Dim: <input type="number" id="ws-width" value="20" onchange="app.resizeRoom()"> x 
-                        <input type="number" id="ws-height" value="12" onchange="app.resizeRoom()"> m
-                    </div>
-                    <div class="tools">
-                        <button onclick="app.addItem('machine')">🏭 Machine</button>
-                        <button onclick="app.addItem('palette')">📦 Palette</button>
-                        <button onclick="app.addItem('scale')">🪜 Échelle</button>
-                        <button onclick="app.addItem('pillar')">⬛ Pilier</button>
-                        <button onclick="app.addItem('waypoint')">📍 Point</button>
-                    </div>
-                    <button onclick="app.addOperator()" class="btn-op">👷 Opérateur</button>
-                    <div id="trash" class="trash-zone">🗑️ Corbeille</div>
+                    <span style="font-size:12px; font-weight:bold;">Dim (m):</span>
+                    <input type="number" id="roomW" value="20" style="width:40px; text-align:center;" onchange="APP.resizeRoom()"> x 
+                    <input type="number" id="roomH" value="12" style="width:40px; text-align:center;" onchange="APP.resizeRoom()">
+                    
+                    <div style="width:1px; height:20px; background:#ccc; margin:0 10px;"></div>
+                    
+                    <button class="btn-tool" onclick="APP.addItem('machine')">🏭 Machine</button>
+                    <button class="btn-tool" onclick="APP.addItem('palette')">📦 Palette</button>
+                    <button class="btn-tool" onclick="APP.addItem('scale')">🪜 Échelle</button>
+                    <button class="btn-tool" onclick="APP.addItem('pillar')">⬛ Pilier</button>
+                    <button class="btn-tool" onclick="APP.addItem('waypoint')">📍 Point</button>
+                    
+                    <div style="width:1px; height:20px; background:#ccc; margin:0 10px;"></div>
+                    
+                    <button class="btn-tool btn-primary" onclick="APP.addOperator()">👷 Opérateur</button>
+                    <button class="btn-tool btn-danger" onclick="APP.clearWorkshop()" style="margin-left:auto;">🗑️ Vider</button>
                 </div>
 
-                <div id="canvas-area">
-                    <div id="grid"></div>
-                    <svg id="svg-layer"></svg>
-                    <div id="items-layer"></div>
+                <div id="canvas-wrapper">
+                    <div id="workshop-area">
+                        <div class="grid-bg"></div>
+                        <svg id="svg-layer"></svg>
+                        <div id="items-layer"></div>
+                    </div>
                 </div>
             </main>
 
-            <aside class="sidebar-right">
-                <div class="panel">
-                    <h3>⚙️ Gammes Opératoires</h3>
-                    <div id="operators-list" class="op-list"></div>
+            <aside class="sidebar right">
+                <div class="panel-block" style="flex:1;">
+                    <div class="panel-title">⚙️ Gammes</div>
+                    <div id="list-operators" class="list-container" style="background:white;"></div>
                 </div>
-                <div class="panel stats">
-                    <h3>📊 Coûts & Temps</h3>
-                    <div class="global-param">
-                        Temps Ref: <input type="number" id="ref-hours" value="7" onchange="app.updateStats()"> h
+                <div class="panel-block" style="height:40%;">
+                    <div class="panel-title">📊 Coûts</div>
+                    <div style="font-size:12px; margin-bottom:5px; background:#eee; padding:5px;">
+                        Temps Ref: <input type="number" id="refHours" value="7" style="width:30px" onchange="APP.updateStats()">h
                     </div>
-                    <div id="stats-display"></div>
+                    <div id="stats-output" style="overflow-y:auto; flex:1;"></div>
                 </div>
             </aside>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const CFG = { pxPerM: 30, colors: ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c'] };
+        
+        const APP = {
+            data: { scenarios: [], activeScIdx: null, activeWsIdx: 0 },
+            temp: { dragEl: null, offX:0, offY:0, recording: null },
+
+            // --- 1. CORE ---
+            init: function() {
+                const saved = localStorage.getItem('fabie_v5_final');
+                if(saved) this.data.scenarios = JSON.parse(saved);
+                
+                // FORCE creation s'il n'y a rien (Pour éviter l'écran vide)
+                if(this.data.scenarios.length === 0) {
+                    this.createDefaultScenario();
+                }
+            },
+
+            login: function() {
+                if(document.getElementById('password').value === "FABIE2026") {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('app-ui').style.display = 'flex';
+                    // Charger le dernier scénario ou le premier
+                    this.loadScenario(0);
+                } else {
+                    document.getElementById('login-msg').style.display = 'block';
+                }
+            },
+
+            save: function() {
+                localStorage.setItem('fabie_v5_final', JSON.stringify(this.data.scenarios));
+                this.renderUI();
+            },
+
+            // --- 2. SCENARIOS ---
+            createDefaultScenario: function() {
+                this.data.scenarios.push({
+                    id: 'sc_'+Date.now(), name: "Démarrage", refHours: 7,
+                    workshops: [{ name: "Atelier 1", w: 20, h: 12, items: [] }],
+                    operators: {} 
+                });
+                this.save();
+            },
+
+            newScenario: function() {
+                const n = prompt("Nom :"); if(!n) return;
+                this.data.scenarios.push({
+                    id: 'sc_'+Date.now(), name: n, refHours: 7,
+                    workshops: [{ name: "Atelier Principal", w: 20, h: 12, items: [] }],
+                    operators: {} 
+                });
+                this.loadScenario(this.data.scenarios.length-1);
+                this.save();
+            },
+
+            loadScenario: function(idx) {
+                if(!this.data.scenarios[idx]) idx = 0; // Fallback
+                this.data.activeScIdx = idx;
+                this.data.activeWsIdx = 0;
+                this.renderUI();
+                this.loadWorkshop();
+            },
+
+            getSc: function() { return this.data.scenarios[this.data.activeScIdx]; },
+            getWs: function() { return this.getSc().workshops[this.data.activeWsIdx]; },
+
+            // --- 3. RENDERING UI ---
+            renderUI: function() {
+                const sc = this.getSc();
+                if(!sc) return;
+
+                // Liste Scénarios
+                const ls = document.getElementById('list-scenarios'); ls.innerHTML = '';
+                this.data.scenarios.forEach((s, i) => {
+                    ls.innerHTML += `<div class="list-item ${i===this.data.activeScIdx?'active':''}" onclick="APP.loadScenario(${i})">
+                        <span>${s.name}</span> <span onclick="APP.delScenario(${i}, event)">🗑️</span>
+                    </div>`;
+                });
+
+                // Liste Ateliers
+                const lw = document.getElementById('list-workshops'); lw.innerHTML = '';
+                sc.workshops.forEach((w, i) => {
+                    lw.innerHTML += `<div class="list-item ${i===this.data.activeWsIdx?'active':''}" onclick="APP.switchWorkshop(${i})">
+                        <span>${w.name}</span> <span style="font-size:10px;">${w.w}x${w.h}m</span>
+                    </div>`;
+                });
+
+                // Liste Opérateurs
+                const lo = document.getElementById('list-operators'); lo.innerHTML = '';
+                for(let id in sc.operators) {
+                    const op = sc.operators[id];
+                    let tasksHTML = '';
+                    op.tasks.forEach(t => {
+                        const isRec = this.temp.recording && this.temp.recording.tid === t.id;
+                        tasksHTML += `<div class="task-row">
+                            <input value="${t.name}" style="flex:1; width:50px;" onchange="APP.updTask('${id}','${t.id}','name',this.value)">
+                            <input value="${t.time}" type="number" style="width:30px;" onchange="APP.updTask('${id}','${t.id}','time',this.value)">s
+                            <input value="${t.freq}" type="number" style="width:30px;" onchange="APP.updTask('${id}','${t.id}','freq',this.value)">x
+                            <button class="btn-rec ${isRec?'recording':''}" onclick="APP.rec('${id}','${t.id}')">📍</button>
+                            <button class="btn-rec" onclick="APP.delTask('${id}','${t.id}')" style="color:red;">×</button>
+                        </div>`;
+                    });
+
+                    lo.innerHTML += `<div style="border:1px solid #ddd; margin-bottom:5px; padding:5px;">
+                        <div style="font-weight:bold; color:${op.color}; display:flex; justify-content:space-between;">
+                            ${op.name} <span onclick="APP.delOp('${id}')" style="cursor:pointer;color:black;">🗑️</span>
+                        </div>
+                        <div style="margin:5px 0;">Coût: <input value="${op.cost}" type="number" style="width:40px" onchange="APP.updOp('${id}',this.value)"> €/h</div>
+                        ${tasksHTML}
+                        <button onclick="APP.addTask('${id}')" style="width:100%; font-size:10px;">+ Tâche</button>
+                    </div>`;
+                }
+                
+                // Update global inputs
+                document.getElementById('refHours').value = sc.refHours;
+                
+                this.updateStats();
+            },
+
+            // --- 4. ATELIERS ---
+            addWorkshop: function() {
+                const n = prompt("Nom atelier :"); if(!n) return;
+                this.getSc().workshops.push({ name:n, w:15, h:10, items:[] });
+                this.switchWorkshop(this.getSc().workshops.length-1);
+                this.save();
+            },
+            switchWorkshop: function(i) {
+                this.data.activeWsIdx = i;
+                this.renderUI();
+                this.loadWorkshop();
+            },
+            loadWorkshop: function() {
+                const ws = this.getWs();
+                document.getElementById('roomW').value = ws.w;
+                document.getElementById('roomH').value = ws.h;
+                this.resizeRoom();
+                
+                const layer = document.getElementById('items-layer');
+                layer.innerHTML = '';
+                ws.items.forEach(it => this.renderItem(it));
+                this.updateStats(); // Redraw lines
+            },
+            resizeRoom: function() {
+                const ws = this.getWs();
+                ws.w = parseFloat(document.getElementById('roomW').value);
+                ws.h = parseFloat(document.getElementById('roomH').value);
+                
+                const wPx = ws.w * CFG.pxPerM;
+                const hPx = ws.h * CFG.pxPerM;
+                const area = document.getElementById('workshop-area');
+                area.style.width = wPx + 'px';
+                area.style.height = hPx + 'px';
+                document.getElementById('svg-layer').style.width = wPx + 'px';
+                document.getElementById('svg-layer').style.height = hPx + 'px';
+                this.save();
+            },
+            clearWorkshop: function() {
+                if(confirm("Vider l'atelier ?")) {
+                    this.getWs().items = [];
+                    this.loadWorkshop();
+                    this.save();
+                }
+            },
+
+            // --- 5. ITEMS & DRAG ---
+            addItem: function(type) {
+                const ws = this.getWs();
+                let w=45, h=30, txt="M";
+                if(type==='palette') { w=36; h=24; txt="Pal"; }
+                if(type==='pillar' || type==='waypoint') { w=15; h=15; txt=""; }
+                
+                const it = { id:'it_'+Date.now(), type, x:20, y:20, w, h, txt };
+                ws.items.push(it);
+                this.renderItem(it);
+                this.save();
+            },
+            addOperator: function() {
+                const sc = this.getSc();
+                const id = 'op_'+Date.now();
+                const col = CFG.colors[Object.keys(sc.operators).length % CFG.colors.length];
+                sc.operators[id] = { name: "Op "+(Object.keys(sc.operators).length+1), color:col, cost:25, tasks:[] };
+                
+                const it = { id:id, type:'person', x:50, y:50, w:24, h:24, txt:'', bg:col };
+                this.getWs().items.push(it);
+                this.renderItem(it);
+                this.renderUI();
+                this.save();
+            },
+            renderItem: function(it) {
+                const div = document.createElement('div');
+                div.className = `item ${it.type}`;
+                div.id = it.id;
+                div.style.left = it.x+'px'; div.style.top = it.y+'px';
+                div.style.width = it.w+'px'; div.style.height = it.h+'px';
+                div.innerText = it.txt;
+                if(it.bg) div.style.backgroundColor = it.bg;
+                
+                // Resizer
+                if(!['waypoint','person'].includes(it.type)) {
+                    const r = document.createElement('div'); r.className='resize-handle';
+                    r.onmousedown = (e) => this.startResize(e, it.id);
+                    div.appendChild(r);
+                }
+
+                div.onmousedown = (e) => this.startDrag(e, it.id);
+                div.onclick = () => this.clkItem(it.id);
+                document.getElementById('items-layer').appendChild(div);
+            },
+
+            // --- 6. DRAG LOGIC ---
+            startDrag: function(e, id) {
+                if(e.target.className.includes('resize')) return;
+                e.stopPropagation();
+                const el = document.getElementById(id);
+                this.temp.dragEl = el;
+                this.temp.offX = e.clientX - el.offsetLeft;
+                this.temp.offY = e.clientY - el.offsetTop;
+                document.onmousemove = (ev) => {
+                    const x = ev.clientX - this.temp.offX;
+                    const y = ev.clientY - this.temp.offY;
+                    el.style.left = x+'px'; el.style.top = y+'px';
+                    this.updateStats(); // Lignes suivent
+                };
+                document.onmouseup = () => {
+                    document.onmousemove = null; document.onmouseup = null;
+                    // Save pos
+                    const item = this.getWs().items.find(i=>i.id===id);
+                    if(item) { item.x = parseInt(el.style.left); item.y = parseInt(el.style.top); }
+                    this.save();
+                };
+            },
+            startResize: function(e, id) {
+                e.stopPropagation();
+                const el = document.getElementById(id);
+                const startX = e.clientX; const startW = parseInt(el.style.width);
+                const startY = e.clientY; const startH = parseInt(el.style.height);
+                document.onmousemove = (ev) => {
+                    el.style.width = (startW + ev.clientX - startX) + 'px';
+                    el.style.height = (startH + ev.clientY - startY) + 'px';
+                };
+                document.onmouseup = () => {
+                    document.onmousemove = null; document.onmouseup = null;
+                    const item = this.getWs().items.find(i=>i.id===id);
+                    if(item) { item.w = parseInt(el.style.width); item.h = parseInt(el.style.height); }
+                    this.save();
+                };
+            },
+
+            // --- 7. GAMMES & SVG ---
+            addTask: function(oid) { this.getSc().operators[oid].tasks.push({id:'t'+Date.now(), name:'Tâche', time:10, freq:1, steps:[]}); this.save(); this.renderUI(); },
+            updTask: function(oid, tid, k, v) { this.getSc().operators[oid].tasks.find(t=>t.id===tid)[k] = (k==='name'?v:parseFloat(v)); this.save(); this.updateStats(); },
+            updOp: function(oid, v) { this.getSc().operators[oid].cost = parseFloat(v); this.save(); this.updateStats(); },
+            delTask: function(oid, tid) { const op = this.getSc().operators[oid]; op.tasks = op.tasks.filter(t=>t.id!==tid); this.save(); this.renderUI(); },
+            delOp: function(oid) { if(confirm("Supprimer opérateur ?")) { delete this.getSc().operators[oid]; this.save(); this.renderUI(); } },
+            
+            rec: function(oid, tid) {
+                if(this.temp.recording) this.temp.recording = null;
+                else this.temp.recording = { oid, tid };
+                this.renderUI();
+            },
+            clkItem: function(iid) {
+                if(!this.temp.recording) return;
+                const { oid, tid } = this.temp.recording;
+                const t = this.getSc().operators[oid].tasks.find(x=>x.id===tid);
+                t.steps.push({ wsIdx: this.data.activeWsIdx, itemId: iid });
+                this.save(); this.updateStats();
+            },
+
+            updateStats: function() {
+                const sc = this.getSc();
+                if(!sc) return;
+                sc.refHours = parseFloat(document.getElementById('refHours').value) || 7;
+                
+                const svg = document.getElementById('svg-layer');
+                svg.innerHTML = '';
+                const out = document.getElementById('stats-output');
+                out.innerHTML = '';
+
+                let totTime = 0, totCost = 0;
+
+                for(let oid in sc.operators) {
+                    const op = sc.operators[oid];
+                    let opTime = 0;
+                    let pathD = "";
+                    let prev = null;
+
+                    op.tasks.forEach(t => {
+                        opTime += t.time * t.freq;
+                        
+                        // Trajets
+                        if(t.steps.length > 1) {
+                            t.steps.forEach(st => {
+                                if(st.wsIdx === this.data.activeWsIdx) {
+                                    const el = document.getElementById(st.itemId);
+                                    if(el) {
+                                        const r = {
+                                            x: parseInt(el.style.left) + parseInt(el.style.width)/2,
+                                            y: parseInt(el.style.top) + parseInt(el.style.height)/2
+                                        };
+                                        
+                                        if(prev) {
+                                            // Dessin
+                                            pathD += `M${prev.x},${prev.y} L${r.x},${r.y} `;
+                                            // Calcul distance
+                                            const dist = Math.sqrt(Math.pow(r.x-prev.x,2) + Math.pow(r.y-prev.y,2)) / CFG.pxPerM;
+                                            opTime += (dist / 1.4) * t.freq;
+                                        }
+                                        prev = r;
+                                    } else { prev = null; }
+                                } else { prev = null; }
+                            });
+                        }
+                    });
+
+                    if(pathD) {
+                        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        p.setAttribute("d", pathD);
+                        p.style.stroke = op.color;
+                        svg.appendChild(p);
+                    }
+
+                    const cost = (opTime/3600) * op.cost;
+                    totTime += opTime; totCost += cost;
+
+                    out.innerHTML += `<div class="stat-card" style="border-left-color:${op.color}">
+                        <strong>${op.name}</strong><br>
+                        ⏱️ ${(opTime/60).toFixed(1)} min | 💶 ${cost.toFixed(2)}€
+                    </div>`;
+                }
+
+                out.innerHTML = `<div style="background:#2c3e50; color:white; padding:10px; margin-bottom:10px; border-radius:4px;">
+                    <strong>TOTAL</strong><br>
+                    ${(totTime/3600).toFixed(2)} Heures<br>
+                    ${totCost.toFixed(2)} €
+                </div>` + out.innerHTML;
+            },
+
+            // --- 8. SYSTEM ---
+            delScenario: function(i, e) { e.stopPropagation(); if(confirm("Supprimer?")) { this.data.scenarios.splice(i,1); this.save(); location.reload(); } },
+            exportData: function() {
+                const a = document.createElement('a');
+                a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.scenarios));
+                a.download = "fabie_backup.json"; a.click();
+            },
+            importData: function(input) {
+                const f = input.files[0]; if(!f) return;
+                const r = new FileReader();
+                r.onload = e => { 
+                    try { 
+                        this.data.scenarios = JSON.parse(e.target.result); 
+                        this.save(); alert("OK"); location.reload(); 
+                    } catch(x) { alert("Erreur"); } 
+                };
+                r.readAsText(f);
+            }
+        };
+
+        // Boot
+        window.onload = () => APP.init();
+    </script>
 </body>
 </html>
