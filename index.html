@@ -280,7 +280,7 @@
     <!-- OVERLAY LOGIN -->
     <div id="login-overlay">
         <div class="login-box">
-            <h2><i class="fas fa-industry"></i> FABIE 2026</h2>
+            <h2><i class="fas fa-industry"></i> SIMULATEUR EMBALLAGE </h2>
             <p>Accès au Simulateur</p>
             <input type="password" id="passwordInput" placeholder="Mot de passe...">
             <button onclick="checkLogin()">Entrer</button>
@@ -312,7 +312,8 @@
                 <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px;">
                     <label>Gestion :</label>
                     <button id="btnManualSave" class="sc-btn" style="background:#27ae60; color:white;" onclick="manualSaveScenario()"><i class="fas fa-save"></i> Enregistrer (Site)</button>
-                    <button class="sc-btn" style="background:#3498db; color:white;" onclick="newScenario()"><i class="fas fa-copy"></i> Nouveau (Dupliquer)</button>
+                    <button class="sc-btn" style="background:#8e44ad; color:white;" onclick="createNewBlankScenario()"><i class="fas fa-file"></i> Nouveau (Vierge)</button>
+                    <button class="sc-btn" style="background:#3498db; color:white;" onclick="newScenario()"><i class="fas fa-copy"></i> Dupliquer (Actuel)</button>
                     
                     <div style="height:1px; background:#eee; margin:5px 0;"></div>
                     
@@ -593,7 +594,38 @@
                 scenarios[currentScenarioId].name = newName;
                 saveScenariosToStorage();
                 updateScenarioSelect();
+                
+                // Feedback visuel sur le bouton
+                const btn = document.querySelector('button[onclick="renameCurrentScenario()"]');
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '✅';
+                setTimeout(() => { btn.innerHTML = oldHtml; }, 1500);
             }
+        }
+
+        function createNewBlankScenario() {
+            saveCurrentScenario(); // Sauvegarde l'actuel avant de changer
+            const newId = 'sc_' + Date.now();
+            const defaultName = "Scénario Vierge " + (Object.keys(scenarios).length + 1);
+            
+            scenarios[newId] = {
+                name: defaultName,
+                machines: [
+                    { id: "m1", className: "machine", text: "Entrée", left: "30px", top: "250px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "" },
+                    { id: "m3", className: "machine", text: "Sortie", left: "500px", top: "30px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "" }
+                ],
+                opData: {},
+                globalTime: { 
+                    h: parseInt(document.getElementById('globalWorkHours').value) || 7, 
+                    m: parseInt(document.getElementById('globalWorkMinutes').value) || 0 
+                }
+            };
+            
+            saveScenariosToStorage();
+            updateScenarioSelect();
+            
+            document.getElementById('sidebarScenarioSelect').value = newId;
+            loadScenario(newId);
         }
 
         function manualSaveScenario() {
