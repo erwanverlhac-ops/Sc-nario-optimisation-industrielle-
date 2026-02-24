@@ -1,468 +1,388 @@
-/**
- * FABIE SIMULATOR - CORE LOGIC
- * Version: 4.0 (Multi-File / Multi-Workshop)
- */
-
-const APP_DATA_KEY = 'fabie_v4_data';
-const PIXELS_PER_METER = 30;
-const OP_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c'];
+// --- CONFIGURATION ---
+const CONFIG = {
+    pxPerMeter: 30,
+    colors: ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c']
+};
 
 const app = {
-    data: {
-        currentUser: null,
+    state: {
+        user: null,
         scenarios: [],
-        activeScenarioIndex: null,
-        activeWorkshopIndex: 0
+        currentScIndex: null,
+        currentWsIndex: 0
     },
-    
-    // État temporaire (non sauvegardé en JSON)
     temp: {
-        draggedItem: null,
-        resizedItem: null,
-        recordingState: null, // { opId, taskId }
-        dragOffset: { x: 0, y: 0 }
+        dragItem: null,
+        offsetX: 0, offsetY: 0,
+        recording: null // { opId, taskId }
     },
 
-    // --- AUTHENTIFICATION ---
+    // --- 1. INITIALISATION & LOGIN ---
+    init: function() {
+        const saved = localStorage.getItem('fabie_data_v5');
+        if (saved) this.state.scenarios = JSON.parse(saved);
+    },
+
     login: function() {
-        const pass = document.getElementById('password').value;
-        const user = document.getElementById('username').value;
-        if(pass === "FABIE2026") {
-            this.data.currentUser = user || "Utilisateur";
-            document.getElementById('user-display').innerText = "👤 " + this.data.currentUser;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-interface').style.display = 'block';
-            this.loadFromStorage();
+        const p = document.getElementById('password').value;
+        const u = document.getElementById('username').value;
+        if (p === "FABIE2026") {
+            this.state.user = u || "Utilisateur";
+            document.getElementById('user-display').textContent = this.state.user;
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'block';
+            this.renderScenarioList();
         } else {
-            document.getElementById('login-error').style.display = 'block';
+            document.getElementById('login-msg').style.display = 'block';
         }
     },
 
-    // --- GESTION SCENARIOS ---
-    loadFromStorage: function() {
-        const stored = localStorage.getItem(APP_DATA_KEY);
-        if(stored) this.data.scenarios = JSON.parse(stored);
-        this.renderScenarioList();
+    save: function() {
+        localStorage.setItem('fabie_data_v5', JSON.stringify(this.state.scenarios));
+        this.renderScenarioList(); // Pour mettre à jour les dates si besoin
     },
 
-    saveToStorage: function() {
-        localStorage.setItem(APP_DATA_KEY, JSON.stringify(this.data.scenarios));
-        this.renderScenarioList();
-    },
-
-    newScenario: function() {
-        const name = prompt("Nom du scénario :", "Scénario " + new Date().toLocaleTimeString());
-        if(!name) return;
+    // --- 2. GESTION SCENARIOS ---
+    createScenario: function() {
+        const name = prompt("Nom du scénario :", "Nouveau " + new Date().toLocaleTimeString());
+        if (!name) return;
         
         const newSc = {
             id: 'sc_' + Date.now(),
             name: name,
-            author: this.data.currentUser,
-            date: new Date().toLocaleString(),
-            globalHours: 7,
+            date: new Date().toLocaleDateString(),
+            refHours: 7,
             workshops: [
-                { id: 'ws_1', name: "Atelier Principal", width: 20, height: 12, items: [] }
+                { id: 'ws_1', name: 'Atelier Principal', w: 20, h: 12, items: [] }
             ],
             operators: {} // { opId: { name, color, cost, tasks: [] } }
         };
         
-        this.data.scenarios.push(newSc);
-        this.loadScenario(this.data.scenarios.length - 1);
-        this.saveToStorage();
+        this.state.scenarios.push(newSc);
+        this.loadScenario(this.state.scenarios.length - 1);
+        this.save();
     },
 
-    loadScenario: function(index) {
-        this.data.activeScenarioIndex = index;
-        this.data.activeWorkshopIndex = 0;
+    loadScenario: function(idx) {
+        this.state.currentScIndex = idx;
+        this.state.currentWsIndex = 0;
         
-        // Update UI Lists
+        // Mise à jour UI
         this.renderScenarioList();
         this.renderWorkshopList();
-        this.renderOperators(); // Important: Charge le panneau de droite
+        this.renderOperators();
         
-        // Load View
+        // Chargement Vue
         this.loadWorkshopView();
-    },
-
-    getActiveScenario: function() {
-        if(this.data.activeScenarioIndex === null) return null;
-        return this.data.scenarios[this.data.activeScenarioIndex];
     },
 
     renderScenarioList: function() {
         const list = document.getElementById('scenario-list');
         list.innerHTML = '';
-        this.data.scenarios.forEach((sc, idx) => {
+        this.state.scenarios.forEach((sc, idx) => {
             const div = document.createElement('div');
-            div.className = `sc-item ${idx === this.data.activeScenarioIndex ? 'active' : ''}`;
-            div.innerHTML = `<span>${sc.name}</span> <span style="font-size:10px; color:#888;">${sc.date.split(' ')[0]}</span>`;
-            div.onclick = () => this.loadScenario(idx);
-            
-            // Delete button (right click)
-            div.oncontextmenu = (e) => {
-                e.preventDefault();
-                if(confirm("Supprimer ce scénario ?")) {
-                    this.data.scenarios.splice(idx, 1);
-                    this.data.activeScenarioIndex = null;
-                    this.saveToStorage();
-                    document.getElementById('items-layer').innerHTML = ''; // Clear view
-                }
-            };
+            div.className = `item-row ${idx === this.state.currentScIndex ? 'active' : ''}`;
+            div.innerHTML = `<span>${sc.name}</span> <span onclick="app.deleteScenario(${idx}, event)">🗑️</span>`;
+            div.onclick = (e) => { if(e.target.tagName !== 'SPAN') this.loadScenario(idx); };
             list.appendChild(div);
         });
     },
 
-    // --- GESTION ATELIERS (MULTI-PAGES) ---
+    deleteScenario: function(idx, e) {
+        e.stopPropagation();
+        if (confirm("Supprimer ?")) {
+            this.state.scenarios.splice(idx, 1);
+            this.state.currentScIndex = null;
+            this.save();
+            document.getElementById('scenario-list').innerHTML = '';
+            // Reset view
+            document.getElementById('grid').style.width = '0px';
+            document.getElementById('items-layer').innerHTML = '';
+        }
+    },
+
+    // --- 3. GESTION ATELIERS (MULTI-PAGES) ---
     renderWorkshopList: function() {
-        const sc = this.getActiveScenario();
-        if(!sc) return;
+        const sc = this.getSc();
         const list = document.getElementById('workshop-list');
         list.innerHTML = '';
-        
+        if (!sc) return;
+
         sc.workshops.forEach((ws, idx) => {
             const div = document.createElement('div');
-            div.className = `ws-item ${idx === this.data.activeWorkshopIndex ? 'active' : ''}`;
-            div.innerText = ws.name;
-            div.onclick = () => this.switchWorkshop(idx);
+            div.className = `item-row ${idx === this.state.currentWsIndex ? 'active' : ''}`;
+            div.textContent = ws.name;
+            div.onclick = () => {
+                this.state.currentWsIndex = idx;
+                this.renderWorkshopList();
+                this.loadWorkshopView();
+            };
             div.ondblclick = () => {
-                const newName = prompt("Renommer atelier :", ws.name);
-                if(newName) { ws.name = newName; this.saveToStorage(); this.renderWorkshopList(); }
+                const n = prompt("Renommer atelier :", ws.name);
+                if (n) { ws.name = n; this.save(); this.renderWorkshopList(); }
             };
             list.appendChild(div);
         });
     },
 
     addWorkshop: function() {
-        const sc = this.getActiveScenario();
-        if(!sc) return;
-        sc.workshops.push({
-            id: 'ws_' + Date.now(),
-            name: "Atelier " + (sc.workshops.length + 1),
-            width: 15, height: 10, items: []
-        });
-        this.switchWorkshop(sc.workshops.length - 1);
-        this.saveToStorage();
-    },
-
-    switchWorkshop: function(index) {
-        this.data.activeWorkshopIndex = index;
+        const sc = this.getSc();
+        if (!sc) return;
+        sc.workshops.push({ id: 'ws_'+Date.now(), name: "Atelier "+(sc.workshops.length+1), w:15, h:10, items:[] });
+        this.state.currentWsIndex = sc.workshops.length - 1;
+        this.save();
         this.renderWorkshopList();
         this.loadWorkshopView();
     },
 
     loadWorkshopView: function() {
-        const sc = this.getActiveScenario();
-        if(!sc) return;
-        const ws = sc.workshops[this.data.activeWorkshopIndex];
+        const sc = this.getSc();
+        if (!sc) return;
+        const ws = sc.workshops[this.state.currentWsIndex];
 
-        // Update Inputs
-        document.getElementById('room-width').value = ws.width;
-        document.getElementById('room-height').value = ws.height;
-        document.getElementById('global-hours').value = sc.globalHours;
+        // Dimensions
+        document.getElementById('ws-width').value = ws.w;
+        document.getElementById('ws-height').value = ws.h;
+        document.getElementById('ref-hours').value = sc.refHours;
+        this.resizeRoom(); // Ajuste la grille
 
-        // Resize Container
-        const container = document.getElementById('workshop-container');
-        container.style.width = (ws.width * PIXELS_PER_METER) + 'px';
-        container.style.height = (ws.height * PIXELS_PER_METER) + 'px';
-
-        // Clear & Render Items
+        // Items
         const layer = document.getElementById('items-layer');
         layer.innerHTML = '';
-        document.getElementById('svg-layer').innerHTML = ''; // Clear lines
+        ws.items.forEach(item => this.createItemDOM(item));
 
-        ws.items.forEach(item => {
-            this.createItemDOM(item);
-        });
-
-        this.updateStats(); // Redessine les lignes et calculs
+        // SVG Lignes (Mise à jour)
+        this.updateStats();
     },
 
     resizeRoom: function() {
-        const sc = this.getActiveScenario();
-        if(!sc) return;
-        const ws = sc.workshops[this.data.activeWorkshopIndex];
+        const sc = this.getSc();
+        if (!sc) return;
+        const ws = sc.workshops[this.state.currentWsIndex];
         
-        ws.width = parseFloat(document.getElementById('room-width').value);
-        ws.height = parseFloat(document.getElementById('room-height').value);
+        ws.w = parseFloat(document.getElementById('ws-width').value);
+        ws.h = parseFloat(document.getElementById('ws-height').value);
         
-        this.loadWorkshopView(); // Reload visuals
-        this.saveToStorage();
+        const wPx = ws.w * CONFIG.pxPerMeter;
+        const hPx = ws.h * CONFIG.pxPerMeter;
+        
+        const grid = document.getElementById('grid');
+        grid.style.width = wPx + 'px';
+        grid.style.height = hPx + 'px';
+        
+        // Ajuster SVG layer pour couvrir la grille
+        const svg = document.getElementById('svg-layer');
+        svg.style.width = wPx + 'px';
+        svg.style.height = hPx + 'px';
+        
+        this.save();
     },
 
-    // --- GESTION ITEMS ---
+    // --- 4. ITEMS & DRAG DROP ---
     addItem: function(type) {
-        const sc = this.getActiveScenario();
+        const sc = this.getSc();
         if(!sc) return;
-        const ws = sc.workshops[this.data.activeWorkshopIndex];
-
-        let w=45, h=30, text="Machine";
-        if(type==='palette') { w=36; h=24; text="Palette"; }
-        if(type==='scale') { w=24; h=24; text="Éch"; }
-        if(type==='pillar') { w=15; h=15; text=""; }
-        if(type==='waypoint') { w=15; h=15; text=""; }
-
-        const newItem = {
-            id: type + '_' + Date.now(),
-            type: type,
-            x: 50, y: 50,
-            w: w, h: h,
-            text: text
-        };
-
-        ws.items.push(newItem);
-        this.createItemDOM(newItem);
-        this.saveToStorage();
+        const ws = sc.workshops[this.state.currentWsIndex];
+        
+        let w=45, h=30, txt="M";
+        if(type==='palette') { w=36; h=24; txt="Pal"; }
+        if(type==='pillar' || type==='waypoint') { w=15; h=15; txt=""; }
+        
+        const item = { id: type+'_'+Date.now(), type, x: 20, y: 20, w, h, txt };
+        ws.items.push(item);
+        this.createItemDOM(item);
+        this.save();
     },
 
     addOperator: function() {
-        const sc = this.getActiveScenario();
+        const sc = this.getSc();
         if(!sc) return;
+        const ws = sc.workshops[this.state.currentWsIndex];
         
-        const opId = 'op_' + Date.now();
-        const color = OP_COLORS[Object.keys(sc.operators).length % OP_COLORS.length];
-        const name = "Opérateur " + (Object.keys(sc.operators).length + 1);
-
-        // Add to Global Scenario Data
-        sc.operators[opId] = { name: name, color: color, cost: 25, tasks: [] };
-
-        // Add Visual to Current Workshop
-        const ws = sc.workshops[this.data.activeWorkshopIndex];
-        const newItem = {
-            id: opId, type: 'person', x: 50, y: 50, w: 24, h: 24, text: name, color: color
-        };
-        ws.items.push(newItem);
+        const opId = 'op_'+Date.now();
+        const color = CONFIG.colors[Object.keys(sc.operators).length % CONFIG.colors.length];
         
-        this.createItemDOM(newItem);
+        // Donnée Globale
+        sc.operators[opId] = { name: "Opérateur "+(Object.keys(sc.operators).length+1), color, cost:25, tasks:[] };
+        
+        // Objet Visuel (placé dans l'atelier courant)
+        const item = { id: opId, type: 'person', x: 50, y: 50, w:24, h:24, txt:'', color };
+        ws.items.push(item);
+        
+        this.createItemDOM(item);
         this.renderOperators();
-        this.saveToStorage();
+        this.save();
     },
 
     createItemDOM: function(item) {
         const div = document.createElement('div');
-        div.className = `item ${item.type}`;
+        div.className = `draggable ${item.type}`;
         div.id = item.id;
         div.style.left = item.x + 'px';
         div.style.top = item.y + 'px';
         div.style.width = item.w + 'px';
         div.style.height = item.h + 'px';
-        div.innerText = item.text;
-        
+        div.innerText = item.txt;
         if(item.color) div.style.backgroundColor = item.color;
 
-        // Events
-        div.onmousedown = (e) => this.startDrag(e, item.id);
-        div.onclick = (e) => this.handleItemClick(item.id);
-
-        // Resizer (sauf waypoint)
-        if(item.type !== 'waypoint' && item.type !== 'person') {
-            const resizer = document.createElement('div');
-            resizer.className = 'resize-handle';
-            resizer.onmousedown = (e) => this.startResize(e, item.id);
-            div.appendChild(resizer);
-        }
+        div.onmousedown = (e) => this.startDrag(e, div);
+        div.onclick = () => this.handleItemClick(item.id);
 
         document.getElementById('items-layer').appendChild(div);
     },
 
-    // --- INTERACTION SOURIS (DRAG & RESIZE) ---
-    startDrag: function(e, id) {
-        if(e.target.className.includes('resize')) return;
-        if(this.temp.recordingState) return;
-
-        this.temp.draggedItem = document.getElementById(id);
-        const rect = this.temp.draggedItem.getBoundingClientRect();
-        const containerRect = document.getElementById('workshop-container').getBoundingClientRect();
+    startDrag: function(e, el) {
+        if (this.temp.recording) return; // Pas de drag pendant enregistrement
+        e.stopPropagation();
+        this.temp.dragItem = el;
+        this.temp.offsetX = e.clientX - el.offsetLeft;
+        this.temp.offsetY = e.clientY - el.offsetTop;
         
-        this.temp.dragOffset.x = e.clientX - rect.left;
-        this.temp.dragOffset.y = e.clientY - rect.top;
-
-        document.onmousemove = (ev) => this.onDrag(ev);
-        document.onmouseup = () => this.endDrag(id);
+        document.onmousemove = (e) => this.doDrag(e);
+        document.onmouseup = () => this.stopDrag();
     },
 
-    onDrag: function(e) {
-        if(!this.temp.draggedItem) return;
+    doDrag: function(e) {
+        if (!this.temp.dragItem) return;
+        const x = e.clientX - this.temp.offsetX;
+        const y = e.clientY - this.temp.offsetY;
+        this.temp.dragItem.style.left = x + 'px';
+        this.temp.dragItem.style.top = y + 'px';
         
-        const container = document.getElementById('workshop-container');
-        const containerRect = container.getBoundingClientRect();
-        
-        let x = e.clientX - containerRect.left - this.temp.dragOffset.x;
-        let y = e.clientY - containerRect.top - this.temp.dragOffset.y;
-
-        // Check Trash
-        const trash = document.getElementById('trash-zone');
-        const trashRect = trash.getBoundingClientRect();
-        if(e.clientX > trashRect.left && e.clientY > trashRect.top && e.clientY < trashRect.bottom) {
+        // Check Corbeille
+        const trash = document.getElementById('trash');
+        const rT = trash.getBoundingClientRect();
+        if(e.clientX > rT.left && e.clientX < rT.right && e.clientY > rT.top && e.clientY < rT.bottom) {
             trash.classList.add('drag-over');
         } else {
             trash.classList.remove('drag-over');
         }
-
-        this.temp.draggedItem.style.left = x + 'px';
-        this.temp.draggedItem.style.top = y + 'px';
-        this.updateStats(); // Redraw lines real-time
+        
+        this.updateStats(); // Redessine les lignes en temps réel !
     },
 
-    endDrag: function(id) {
+    stopDrag: function() {
         document.onmousemove = null;
         document.onmouseup = null;
-        const el = this.temp.draggedItem;
-        this.temp.draggedItem = null;
+        const el = this.temp.dragItem;
+        this.temp.dragItem = null;
+        if(!el) return;
 
-        // Handle Trash Drop
-        const trash = document.getElementById('trash-zone');
+        const trash = document.getElementById('trash');
         if(trash.classList.contains('drag-over')) {
             trash.classList.remove('drag-over');
-            this.deleteItem(id);
-            return;
-        }
-
-        // Update Data Model
-        const sc = this.getActiveScenario();
-        const ws = sc.workshops[this.data.activeWorkshopIndex];
-        const item = ws.items.find(i => i.id === id);
-        if(item) {
-            item.x = parseInt(el.style.left);
-            item.y = parseInt(el.style.top);
-            this.saveToStorage();
+            this.deleteItem(el.id);
+        } else {
+            // Save pos
+            const sc = this.getSc();
+            const ws = sc.workshops[this.state.currentWsIndex];
+            const item = ws.items.find(i => i.id === el.id);
+            if(item) {
+                item.x = parseInt(el.style.left);
+                item.y = parseInt(el.style.top);
+                this.save();
+            }
         }
     },
 
     deleteItem: function(id) {
-        const sc = this.getActiveScenario();
-        const ws = sc.workshops[this.data.activeWorkshopIndex];
-        
-        // Remove from items
+        const sc = this.getSc();
+        const ws = sc.workshops[this.state.currentWsIndex];
         ws.items = ws.items.filter(i => i.id !== id);
+        document.getElementById(id).remove();
         
-        // Remove from DOM
-        const el = document.getElementById(id);
-        if(el) el.remove();
-
-        // If it's an operator, ask to remove global data too
-        if(sc.operators[id]) {
-            if(confirm("Supprimer aussi les données de l'opérateur ?")) {
-                delete sc.operators[id];
-                this.renderOperators();
-            }
+        // Si c'est un opérateur, on supprime aussi ses gammes ?
+        if(sc.operators[id] && confirm("Supprimer aussi les gammes de l'opérateur ?")) {
+            delete sc.operators[id];
+            this.renderOperators();
         }
-
         this.updateStats();
-        this.saveToStorage();
+        this.save();
     },
 
-    // --- GAMMES OPÉRATOIRES & CALCULS ---
+    // --- 5. GAMMES & ENREGISTREMENT ---
     renderOperators: function() {
-        const sc = this.getActiveScenario();
-        const container = document.getElementById('operators-list');
-        container.innerHTML = '';
+        const sc = this.getSc();
+        const box = document.getElementById('operators-list');
+        box.innerHTML = '';
         if(!sc) return;
 
         for(const [opId, op] of Object.entries(sc.operators)) {
             const card = document.createElement('div');
             card.className = 'op-card';
             card.innerHTML = `
-                <div class="op-header" style="background:${op.color}">
-                    <span contenteditable="true" onblur="app.updateOpName('${opId}', this.innerText)">${op.name}</span>
-                </div>
-                <div class="op-body">
-                    Coût: <input type="number" value="${op.cost}" onchange="app.updateOpCost('${opId}', this.value)" style="width:40px"> €/h
+                <div class="op-head" style="background:${op.color}">${op.name}</div>
+                <div style="padding:5px;">
+                    Coût: <input type="number" value="${op.cost}" style="width:40px" onchange="app.updOp('${opId}', 'cost', this.value)"> €/h
                     <div id="tasks-${opId}"></div>
-                    <button onclick="app.addTask('${opId}')" style="width:100%; margin-top:5px; background:#eee; color:#333;">+ Tâche</button>
+                    <button onclick="app.addTask('${opId}')" style="width:100%;margin-top:5px;">+ Tâche</button>
                 </div>
             `;
-            container.appendChild(card);
-            op.tasks.forEach(t => this.renderTaskRow(opId, t));
+            box.appendChild(card);
+            op.tasks.forEach(t => this.renderTask(opId, t));
         }
         this.updateStats();
     },
 
-    renderTaskRow: function(opId, task) {
+    renderTask: function(opId, t) {
         const div = document.createElement('div');
         div.className = 'task-row';
-        const isRec = this.temp.recordingState && this.temp.recordingState.taskId === task.id;
-        
+        const isRec = this.temp.recording && this.temp.recording.taskId === t.id;
         div.innerHTML = `
-            <input type="text" value="${task.name}" onchange="app.updateTask('${opId}','${task.id}', 'name', this.value)" style="flex:1">
-            <input type="number" value="${task.time}" onchange="app.updateTask('${opId}','${task.id}', 'time', this.value)" style="width:30px">s
-            <input type="number" value="${task.freq}" onchange="app.updateTask('${opId}','${task.id}', 'freq', this.value)" style="width:30px">x
-            <button class="btn-rec ${isRec?'recording':''}" onclick="app.toggleRecord('${opId}','${task.id}')">📍</button>
-            <button onclick="app.deleteTask('${opId}','${task.id}')" style="color:red;padding:0 4px;">×</button>
+            <input value="${t.name}" style="flex:1" onchange="app.updTask('${opId}','${t.id}','name',this.value)">
+            <input type="number" value="${t.time}" style="width:25px" onchange="app.updTask('${opId}','${t.id}','time',this.value)">s
+            <input type="number" value="${t.freq}" style="width:25px" onchange="app.updTask('${opId}','${t.id}','freq',this.value)">x
+            <button class="btn-rec ${isRec?'recording':''}" onclick="app.rec('${opId}','${t.id}')">📍</button>
+            <button onclick="app.delTask('${opId}','${t.id}')" style="color:red;">×</button>
         `;
         document.getElementById(`tasks-${opId}`).appendChild(div);
     },
 
     addTask: function(opId) {
-        const sc = this.getActiveScenario();
-        sc.operators[opId].tasks.push({
-            id: 't_' + Date.now(), name: 'Action', time: 10, freq: 1, steps: []
-        });
-        this.renderOperators();
-        this.saveToStorage();
+        this.getSc().operators[opId].tasks.push({ id:'t_'+Date.now(), name:'Tâche', time:10, freq:1, steps:[] });
+        this.save(); this.renderOperators();
+    },
+    updTask: function(opId, tId, k, v) { 
+        const t = this.getSc().operators[opId].tasks.find(x=>x.id===tId); 
+        t[k] = (k==='name'?v:parseFloat(v)); 
+        this.save(); this.updateStats(); 
+    },
+    updOp: function(opId, k, v) { this.getSc().operators[opId][k] = parseFloat(v); this.save(); this.updateStats(); },
+    delTask: function(opId, tId) {
+        const op = this.getSc().operators[opId];
+        op.tasks = op.tasks.filter(t=>t.id!==tId);
+        this.save(); this.renderOperators();
     },
 
-    updateTask: function(opId, tId, field, val) {
-        const sc = this.getActiveScenario();
-        const t = sc.operators[opId].tasks.find(x => x.id === tId);
-        if(t) t[field] = field === 'name' ? val : parseFloat(val);
-        this.updateStats();
-        this.saveToStorage();
-    },
-
-    updateOpCost: function(opId, val) {
-        const sc = this.getActiveScenario();
-        sc.operators[opId].cost = parseFloat(val);
-        this.updateStats();
-        this.saveToStorage();
-    },
-
-    // --- ENREGISTREMENT TRAJETS ---
-    toggleRecord: function(opId, tId) {
-        if(this.temp.recordingState) {
-            this.temp.recordingState = null;
-        } else {
-            this.temp.recordingState = { opId: opId, taskId: tId };
-        }
-        this.renderOperators(); // Refresh buttons state
+    rec: function(opId, tId) {
+        if(this.temp.recording) this.temp.recording = null;
+        else this.temp.recording = { opId, taskId: tId };
+        this.renderOperators(); // update buttons
     },
 
     handleItemClick: function(itemId) {
-        if(!this.temp.recordingState) return;
-        const { opId, taskId } = this.temp.recordingState;
-        const sc = this.getActiveScenario();
-        const task = sc.operators[opId].tasks.find(t => t.id === taskId);
+        if(!this.temp.recording) return;
+        const { opId, taskId } = this.temp.recording;
+        const t = this.getSc().operators[opId].tasks.find(x=>x.id===taskId);
         
-        // Ajouter le point avec référence à l'atelier courant
-        task.steps.push({
-            workshopIndex: this.data.activeWorkshopIndex,
-            itemId: itemId
-        });
-        
-        this.updateStats();
-        this.saveToStorage();
+        // Ajoute le point avec l'info de l'atelier
+        t.steps.push({ wsIdx: this.state.currentWsIndex, itemId });
+        this.save(); this.updateStats();
     },
 
-    deleteTask: function(opId, tId) {
-        const sc = this.getActiveScenario();
-        sc.operators[opId].tasks = sc.operators[opId].tasks.filter(t => t.id !== tId);
-        this.renderOperators();
-        this.saveToStorage();
-    },
-
-    // --- CŒUR DU SYSTÈME : DESSIN & CALCUL ---
+    // --- 6. DESSIN SVG & CALCULS ---
     updateStats: function() {
-        const sc = this.getActiveScenario();
+        const sc = this.getSc();
         if(!sc) return;
-
+        
         const svg = document.getElementById('svg-layer');
         svg.innerHTML = ''; // Reset Lignes
-        
-        const statsDiv = document.getElementById('stats-output');
-        statsDiv.innerHTML = '';
+        const disp = document.getElementById('stats-display');
+        disp.innerHTML = '';
 
-        let totalTime = 0;
-        let totalCost = 0;
-        const refHours = parseFloat(document.getElementById('global-hours').value) || 7;
+        let totalTime = 0, totalCost = 0;
+        const refH = parseFloat(document.getElementById('ref-hours').value) || 7;
+        sc.refHours = refH; // save global ref
 
         for(const [opId, op] of Object.entries(sc.operators)) {
             let opTime = 0;
@@ -472,42 +392,32 @@ const app = {
             op.tasks.forEach(task => {
                 opTime += (task.time * task.freq);
 
-                // Dessin des lignes
+                // Dessin des traits (Points)
                 if(task.steps.length > 1) {
                     for(let i=0; i<task.steps.length; i++) {
                         const step = task.steps[i];
-                        
-                        // On ne dessine QUE si le point est dans l'atelier ACTUEL
-                        if(step.workshopIndex === this.data.activeWorkshopIndex) {
+                        // On ne dessine que si c'est dans l'atelier visible
+                        if(step.wsIdx === this.state.currentWsIndex) {
                             const el = document.getElementById(step.itemId);
                             if(el) {
                                 if(prevEl) {
-                                    // Calcul coordonnées
                                     const x1 = parseInt(prevEl.style.left) + parseInt(prevEl.style.width)/2;
                                     const y1 = parseInt(prevEl.style.top) + parseInt(prevEl.style.height)/2;
                                     const x2 = parseInt(el.style.left) + parseInt(el.style.width)/2;
                                     const y2 = parseInt(el.style.top) + parseInt(el.style.height)/2;
+                                    pathD += `M${x1},${y1} L${x2},${y2} `;
                                     
-                                    pathD += `M ${x1} ${y1} L ${x2} ${y2} `;
-                                    
-                                    // Calcul distance pour le coût (même si visuel caché)
-                                    const distPx = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
-                                    const distM = distPx / PIXELS_PER_METER;
-                                    opTime += ((distM / 1.4) * task.freq);
+                                    // Calcul distance
+                                    const distM = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2)) / CONFIG.pxPerMeter;
+                                    opTime += (distM / 1.4) * task.freq;
                                 }
-                                prevEl = el; // Chainage
-                            } else {
-                                // Si l'élément précédent était dans un autre atelier, on brise la ligne visuelle
-                                prevEl = null; 
-                            }
-                        } else {
-                            prevEl = null; // Sortie de l'atelier courant
-                        }
+                                prevEl = el;
+                            } else { prevEl = null; }
+                        } else { prevEl = null; }
                     }
                 }
             });
 
-            // Affichage Ligne SVG
             if(pathD) {
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", pathD);
@@ -515,59 +425,42 @@ const app = {
                 svg.appendChild(path);
             }
 
-            // Calculs Opérateur
-            const cost = (opTime / 3600) * op.cost;
-            totalTime += opTime;
-            totalCost += cost;
+            const cost = (opTime/3600) * op.cost;
+            totalTime += opTime; totalCost += cost;
 
-            statsDiv.innerHTML += `
-                <div class="stat-card" style="border-color:${op.color}">
-                    <strong>${op.name}</strong><br>
-                    Temps: ${(opTime/60).toFixed(1)} min<br>
-                    Coût: ${cost.toFixed(2)} €
-                </div>
-            `;
+            disp.innerHTML += `<div style="border-left:4px solid ${op.color}; padding:5px; margin-bottom:5px; background:#fff; font-size:11px;">
+                <strong>${op.name}</strong><br>${(opTime/60).toFixed(1)} min | ${cost.toFixed(2)}€
+            </div>`;
         }
 
-        // Résumé Global
-        const totalDiv = document.createElement('div');
-        totalDiv.className = 'total-summary';
-        totalDiv.innerHTML = `
-            <strong>TOTAL GLOBAL</strong><br>
-            Temps Cumulé: ${(totalTime/3600).toFixed(2)} h<br>
-            Coût Production: ${totalCost.toFixed(2)} €
-        `;
-        statsDiv.prepend(totalDiv);
+        disp.innerHTML = `<div style="background:#2c3e50; color:white; padding:8px; border-radius:4px; margin-bottom:10px;">
+            <strong>TOTAL</strong><br>${(totalTime/3600).toFixed(2)}h | ${totalCost.toFixed(2)}€
+        </div>` + disp.innerHTML;
     },
 
-    // --- IMPORT / EXPORT FICHIER ---
-    exportData: function() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.scenarios));
-        const dl = document.createElement('a');
-        dl.setAttribute("href", dataStr);
-        dl.setAttribute("download", "fabie_backup.json");
-        document.body.appendChild(dl); dl.click(); dl.remove();
+    // Utils
+    getSc: function() { return this.state.scenarios[this.state.currentScIndex]; },
+    
+    // Import/Export
+    downloadJSON: function() {
+        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state.scenarios));
+        const a = document.createElement('a'); a.href = data; a.download = 'fabie_save.json'; a.click();
     },
-
-    importData: function(input) {
+    uploadJSON: function(input) {
         const file = input.files[0];
         if(!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                this.data.scenarios = JSON.parse(e.target.result);
-                this.saveToStorage();
-                this.renderScenarioList();
-                alert("Import réussi !");
-            } catch(e) { alert("Fichier invalide"); }
+                this.state.scenarios = JSON.parse(e.target.result);
+                this.save();
+                alert("Importé avec succès !");
+                this.loadScenario(0);
+            } catch(x) { alert("Fichier invalide"); }
         };
         reader.readAsText(file);
     }
 };
 
-// Initialisation
-window.onload = function() {
-    // Si déjà des données, on pré-charge (mais on reste sur login)
-    const stored = localStorage.getItem(APP_DATA_KEY);
-    if(stored) app.data.scenarios = JSON.parse(stored);
-};
+// Start
+app.init();
