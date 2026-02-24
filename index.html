@@ -22,6 +22,7 @@
             --room-w: 19.9;  
             --room-h: 11.74; 
             --panel-width: 320px;
+            --config-width: 340px; /* Nouvelle variable pour le panneau de droite */
         }
 
         body {
@@ -63,7 +64,7 @@
             flex: 1;
             overflow: hidden;
             width: 100%;
-            filter: blur(5px); /* Flou tant que pas connecté */
+            filter: blur(5px);
             pointer-events: none;
             transition: filter 0.5s;
         }
@@ -83,12 +84,31 @@
             overflow-y: auto;
         }
 
-        /* --- PANNEAU DU BAS (CONFIG) --- */
-        .bottom-panel {
+        /* --- COLONNE DROITE (GAMMES OPÉRATOIRES) --- */
+        .config-sidebar {
+            width: var(--config-width);
+            background: white;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            z-index: 20;
+            flex-shrink: 0;
+            height: 100vh;
+        }
+        .config-sidebar.collapsed { display: none; }
+
+        .config-list-col {
+            display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; 
+            gap: 15px; flex: 1; padding: 10px; background: #fafafa;
+        }
+
+        /* --- PANNEAU DU BAS (ANALYSE CHARGE) --- */
+        .stats-bottom-panel {
             height: 280px;
             background: white;
             border-top: 1px solid #ddd;
-            display: flex;
+            display: none; /* Sera mis à 'flex' par JS */
             flex-direction: column;
             box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
             z-index: 20;
@@ -96,7 +116,10 @@
             width: 100%;
         }
 
-        .bottom-panel.collapsed { display: none; }
+        .stats-content-row {
+            display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; 
+            gap: 15px; flex: 1; padding: 10px; background: #fafafa; align-items: flex-start;
+        }
 
         /* --- COLONNE CENTRALE (ATELIER) --- */
         .main-content {
@@ -108,21 +131,6 @@
             overflow-y: auto;
             position: relative;
             background: #f4f7f6;
-        }
-
-        /* --- COLONNE DROITE (STATS) --- */
-        .stats-sidebar {
-            width: var(--panel-width);
-            background: white;
-            border-left: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-            z-index: 20;
-            flex-shrink: 0;
-            display: none;
-            height: 100vh;
-            overflow-y: auto;
         }
 
         header { text-align: center; margin-bottom: 10px; flex-shrink: 0; }
@@ -159,32 +167,32 @@
         .btn-clear { background: #95a5a6; color: white; }
         .btn-save { background: #27ae60; color: white; }
 
-        /* PANNEAUX */
+        /* PANNEAUX GENERAL */
         .panel-header {
             padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee;
             font-weight: bold; color: var(--text); font-size: 1.1em;
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
         }
         .panel-body { flex: 1; overflow-y: auto; padding: 15px; }
-        
-        .config-list { 
-            display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; 
-            gap: 15px; flex: 1; padding: 10px; background: #fafafa;
-        }
 
+        /* CARTES OPÉRATEURS (GAMMES - DROITE) */
         .op-config-card {
             background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 0;
-            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 350px; max-width: 370px; display: flex; flex-direction: column;
-        }
-        .op-stat-card {
-            background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 15px;
-            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; display: flex; flex-direction: column;
+            flex-shrink: 0;
         }
         .op-config-header {
             padding: 8px 12px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;
         }
-        .op-config-body { padding: 10px; overflow-y: auto; flex: 1; }
+        .op-config-body { padding: 10px; flex: 1; }
         
+        /* CARTES STATS (ANALYSE - BAS) */
+        .op-stat-card {
+            background: white; border: 1px solid #e0e0e0; border-radius: 6px; 
+            overflow-y: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #ccc; padding: 10px;
+            min-width: 320px; max-width: 350px; flex-shrink: 0; max-height: 100%;
+        }
+
         /* ACTION ROWS */
         .action-row {
             display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;
@@ -207,6 +215,9 @@
         .btn-sm { padding: 4px 8px; font-size: 11px; }
         .btn-add-action { background: #f1f2f6; color: #333; width: 100%; justify-content: center; margin-top: 5px; border: 1px dashed #ccc;}
         .btn-delete-action { background: white; border: 1px solid #ffcdd2; color: #e74c3c; }
+
+        .info-dot { font-size: 12px; color: #3498db; cursor: pointer; transition: transform 0.2s; }
+        .info-dot:hover { transform: scale(1.2); color: #2980b9; }
 
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
@@ -250,7 +261,7 @@
             cursor: se-resize; z-index: 15; clip-path: polygon(100% 0, 100% 100%, 0 100%);
         }
 
-        /* STATS PANEL */
+        /* STATS PANEL Details */
         .task-detail { font-size: 0.85em; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 5px; margin-bottom: 5px; }
         .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 2px; align-items: center; }
         
@@ -273,6 +284,16 @@
         /* Boutons Scenarios */
         .sc-btn { width: 100%; padding: 8px; margin-bottom: 5px; border-radius: 4px; border:none; text-align: left; display: flex; align-items: center; gap: 8px; font-size: 12px; }
         .sc-btn:hover { opacity: 0.9; }
+
+        /* OVERLAY MODAL INFO */
+        #calcInfoModalOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;
+        }
+        .calc-modal {
+            background: white; padding: 20px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 450px; width: 90%; font-size: 13px; line-height: 1.5; color: var(--text);
+        }
     </style>
 </head>
 <body>
@@ -280,11 +301,27 @@
     <!-- OVERLAY LOGIN -->
     <div id="login-overlay">
         <div class="login-box">
-            <h2><i class="fas fa-industry"></i> SIMULATEUR EMBALLAGE </h2>
+            <h2><i class="fas fa-industry"></i> FABIE 2026</h2>
             <p>Accès au Simulateur</p>
             <input type="password" id="passwordInput" placeholder="Mot de passe...">
             <button onclick="checkLogin()">Entrer</button>
             <div id="loginError" class="error-msg">Mot de passe incorrect</div>
+        </div>
+    </div>
+
+    <!-- OVERLAY MODAL CALCULS -->
+    <div id="calcInfoModalOverlay" onclick="closeCalcInfo(event)">
+        <div class="calc-modal" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0; color:var(--box-bg); border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                <i class="fas fa-calculator"></i> Méthode de calcul
+            </h3>
+            <p>Le paramètre <b>Répétition</b> multiplie automatiquement vos données (temps fixe, trajet, gâteaux emballés) selon la logique suivante :</p>
+            <ul style="padding-left: 20px; background: #f8f9fa; padding: 15px 15px 15px 35px; border-radius: 5px; border-left: 3px solid #3498db;">
+                <li style="margin-bottom: 8px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
+                <li style="margin-bottom: 8px;"><b>/ Grille :</b> La valeur saisie est multipliée par <b>17</b> (grilles) et par l'<b>Objectif d'Échelles</b>.</li>
+                <li><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
+            </ul>
+            <button onclick="document.getElementById('calcInfoModalOverlay').style.display='none'" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
         </div>
     </div>
 
@@ -372,25 +409,37 @@
             </div>
         </div>
 
-        <!-- COLONNE DROITE: RESULTATS -->
-        <div class="stats-sidebar" id="statsPanel">
-            <div class="panel-header">
-                <span>📊 Analyse Charge</span>
-                <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px; border:none; background:transparent;">×</button>
+        <!-- COLONNE DROITE (Anciennement Bas): GAMMES OPÉRATOIRES -->
+        <div class="config-sidebar" id="configPanel">
+            <div class="panel-header">⚙️ Gammes Opératoires</div>
+            <div class="config-list-col" id="configList">
+                <!-- Dynamically populated -->
             </div>
-            <div class="panel-body" id="statsContent"></div>
         </div>
     </div>
 
-    <!-- PANNEAU BAS: CONFIGURATION -->
-    <div class="bottom-panel">
-        <div class="panel-header">⚙️ Gammes Opératoires</div>
-        <div class="config-list" id="configList">
+    <!-- PANNEAU BAS (Anciennement Droite): ANALYSE CHARGE -->
+    <div class="stats-bottom-panel" id="statsPanel">
+        <div class="panel-header">
+            <span>📊 Analyse Charge & Coûts</span>
+            <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px; border:none; background:transparent;">×</button>
+        </div>
+        <div class="stats-content-row" id="statsContent">
             <!-- Dynamically populated -->
         </div>
     </div>
 
     <script>
+        // --- BULLE D'INFO ---
+        function showCalcInfo() {
+            document.getElementById('calcInfoModalOverlay').style.display = 'flex';
+        }
+        function closeCalcInfo(e) {
+            if (e.target.id === 'calcInfoModalOverlay') {
+                document.getElementById('calcInfoModalOverlay').style.display = 'none';
+            }
+        }
+
         // --- LOGIN LOGIC ---
         function checkLogin() {
             const pass = document.getElementById('passwordInput').value;
@@ -433,7 +482,6 @@
             const saved = localStorage.getItem('fabie_scenarios_v3');
             if (saved) {
                 scenarios = JSON.parse(saved);
-                // Si on a des scénarios, on charge le premier, sinon init
                 const keys = Object.keys(scenarios);
                 if (keys.length > 0) {
                     currentScenarioId = keys[0];
@@ -452,7 +500,6 @@
         }
 
         function initInitialScenario() {
-            // Création du layout de base par défaut
             workshop.innerHTML = '<svg id="connections"></svg>';
             createObj("m1", "Entrée", 45, 30, 30, 250);
             createObj("m3", "Sortie", 45, 30, 500, 30);
@@ -509,18 +556,16 @@
                 opData: JSON.parse(opDataStr),
                 globalTime: globalTime
             };
-            saveScenariosToStorage(); // Persistance auto
+            saveScenariosToStorage();
         }
 
         function loadScenario(id) {
             currentScenarioId = id;
             const sc = scenarios[id];
             
-            // Restore time
             document.getElementById('globalWorkHours').value = sc.globalTime.h;
             document.getElementById('globalWorkMinutes').value = sc.globalTime.m;
             
-            // Clear & Restore Machines
             workshop.innerHTML = '<svg id="connections"></svg>';
             sc.machines.forEach(m => {
                 const div = document.createElement('div');
@@ -538,7 +583,6 @@
                 initMachine(div);
             });
             
-            // Restore operator data & UI
             operatorData = JSON.parse(JSON.stringify(sc.opData));
             recordingState = null;
             rebuildConfigUI();
@@ -553,11 +597,10 @@
         }
 
         function newScenario() {
-            saveCurrentScenario(); // Save current before cloning
+            saveCurrentScenario(); 
             const defaultName = scenarios[currentScenarioId].name + " (Copie)";
             const newId = 'sc_' + Date.now();
             
-            // Clone l'état actuel
             const currentStateStr = JSON.stringify(scenarios[currentScenarioId]);
             const newState = JSON.parse(currentStateStr);
             newState.name = defaultName;
@@ -565,46 +608,12 @@
             scenarios[newId] = newState;
             updateScenarioSelect();
             
-            // On switch dessus
             document.getElementById('sidebarScenarioSelect').value = newId;
             loadScenario(newId);
         }
 
-        function updateScenarioSelect() {
-            const select = document.getElementById('sidebarScenarioSelect');
-            select.innerHTML = '';
-            for (let id in scenarios) {
-                const opt = document.createElement('option');
-                opt.value = id;
-                opt.textContent = scenarios[id].name;
-                if (id === currentScenarioId) opt.selected = true;
-                select.appendChild(opt);
-            }
-            
-            // Mise à jour de l'input de renommage
-            const renameInput = document.getElementById('scenarioNameInput');
-            if (renameInput && scenarios[currentScenarioId]) {
-                renameInput.value = scenarios[currentScenarioId].name;
-            }
-        }
-
-        function renameCurrentScenario() {
-            const newName = document.getElementById('scenarioNameInput').value.trim();
-            if (newName && currentScenarioId) {
-                scenarios[currentScenarioId].name = newName;
-                saveScenariosToStorage();
-                updateScenarioSelect();
-                
-                // Feedback visuel sur le bouton
-                const btn = document.querySelector('button[onclick="renameCurrentScenario()"]');
-                const oldHtml = btn.innerHTML;
-                btn.innerHTML = '✅';
-                setTimeout(() => { btn.innerHTML = oldHtml; }, 1500);
-            }
-        }
-
         function createNewBlankScenario() {
-            saveCurrentScenario(); // Sauvegarde l'actuel avant de changer
+            saveCurrentScenario();
             const newId = 'sc_' + Date.now();
             const defaultName = "Scénario Vierge " + (Object.keys(scenarios).length + 1);
             
@@ -623,9 +632,39 @@
             
             saveScenariosToStorage();
             updateScenarioSelect();
-            
             document.getElementById('sidebarScenarioSelect').value = newId;
             loadScenario(newId);
+        }
+
+        function updateScenarioSelect() {
+            const select = document.getElementById('sidebarScenarioSelect');
+            select.innerHTML = '';
+            for (let id in scenarios) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = scenarios[id].name;
+                if (id === currentScenarioId) opt.selected = true;
+                select.appendChild(opt);
+            }
+            
+            const renameInput = document.getElementById('scenarioNameInput');
+            if (renameInput && scenarios[currentScenarioId]) {
+                renameInput.value = scenarios[currentScenarioId].name;
+            }
+        }
+
+        function renameCurrentScenario() {
+            const newName = document.getElementById('scenarioNameInput').value.trim();
+            if (newName && currentScenarioId) {
+                scenarios[currentScenarioId].name = newName;
+                saveScenariosToStorage();
+                updateScenarioSelect();
+                
+                const btn = document.querySelector('button[onclick="renameCurrentScenario()"]');
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '✅';
+                setTimeout(() => { btn.innerHTML = oldHtml; }, 1500);
+            }
         }
 
         function manualSaveScenario() {
@@ -652,7 +691,6 @@
             }
         }
 
-        // --- EXPORT / IMPORT JSON ---
         function exportJson() {
             saveCurrentScenario();
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scenarios));
@@ -776,7 +814,6 @@
             saveCurrentScenario();
         }
 
-        // --- FORMATAGE TEMPS ---
         function formatTime(seconds) {
             if (seconds === 0) return "0s";
             const h = Math.floor(seconds / 3600);
@@ -789,7 +826,7 @@
             return res.trim();
         }
 
-        // --- GESTION GAMMES (SIDEBAR BAS) ---
+        // --- GESTION GAMMES (SIDEBAR DROITE) ---
         function addConfigCard(opId, opName, color) {
             operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, tasks: [] };
             rebuildConfigUI();
@@ -814,7 +851,6 @@
 
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
             const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
-            // On ajoute cakesPerAction avec une valeur par défaut de 0
             operatorData[opId].tasks.push({ 
                 id: taskId, name: defaultName, time: defaultTime, cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] 
             });
@@ -827,7 +863,7 @@
             if(task) {
                 if (field === 'time' || field === 'freqValue' || field === 'cakesPerAction') {
                     task[field] = parseFloat(value) || 0;
-                    if (field === 'freqValue' && !task[field]) task[field] = 1; // Fallback sécurité
+                    if (field === 'freqValue' && !task[field]) task[field] = 1; 
                 }
                 else task[field] = value;
                 saveCurrentScenario();
@@ -863,7 +899,6 @@
                     const btnClass = task.steps.length > 0 ? 'btn-record has-path' : 'btn-record';
                     const btnText = task.steps.length > 0 ? '✅ OK' : '📍 Trajet';
 
-                    // Nouvelle disposition sur 2 lignes pour intégrer proprement tous les champs
                     tasksHTML += `
                         <div class="action-row" id="row-${task.id}">
                             <div class="action-inputs" style="flex-wrap: wrap;">
@@ -871,8 +906,10 @@
                                 <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps (sec)">s
                                 <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés par action">🎂
                             </div>
-                            <div class="action-inputs" style="margin-top:4px;">
-                                <span style="font-size:12px; color:#555;">Répétition :</span>
+                            <div class="action-inputs" style="margin-top:4px; align-items:center;">
+                                <span style="font-size:12px; color:#555; display:flex; align-items:center; gap:4px;">
+                                    Répétition <i class="fas fa-info-circle info-dot" title="Cliquez pour comprendre le calcul" onclick="showCalcInfo()"></i> :
+                                </span>
                                 <input type="number" id="freqVal-${task.id}" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)" title="Quantité">
                                 <select id="freqType-${task.id}" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)" title="Mode de répétition">
                                     <option value="total" ${selTotal}>/ Jour</option>
@@ -915,7 +952,6 @@
             }
         }
 
-        // --- ENREGISTREMENT ---
         function toggleRecord(opId, taskId) {
             if (recordingState && recordingState.taskId === taskId) { stopRecording(); return; }
             if (recordingState) stopRecording();
@@ -950,7 +986,7 @@
             }
         }
 
-        // --- DESSIN & CALCUL ---
+        // --- DESSIN & CALCUL (BOTTOM PANEL) ---
         function calculateAndDraw() {
             const svgEl = document.getElementById('connections');
             if(!svgEl) return;
@@ -986,12 +1022,10 @@
                     else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
                     else taskCycles = task.freqValue;
 
-                    // Calcul gâteaux pour cette tâche
                     const taskCakes = (task.cakesPerAction || 0) * taskCycles;
                     opTotalCakes += taskCakes;
 
                     if(task.steps.length < 2) {
-                        // AFFICHER LE BADGE "1" MÊME SI LE TRAJET N'A QU'UNE ÉTAPE
                         if (task.steps.length === 1 && recordingState && recordingState.taskId === task.id) {
                             const el = document.getElementById(task.steps[0]);
                             if (el) addBadge(el, 1, data.color);
@@ -1011,7 +1045,6 @@
                     
                     let pathString = ""; let taskDistPixels = 0;
                     const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3;
-                    
                     let prevPos = null;
 
                     for (let i = 0; i < task.steps.length; i++) {
@@ -1061,7 +1094,6 @@
                 const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime;
                 const totalDistMeters = opTotalDist;
                 const totalWalkTimeSeconds = opTotalWalkTime;
-                
                 const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
                 
                 grandTotalTime += totalWorkTimeSeconds;
@@ -1069,11 +1101,11 @@
                 grandTotalCakes += opTotalCakes;
 
                 let loadPercent = 0;
-                let loadColor = "#2ecc71"; // Vert
+                let loadColor = "#2ecc71";
                 if (globalTimeSeconds > 0) {
                     loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100;
-                    if (loadPercent > 100) loadColor = "#e74c3c"; // Rouge
-                    else if (loadPercent > 85) loadColor = "#f39c12"; // Orange
+                    if (loadPercent > 100) loadColor = "#e74c3c"; 
+                    else if (loadPercent > 85) loadColor = "#f39c12"; 
                 }
 
                 card.innerHTML = `
@@ -1116,6 +1148,7 @@
                 statsContent.appendChild(globalCard);
             }
 
+            // Affichage du panneau d'Analyse (en bas) si on a des datas
             statsPanel.style.display = hasAnyData ? 'flex' : 'none';
         }
 
@@ -1166,7 +1199,7 @@
                 const newName = extractTextContent(element);
                 if(element.classList.contains('person') && operatorData[element.id]) { 
                     operatorData[element.id].name = newName;
-                    rebuildConfigUI(); // Refresh header
+                    rebuildConfigUI(); 
                 }
                 saveCurrentScenario();
                 calculateAndDraw();
@@ -1185,10 +1218,10 @@
             calculateAndDraw(); 
         }
 
-        function closeStats() { statsPanel.style.display = 'none'; }
+        function closeStats() { document.getElementById('statsPanel').style.display = 'none'; }
         
         function toggleConfigPanel() {
-            const panel = document.querySelector('.bottom-panel'); const btn = document.getElementById('btnToggleConfig');
+            const panel = document.getElementById('configPanel'); const btn = document.getElementById('btnToggleConfig');
             panel.classList.toggle('collapsed');
             if (panel.classList.contains('collapsed')) btn.innerHTML = '👁️ Afficher Gammes';
             else btn.innerHTML = '👁️ Cacher Gammes';
