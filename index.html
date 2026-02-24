@@ -3,97 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FABIE - Simulateur Multi-Ateliers</title>
+    <title>FABIE - Simulateur Pro</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="login-screen">
+    <div id="login-overlay">
         <div class="login-box">
             <h2>🏭 Accès FABIE</h2>
-            <div class="input-group">
-                <label>Identifiant</label>
-                <input type="text" id="username" placeholder="Votre nom">
-            </div>
-            <div class="input-group">
-                <label>Mot de passe</label>
-                <input type="password" id="password" placeholder="••••••••">
-            </div>
-            <button onclick="app.login()">Entrer</button>
-            <p id="login-error" class="error-msg">Mot de passe incorrect</p>
+            <input type="text" id="username" placeholder="Identifiant">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <button onclick="app.login()">Connexion</button>
+            <p id="login-msg">Mot de passe incorrect</p>
         </div>
     </div>
 
-    <div id="app-interface" style="display:none;">
-        
+    <div id="main-interface" style="display:none;">
         <nav class="navbar">
-            <div class="logo">Simulateur <span>FABIE</span></div>
-            <div class="nav-actions">
-                <span id="user-display">👤 Invité</span>
-                <button class="btn-logout" onclick="location.reload()">Déconnexion</button>
+            <div class="brand">Simulateur <span>FABIE</span></div>
+            <div class="user-info">
+                <span id="user-display">Invité</span>
+                <button class="btn-logout" onclick="location.reload()">Quitter</button>
             </div>
         </nav>
 
-        <div class="main-container">
+        <div class="layout">
             <aside class="sidebar-left">
-                <div class="panel-section">
+                <div class="panel">
                     <h3>📂 Scénarios</h3>
-                    <div class="scenario-controls">
-                        <button onclick="app.newScenario()" class="btn-primary">+ Nouveau</button>
-                        <button onclick="app.exportData()">💾 Exporter</button>
-                        <input type="file" id="import-input" hidden onchange="app.importData(this)">
-                        <button onclick="document.getElementById('import-input').click()">📂 Importer</button>
+                    <div class="controls">
+                        <button onclick="app.createScenario()" class="btn-new">+ Nouveau</button>
+                        <button onclick="app.downloadJSON()" title="Sauvegarder fichier">💾</button>
+                        <button onclick="document.getElementById('file-upload').click()" title="Ouvrir fichier">📂</button>
+                        <input type="file" id="file-upload" hidden onchange="app.uploadJSON(this)">
                     </div>
-                    <div id="scenario-list" class="list-container"></div>
+                    <div id="scenario-list" class="list-box"></div>
                 </div>
-                
-                <div class="panel-section">
-                    <h3>🏭 Ateliers (Onglets)</h3>
-                    <div id="workshop-list" class="list-container workshops">
-                        </div>
-                    <button onclick="app.addWorkshop()" class="btn-secondary" style="width:100%; margin-top:5px;">+ Ajouter Atelier</button>
+
+                <div class="panel">
+                    <h3>🏭 Mes Ateliers</h3>
+                    <div id="workshop-list" class="list-box workshops"></div>
+                    <button onclick="app.addWorkshop()" class="btn-add-ws">+ Ajouter Atelier</button>
                 </div>
             </aside>
 
-            <main class="editor-area">
+            <main class="viewport">
                 <div class="toolbar">
-                    <div class="group-dims">
-                        <label>Dim (m):</label>
-                        <input type="number" id="room-width" value="20" onchange="app.resizeRoom()"> x 
-                        <input type="number" id="room-height" value="12" onchange="app.resizeRoom()">
+                    <div class="dims">
+                        Dim: <input type="number" id="ws-width" value="20" onchange="app.resizeRoom()"> x 
+                        <input type="number" id="ws-height" value="12" onchange="app.resizeRoom()"> m
                     </div>
-                    <div class="separator"></div>
-                    <div class="group-tools">
+                    <div class="tools">
                         <button onclick="app.addItem('machine')">🏭 Machine</button>
                         <button onclick="app.addItem('palette')">📦 Palette</button>
                         <button onclick="app.addItem('scale')">🪜 Échelle</button>
                         <button onclick="app.addItem('pillar')">⬛ Pilier</button>
                         <button onclick="app.addItem('waypoint')">📍 Point</button>
                     </div>
-                    <div class="separator"></div>
-                    <button onclick="app.addOperator()" class="btn-operator">👷 Opérateur</button>
-                    <div id="trash-zone" class="trash">🗑️ Glisser ici</div>
+                    <button onclick="app.addOperator()" class="btn-op">👷 Opérateur</button>
+                    <div id="trash" class="trash-zone">🗑️ Corbeille</div>
                 </div>
 
-                <div id="viewport">
-                    <div id="workshop-container">
-                        <div class="grid-background"></div>
-                        <svg id="svg-layer"></svg>
-                        <div id="items-layer"></div>
-                    </div>
+                <div id="canvas-area">
+                    <div id="grid"></div>
+                    <svg id="svg-layer"></svg>
+                    <div id="items-layer"></div>
                 </div>
             </main>
 
             <aside class="sidebar-right">
-                <div class="panel-header">⚙️ Gammes Opératoires</div>
-                <div id="operators-list" class="config-container"></div>
-                
-                <div class="panel-header stats-header">📊 Analyse Coûts</div>
-                <div class="global-inputs">
-                    Temps Ref (h): <input type="number" id="global-hours" value="7" onchange="app.updateStats()">
+                <div class="panel">
+                    <h3>⚙️ Gammes Opératoires</h3>
+                    <div id="operators-list" class="op-list"></div>
                 </div>
-                <div id="stats-output" class="stats-container"></div>
+                <div class="panel stats">
+                    <h3>📊 Coûts & Temps</h3>
+                    <div class="global-param">
+                        Temps Ref: <input type="number" id="ref-hours" value="7" onchange="app.updateStats()"> h
+                    </div>
+                    <div id="stats-display"></div>
+                </div>
             </aside>
         </div>
     </div>
