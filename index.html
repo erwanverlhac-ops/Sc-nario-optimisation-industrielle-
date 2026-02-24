@@ -3,384 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FABIE - Simulateur Industriel Expert</title>
+    <title>Simulateur Atelier FABIE - Expert</title>
     <style>
         :root {
-            --primary: #2c3e50; --accent: #e74c3c; --highlight: #3498db; --success: #27ae60;
-            --bg-gray: #f4f7f6; --panel-w: 320px; --scale: 30px;
-            --palette-bg: #d35400; --scale-bg: #27ae60; --waypoint-bg: #8e44ad;
+            --grid-color: #cccccc;
+            --wall-color: #333;
+            --box-bg: #3498db;
+            --box-border: #2980b9;
+            --palette-bg: #d35400;
+            --scale-bg: #27ae60;
+            --waypoint-bg: #8e44ad;
+            --pillar-bg: #000000;
+            --accent: #e74c3c;
+            --text: #2c3e50;
+            --scale: 30px; 
+            --room-w: 19.9;  
+            --room-h: 11.74; 
+            --panel-width: 340px;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-gray); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-        /* --- LOGIN --- */
-        #loginOverlay { position: fixed; inset: 0; background: rgba(44,62,80,0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .login-btn { background: var(--highlight); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
-
-        /* --- LAYOUT --- */
-        .navbar { background: var(--primary); color: white; padding: 0 20px; height: 50px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
-
-        /* --- SIDEBARS --- */
-        .sidebar { width: var(--panel-w); background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; z-index: 20; }
-        .sidebar.right { border-left: 1px solid #ddd; border-right: none; }
-        .panel-section { padding: 15px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; max-height: 50%; }
-        .panel-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .list-container { flex: 1; overflow-y: auto; background: #fafafa; border: 1px solid #eee; min-height: 100px; border-radius: 4px; }
-        
-        .item-row { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 13px; display: flex; flex-direction: column; gap: 5px; }
-        .item-row:hover { background: #f0f7ff; }
-        .item-row.active { background: #e3f2fd; border-left: 4px solid var(--highlight); }
-        .row-actions { display: flex; gap: 5px; margin-top: 5px; }
-
-        /* --- VIEWPORT --- */
-        .viewport { flex: 1; display: flex; flex-direction: column; background: #eaeded; position: relative; }
-        .toolbar { background: white; border-bottom: 1px solid #ccc; display: flex; align-items: center; padding: 10px 15px; gap: 10px; z-index: 10; flex-wrap: wrap; }
-        
-        .trash-zone { margin-left: auto; border: 2px dashed #ccc; color: #999; padding: 5px 15px; border-radius: 4px; font-size: 12px; }
-        .trash-zone.drag-over { background: #ffebee; border-color: var(--accent); color: var(--accent); transform: scale(1.05); }
-
-        #canvas-wrapper { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 50px; position: relative; }
-        #workshop-area { position: relative; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        .grid-bg { width: 100%; height: 100%; position: absolute; background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px); background-size: var(--scale) var(--scale); border: 3px solid #333; z-index: 0; }
-
-        /* --- SVG & ITEMS --- */
-        #svg-layer { width: 100%; height: 100%; position: absolute; pointer-events: none; z-index: 5; }
-        #items-layer { width: 100%; height: 100%; position: absolute; z-index: 10; }
-
-        .item {
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold; color: white; background: var(--highlight);
-            border-radius: 4px; cursor: grab; user-select: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f7f6;
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
-        .item.person { border-radius: 50%; border: 2px solid white; }
-        .item.palette { background: var(--palette-bg); }
-        .item.scale { background: var(--scale-bg); border: 2px dashed rgba(255,255,255,0.5); }
-        .item.waypoint { background: var(--waypoint-bg); border-radius: 50%; font-size: 0; border: 2px solid white; }
-        .item.waypoint::after { content: '+'; font-size: 12px; }
-        .item.pillar { background: black; border-radius: 0; }
 
-        .resize-handle { width: 10px; height: 10px; background: #333; position: absolute; right: 0; bottom: 0; cursor: se-resize; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+        /* --- LOGIN OVERLAY --- */
+        #loginOverlay {
+            position: fixed; inset: 0; background: rgba(44, 62, 80, 0.98);
+            z-index: 9999; display: flex; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 12px; width: 320px;
+            text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .login-btn { width: 100%; padding: 10px; background: var(--box-bg); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-        path { fill: none; stroke-width: 3; stroke-dasharray: 8, 5; stroke-linecap: round; animation: dash 30s linear infinite; opacity: 0.8; }
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; width: 100%; }
+
+        /* --- SIDEBAR GAUCHE (SCENARIOS) --- */
+        .sidebar-left {
+            width: 280px; background: white; border-right: 1px solid #ddd;
+            display: flex; flex-direction: column; z-index: 30;
+        }
+        .sidebar-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+        .sc-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .sc-item { 
+            padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer;
+            font-size: 12px; transition: 0.2s;
+        }
+        .sc-item:hover { background: #f0f7ff; border-color: var(--box-bg); }
+        .sc-item.active { border-color: var(--box-bg); background: #e3f2fd; font-weight: bold; }
+        .sc-actions { display: flex; gap: 4px; margin-top: 5px; }
+
+        /* --- CONTENU CENTRAL --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; background: #eaeded; }
+
+        .top-bar {
+            background: white; padding: 8px 15px; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
+            display: flex; gap: 8px; align-items: center; z-index: 100;
+        }
+
+        .trash-zone {
+            display: flex; align-items: center; justify-content: center;
+            background-color: #ffebee; border: 2px dashed #e57373; color: #c62828;
+            padding: 5px 15px; border-radius: 5px; font-weight: bold; font-size: 13px;
+        }
+        .trash-zone.drag-over { background-color: #c62828; color: white; transform: scale(1.05); }
+
+        button.btn-tool { padding: 6px 10px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; background: white; }
+        button.btn-tool:hover { background: #f1f1f1; }
+        .btn-add-person { background: #e74c3c; color: white; border: none; }
+
+        /* --- WORKSHOP --- */
+        .workshop-container {
+            position: relative;
+            width: calc(var(--room-w) * var(--scale)); 
+            height: calc(var(--room-h) * var(--scale));
+            background-color: white;
+            border: 4px solid var(--wall-color);
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: var(--scale) var(--scale);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-bottom: 50px;
+        }
+
+        .machine {
+            position: absolute; background: rgba(52, 152, 219, 0.9);
+            border: 2px solid var(--box-border); border-radius: 4px; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; cursor: grab; user-select: none; z-index: 10;
+        }
+        .machine.person { border-radius: 50%; border: 2px solid white; }
+        .machine.palette { background: var(--palette-bg); border-color: #a04000; }
+        .machine.scale-machine { background: var(--scale-bg); border-color: #1e8449; border-style: dashed; }
+        .machine.waypoint { background: var(--waypoint-bg); border-radius: 50%; font-size: 0; border: 2px solid white; }
+        .machine.waypoint::after { content: "+"; font-size: 14px; }
+        .machine.pillar { background: #000000; border: none; border-radius: 0; }
+        
+        .resize-handle { width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0; cursor: se-resize; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        path { fill: none; stroke-width: 3; stroke-dasharray: 8, 5; animation: dash 30s linear infinite; opacity: 0.8; }
         @keyframes dash { to { stroke-dashoffset: -1000; } }
 
-        /* --- STATS --- */
-        .op-card { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
-        .op-head { padding: 8px; color: white; font-weight: bold; display: flex; justify-content: space-between; }
-        .task-row { display: flex; gap: 5px; padding: 5px; border-bottom: 1px solid #eee; align-items: center; }
-        .btn-rec.recording { background: #ffebee; color: red; border: 1px solid red; animation: pulse 1s infinite; }
-        @keyframes pulse { 50% { opacity: 0.5; } }
+        /* --- STATS & CONFIG --- */
+        .bottom-panel { height: 260px; background: white; border-top: 1px solid #ddd; display: flex; flex-direction: column; }
+        .config-list { display: flex; flex-direction: row; overflow-x: auto; gap: 15px; padding: 10px; background: #fafafa; flex: 1; }
+        .op-config-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; min-width: 320px; display: flex; flex-direction: column; }
+        .action-row { display: flex; flex-direction: column; gap: 5px; padding: 8px; border-bottom: 1px solid #f0f0f0; }
+        .action-inputs { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+        .action-inputs input { padding: 3px; border: 1px solid #ddd; border-radius: 3px; }
 
-        .btn-action { padding: 4px 8px; font-size: 10px; border: 1px solid #ccc; background: white; border-radius: 3px; cursor: pointer; }
+        .stats-sidebar { width: var(--panel-width); background: white; border-left: 1px solid #ddd; display: none; flex-direction: column; overflow-y: auto; }
+        .op-stat-card { border-left: 4px solid #ccc; background: #fafafa; padding: 10px; margin-bottom: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div id="loginOverlay">
         <div class="login-box">
-            <h2 style="color:var(--primary); margin-top:0;">🏭 FABIE Expert v6.0</h2>
-            <input type="text" id="username" placeholder="Identifiant (ex: Erwan)">
+            <h2>🏭 Accès FABIE Expert</h2>
+            <input type="text" id="username" placeholder="Identifiant">
             <input type="password" id="password" placeholder="Mot de passe">
             <button class="login-btn" onclick="app.login()">Entrer</button>
-            <p id="loginError" style="color:red; display:none; font-size:12px;">Identifiants incorrects</p>
         </div>
     </div>
 
-    <div class="navbar">
-        <div style="font-weight:bold; font-size:18px;">Simulateur <span style="color:var(--highlight)">FABIE</span></div>
-        <div id="userBadge" style="font-size:12px;">👤 <span id="userName">Invité</span></div>
+    <div class="main-wrapper">
+        <aside class="sidebar-left">
+            <div class="sidebar-header">
+                📂 Scénarios
+                <div>
+                    <button onclick="app.exportFile()" title="Exporter">📤</button>
+                    <button onclick="document.getElementById('importInput').click()" title="Importer">📥</button>
+                    <input type="file" id="importInput" hidden onchange="app.importFile(this)">
+                </div>
+            </div>
+            <div style="padding:10px;"><button onclick="app.newScenario()" style="width:100%;">+ Nouveau Scénario</button></div>
+            <div id="scenarioList" class="sc-list"></div>
+        </aside>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <div id="trashBin" class="trash-zone">🗑️ Corbeille</div>
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
+                <button class="btn-tool" onclick="app.addItem('machine')">+ Machine</button>
+                <button class="btn-tool" onclick="app.addItem('palette')">+ Palette</button>
+                <button class="btn-tool" onclick="app.addItem('scale')">+ Échelle</button>
+                <button class="btn-tool" onclick="app.addItem('pillar')">+ Pilier</button>
+                <button class="btn-tool" onclick="app.addItem('waypoint')">+ Point</button>
+                <button class="btn-tool btn-add-person" onclick="app.addPerson()">+ Opérateur</button>
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
+                <button class="btn-tool" onclick="app.quickSave()" style="background:var(--success); color:white; border:none;">💾 Sauver</button>
+                <div style="display:flex; align-items:center; gap:3px; font-size:12px;">
+                    Ref: <input type="number" id="globalWorkHours" value="7" style="width:35px" onchange="app.draw()"> h
+                </div>
+            </div>
+
+            <div class="workshop-container" id="workshop">
+                <svg id="connections"></svg>
+                <div id="items-layer"></div>
+            </div>
+        </div>
+
+        <div class="stats-sidebar" id="statsPanel">
+            <div style="padding:15px; font-weight:bold; border-bottom:1px solid #eee;">📊 Analyse Charge</div>
+            <div id="statsContent" style="padding:10px;"></div>
+        </div>
     </div>
 
-    <div class="main-layout">
-        <aside class="sidebar">
-            <div class="panel-section">
-                <div class="panel-title">📂 Scénarios 
-                    <div>
-                        <button onclick="app.exportData()" title="Exporter Fichier">📤</button>
-                        <button onclick="document.getElementById('importFile').click()" title="Importer Fichier">📥</button>
-                        <input type="file" id="importFile" hidden onchange="app.importData(this)">
-                    </div>
-                </div>
-                <button onclick="app.newScenario()" style="width:100%; margin-bottom:10px;">+ Nouveau Scénario</button>
-                <div id="scenarioList" class="list-container"></div>
-            </div>
-            <div class="panel-section" style="flex:1;">
-                <div class="panel-title">🏠 Ateliers</div>
-                <button onclick="app.addWorkshop()" style="width:100%; margin-bottom:10px;">+ Ajouter Atelier</button>
-                <div id="workshopList" class="list-container"></div>
-            </div>
-        </aside>
-
-        <main class="viewport">
-            <div class="toolbar">
-                <div style="font-size:12px;">Dim (m): <input type="number" id="roomW" value="20" style="width:40px" onchange="app.resizeRoom()"> x <input type="number" id="roomH" value="12" style="width:40px" onchange="app.resizeRoom()"></div>
-                <div style="width:1px; height:20px; background:#ddd;"></div>
-                <button onclick="app.addItem('machine')">🏭 Machine</button>
-                <button onclick="app.addItem('palette')">📦 Palette</button>
-                <button onclick="app.addItem('scale')">🪜 Échelle</button>
-                <button onclick="app.addItem('pillar')">⬛ Pilier</button>
-                <button onclick="app.addItem('waypoint')">📍 Point</button>
-                <button onclick="app.addOperator()" style="background:var(--accent); color:white; border:none;">👷 Opérateur</button>
-                <div id="trashZone" class="trash-zone">🗑️ Corbeille</div>
-            </div>
-
-            <div id="canvas-wrapper">
-                <div id="workshop-area">
-                    <div class="grid-bg"></div>
-                    <svg id="svg-layer"></svg>
-                    <div id="items-layer"></div>
-                </div>
-            </div>
-        </main>
-
-        <aside class="sidebar right">
-            <div class="panel-section" style="flex:1;">
-                <div class="panel-title">⚙️ Gammes Opératoires</div>
-                <div id="configList" class="list-container" style="background:white;"></div>
-            </div>
-            <div class="panel-section" style="height:35%;">
-                <div class="panel-title">📊 Analyse de Coûts</div>
-                <div style="font-size:11px; margin-bottom:5px; background:#eee; padding:5px;">T. Ref (h): <input type="number" id="refHours" value="7" style="width:35px" onchange="app.renderStats()"></div>
-                <div id="statsOutput" style="overflow-y:auto; flex:1;"></div>
-            </div>
-        </aside>
+    <div class="bottom-panel">
+        <div style="padding:8px 15px; background:#f8f9fa; font-weight:bold; font-size:13px; border-bottom:1px solid #ddd;">⚙️ Gammes Opératoires (Grilles / Échelles / Jour)</div>
+        <div class="config-list" id="configList"></div>
     </div>
 
     <script>
         const app = {
-            data: { scenarios: [], activeSc: null, activeWs: 0 },
-            temp: { dragEl: null, off: {x:0, y:0}, rec: null },
+            data: { scenarios: [], currentIdx: null },
+            temp: { dragEl: null, rec: null },
 
             login: function() {
                 if(document.getElementById('password').value === "FABIE2026") {
                     document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('userName').innerText = document.getElementById('username').value || "Expert";
                     this.init();
-                } else { document.getElementById('loginError').style.display = 'block'; }
+                }
             },
 
             init: function() {
-                const saved = localStorage.getItem('fabie_v6_expert');
+                const saved = localStorage.getItem('fabie_expert_v7');
                 if(saved) this.data.scenarios = JSON.parse(saved);
                 if(this.data.scenarios.length === 0) {
-                    this.data.scenarios.push({ id:'sc1', name:"Simulation Initiale", date: new Date().toLocaleDateString(), refHours: 7, workshops: [{name:"Atelier 1", w:20, h:12, items:[]}], operators: {} });
+                    this.data.scenarios.push({
+                        id: 'sc1', name: "Scénario Initial", ref: 7, operators: {}, items: [
+                            {id:'m1', type:'machine', x:30, y:250, w:45, h:30, txt:'Entrée'},
+                            {id:'m3', type:'machine', x:500, y:30, w:45, h:30, txt:'Sortie'}
+                        ]
+                    });
                 }
                 this.loadScenario(0);
             },
 
             save: function() {
-                localStorage.setItem('fabie_v6_expert', JSON.stringify(this.data.scenarios));
+                localStorage.setItem('fabie_expert_v7', JSON.stringify(this.data.scenarios));
                 this.renderScenarioList();
             },
 
-            getSc: function() { return this.data.scenarios[this.data.activeSc]; },
-            getWs: function() { return this.getSc().workshops[this.data.activeWs]; },
+            getSc: function() { return this.data.scenarios[this.data.currentIdx]; },
 
-            // --- NAVIGATION ---
             loadScenario: function(idx) {
-                this.data.activeSc = idx;
-                this.data.activeWs = 0;
+                this.data.currentIdx = idx;
+                const sc = this.getSc();
+                document.getElementById('globalWorkHours').value = sc.ref;
+                document.getElementById('items-layer').innerHTML = '';
+                sc.items.forEach(it => this.createDOM(it));
                 this.renderScenarioList();
-                this.renderWorkshopList();
-                this.loadWorkshopView();
                 this.renderOperators();
+                this.draw();
             },
 
             newScenario: function() {
-                const n = prompt("Nom du scénario :"); if(!n) return;
-                this.data.scenarios.push({ id:'sc'+Date.now(), name:n, date: new Date().toLocaleDateString(), refHours: 7, workshops: [{name:"Atelier 1", w:20, h:12, items:[]}], operators: {} });
+                const n = prompt("Nom :"); if(!n) return;
+                this.data.scenarios.push({ id:'sc'+Date.now(), name:n, ref:7, operators:{}, items:[{id:'m1', type:'machine', x:30, y:250, w:45, h:30, txt:'Entrée'}] });
                 this.loadScenario(this.data.scenarios.length-1);
                 this.save();
             },
 
-            duplicateScenario: function(idx, e) {
-                e.stopPropagation();
-                const original = this.data.scenarios[idx];
-                const clone = JSON.parse(JSON.stringify(original));
-                clone.id = 'sc'+Date.now();
-                clone.name += " (Copie)";
-                this.data.scenarios.push(clone);
-                this.save();
-            },
-
-            renameScenario: function(idx, e) {
-                e.stopPropagation();
-                const n = prompt("Nouveau nom :", this.data.scenarios[idx].name);
-                if(n) { this.data.scenarios[idx].name = n; this.save(); }
-            },
-
-            addWorkshop: function() {
-                const n = prompt("Nom de l'atelier :"); if(!n) return;
-                this.getSc().workshops.push({ name:n, w:15, h:10, items:[] });
-                this.data.activeWs = this.getSc().workshops.length-1;
-                this.save(); this.renderWorkshopList(); this.loadWorkshopView();
-            },
-
-            switchWorkshop: function(idx) {
-                this.data.activeWs = idx;
-                this.renderWorkshopList(); this.loadWorkshopView();
-            },
-
-            // --- VIEW ---
-            loadWorkshopView: function() {
-                const ws = this.getWs();
-                document.getElementById('roomW').value = ws.w;
-                document.getElementById('roomH').value = ws.h;
-                this.resizeRoom();
-                const layer = document.getElementById('items-layer');
-                layer.innerHTML = '';
-                ws.items.forEach(it => this.createItemDOM(it));
-                this.renderStats();
-            },
-
-            resizeRoom: function() {
-                const ws = this.getWs();
-                ws.w = parseFloat(document.getElementById('roomW').value);
-                ws.h = parseFloat(document.getElementById('roomH').value);
-                const area = document.getElementById('workshop-area');
-                area.style.width = (ws.w * 30) + 'px';
-                area.style.height = (ws.h * 30) + 'px';
-                this.save();
-            },
+            quickSave: function() { this.save(); alert("Sauvegardé !"); },
 
             // --- ITEMS ---
+            createDOM: function(it) {
+                const div = document.createElement('div');
+                div.className = `machine ${it.type}`; div.id = it.id;
+                div.style.left = it.x+'px'; div.style.top = it.y+'px';
+                div.style.width = it.w+'px'; div.style.height = it.h+'px';
+                div.innerText = it.txt || '';
+                if(it.bg) div.style.backgroundColor = it.bg;
+
+                div.onmousedown = (e) => this.startDrag(e, it.id);
+                div.onclick = () => this.handlePointClick(it.id);
+
+                if(!['waypoint','person'].includes(it.type)) {
+                    const r = document.createElement('div'); r.className='resize-handle';
+                    r.onmousedown = (e) => this.startResize(e, it.id);
+                    div.appendChild(r);
+                }
+                document.getElementById('items-layer').appendChild(div);
+            },
+
             addItem: function(type) {
                 let w=45, h=30, txt="M";
                 if(type==='palette') { w=36; h=24; txt="Pal"; }
                 if(type==='scale') { w=24; h=24; txt="Ech"; }
                 if(type==='pillar' || type==='waypoint') { w=15; h=15; txt=""; }
-                const it = { id:type+Date.now(), type, x:50, y:50, w, h, txt };
-                this.getWs().items.push(it);
-                this.createItemDOM(it);
-                this.save();
+                const it = { id:type+Date.now(), type, x:100, y:100, w, h, txt };
+                this.getSc().items.push(it); this.createDOM(it); this.save();
             },
 
-            addOperator: function() {
-                const sc = this.getSc();
-                const id = 'op'+Date.now();
-                const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
-                const col = colors[Object.keys(sc.operators).length % colors.length];
-                sc.operators[id] = { name: "Op "+(Object.keys(sc.operators).length+1), color: col, cost: 25, tasks: [] };
-                const it = { id: id, type: 'person', x: 20, y: 20, w: 24, h: 24, txt: '', bg: col };
-                this.getWs().items.push(it);
-                this.createItemDOM(it);
-                this.renderOperators();
-                this.save();
-            },
-
-            createItemDOM: function(it) {
-                const div = document.createElement('div');
-                div.className = `item ${it.type}`; div.id = it.id;
-                div.style.left = it.x+'px'; div.style.top = it.y+'px';
-                div.style.width = it.w+'px'; div.style.height = it.h+'px';
-                div.innerText = it.txt;
-                if(it.bg) div.style.backgroundColor = it.bg;
-
-                div.onmousedown = (e) => this.startDrag(e, it.id);
-                div.onclick = () => this.handleItemClick(it.id);
-
-                if(!['waypoint','person'].includes(it.type)) {
-                    const res = document.createElement('div'); res.className = 'resize-handle';
-                    res.onmousedown = (e) => this.startResize(e, it.id);
-                    div.appendChild(res);
-                }
-                document.getElementById('items-layer').appendChild(div);
+            addPerson: function() {
+                const sc = this.getSc(); const id = 'op'+Date.now();
+                const cols = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
+                const col = cols[Object.keys(sc.operators).length % cols.length];
+                sc.operators[id] = { name:"Op "+(Object.keys(sc.operators).length+1), color:col, tasks:[] };
+                const it = { id, type:'person', x:50, y:50, w:24, h:24, txt:'', bg:col };
+                sc.items.push(it); this.createDOM(it); this.renderOperators(); this.save();
             },
 
             // --- DRAG / RESIZE ---
             startDrag: function(e, id) {
                 if(e.target.className.includes('resize')) return;
-                e.stopPropagation();
-                const el = document.getElementById(id);
-                this.temp.dragEl = el;
-                this.temp.off.x = e.clientX - el.offsetLeft;
-                this.temp.off.y = e.clientY - el.offsetTop;
+                e.stopPropagation(); const el = document.getElementById(id);
+                const offX = e.clientX - el.offsetLeft; const offY = e.clientY - el.offsetTop;
                 document.onmousemove = (ev) => {
-                    const x = ev.clientX - this.temp.off.x;
-                    const y = ev.clientY - this.temp.off.y;
+                    const x = ev.clientX - offX; const y = ev.clientY - offY;
                     el.style.left = x+'px'; el.style.top = y+'px';
-                    const trash = document.getElementById('trashZone');
-                    const r = trash.getBoundingClientRect();
+                    const trash = document.getElementById('trashBin'); const r = trash.getBoundingClientRect();
                     if(ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom) trash.classList.add('drag-over');
                     else trash.classList.remove('drag-over');
-                    this.renderStats();
+                    this.draw();
                 };
-                document.onmouseup = (ev) => {
-                    const trash = document.getElementById('trashZone');
+                document.onmouseup = () => {
+                    document.onmousemove = null; document.onmouseup = null;
+                    const trash = document.getElementById('trashBin');
                     if(trash.classList.contains('drag-over')) {
                         trash.classList.remove('drag-over');
-                        this.getWs().items = this.getWs().items.filter(i => i.id !== id);
-                        el.remove();
+                        this.getSc().items = this.getSc().items.filter(i=>i.id!==id); el.remove();
                     } else {
-                        const item = this.getWs().items.find(i => i.id === id);
-                        if(item) { item.x = parseInt(el.style.left); item.y = parseInt(el.style.top); }
+                        const it = this.getSc().items.find(i=>i.id===id);
+                        if(it) { it.x = parseInt(el.style.left); it.y = parseInt(el.style.top); }
                     }
-                    document.onmousemove = null; document.onmouseup = null;
-                    this.save(); this.renderStats();
+                    this.save(); this.draw();
                 };
             },
 
             startResize: function(e, id) {
-                e.stopPropagation();
-                const el = document.getElementById(id);
+                e.stopPropagation(); const el = document.getElementById(id);
                 const sw = el.offsetWidth, sh = el.offsetHeight, sx = e.clientX, sy = e.clientY;
                 document.onmousemove = (ev) => {
-                    el.style.width = (sw + (ev.clientX - sx))+'px';
-                    el.style.height = (sh + (ev.clientY - sy))+'px';
+                    el.style.width = (sw + (ev.clientX - sx))+'px'; el.style.height = (sh + (ev.clientY - sy))+'px';
                 };
                 document.onmouseup = () => {
-                    const item = this.getWs().items.find(i => i.id === id);
-                    if(item) { item.w = el.offsetWidth; item.h = el.offsetHeight; }
-                    document.onmousemove = null; document.onmouseup = null;
-                    this.save();
+                    const it = this.getSc().items.find(i=>i.id===id);
+                    if(it) { it.w = el.offsetWidth; it.h = el.offsetHeight; }
+                    document.onmousemove = null; document.onmouseup = null; this.save();
                 };
             },
 
             // --- LOGIQUE METIER ---
-            addTask: function(oid) {
-                this.getSc().operators[oid].tasks.push({ id:'t'+Date.now(), name:'Tâche', time:10, freq:1, steps:[] });
-                this.renderOperators(); this.save();
+            renderOperators: function() {
+                const sc = this.getSc(); const box = document.getElementById('configList'); box.innerHTML = '';
+                for(let id in sc.operators) {
+                    const op = sc.operators[id]; const div = document.createElement('div'); div.className = 'op-config-card';
+                    let tH = '';
+                    op.tasks.forEach(t => {
+                        const isR = this.temp.rec && this.temp.rec.tid === t.id;
+                        tH += `<div class="action-row">
+                            <div class="action-inputs">
+                                <input value="${t.name}" style="flex:1" onchange="app.updTask('${id}','${t.id}','name',this.value)">
+                                <input type="number" value="${t.time}" style="width:30px" onchange="app.updTask('${id}','${t.id}','time',this.value)">s
+                                <span>x</span>
+                                <input type="number" value="${t.qty}" style="width:30px" onchange="app.updTask('${id}','${t.id}','qty',this.value)">
+                                <select onchange="app.updTask('${id}','${t.id}','type',this.value)">
+                                    <option value="total" ${t.type==='total'?'selected':''}>/ Jour</option>
+                                    <option value="grid" ${t.type==='grid'?'selected':''}>/ Grille</option>
+                                    <option value="scale" ${t.type==='scale'?'selected':''}>/ Échelle</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap:5px; margin-top:5px;">
+                                <button class="btn-tool btn-rec ${isR?'recording':''}" onclick="app.toggleRec('${id}','${t.id}')">📍 Trajet</button>
+                                <button class="btn-tool" onclick="app.delTask('${id}','${t.id}')" style="color:red">🗑️</button>
+                            </div>
+                        </div>`;
+                    });
+                    div.innerHTML = `<div style="background:${op.color}; color:white; padding:8px; font-weight:bold;">${op.name}</div>
+                        <div style="padding:5px;">${tH}<button onclick="app.addTask('${id}')" style="width:100%; font-size:10px; margin-top:5px;">+ Ajouter Tâche</button></div>`;
+                    box.appendChild(div);
+                }
             },
 
-            handleItemClick: function(iid) {
+            addTask: function(oid) { this.getSc().operators[oid].tasks.push({id:'t'+Date.now(), name:'Tâche', time:10, qty:1, type:'grid', steps:[]}); this.save(); this.renderOperators(); },
+            updTask: function(oid, tid, k, v) { this.getSc().operators[oid].tasks.find(x=>x.id===tid)[k] = (k==='name'||k==='type'?v:parseFloat(v)); this.save(); this.draw(); },
+            delTask: function(oid, tid) { this.getSc().operators[oid].tasks = this.getSc().operators[oid].tasks.filter(t=>t.id!==tid); this.save(); this.renderOperators(); },
+            toggleRec: function(oid, tid) { this.temp.rec = (this.temp.rec && this.temp.rec.tid === tid) ? null : {oid, tid}; this.renderOperators(); },
+            handlePointClick: function(iid) {
                 if(!this.temp.rec) return;
-                const task = this.getSc().operators[this.temp.rec.oid].tasks.find(t => t.id === this.temp.rec.tid);
-                task.steps.push({ ws: this.data.activeWs, iid });
-                this.renderStats(); this.save();
+                const t = this.getSc().operators[this.temp.rec.oid].tasks.find(x=>x.id===this.temp.rec.tid);
+                t.steps.push(iid); this.save(); this.draw();
             },
 
-            renderStats: function() {
+            draw: function() {
                 const sc = this.getSc(); if(!sc) return;
-                const svg = document.getElementById('svg-layer'); svg.innerHTML = '';
-                const out = document.getElementById('statsOutput'); out.innerHTML = '';
-                let tTime = 0, tCost = 0;
-                const ref = parseFloat(document.getElementById('refHours').value) || 7;
+                sc.ref = parseFloat(document.getElementById('globalWorkHours').value) || 7;
+                const svg = document.getElementById('connections'); svg.innerHTML = '';
+                const out = document.getElementById('statsContent'); out.innerHTML = '';
+                let hasData = false;
 
                 for(let oid in sc.operators) {
-                    const op = sc.operators[oid];
-                    let opT = 0, pathD = "", prev = null;
+                    const op = sc.operators[oid]; let opT = 0, pathD = "", prev = null;
+                    op.tasks.forEach(t => {
+                        let cycles = t.qty;
+                        if(t.type === 'grid') cycles = t.qty * 17; // 17 grilles par échelle
+                        // Ajout du calcul temps
+                        opT += (t.time * cycles);
 
-                    op.tasks.forEach(task => {
-                        opT += (task.time * task.freq);
-                        if(task.steps.length > 1) {
-                            task.steps.forEach(st => {
-                                if(st.ws === this.data.activeWs) {
-                                    const el = document.getElementById(st.iid);
-                                    if(el) {
-                                        const x = el.offsetLeft + el.offsetWidth/2;
-                                        const y = el.offsetTop + el.offsetHeight/2;
-                                        if(prev) {
-                                            pathD += `M${prev.x},${prev.y} L${x},${y} `;
-                                            const d = Math.sqrt(Math.pow(x-prev.x,2)+Math.pow(y-prev.y,2))/30;
-                                            opT += (d/1.4)*task.freq;
-                                        }
-                                        prev = {x, y};
-                                    } else prev = null;
-                                } else prev = null;
+                        if(t.steps.length > 1) {
+                            hasData = true;
+                            t.steps.forEach(sid => {
+                                const el = document.getElementById(sid);
+                                if(el) {
+                                    const x = el.offsetLeft + el.offsetWidth/2;
+                                    const y = el.offsetTop + el.offsetHeight/2;
+                                    if(prev) {
+                                        pathD += `M${prev.x},${prev.y} L${x},${y} `;
+                                        const d = Math.sqrt(Math.pow(x-prev.x,2)+Math.pow(y-prev.y,2))/30;
+                                        opT += (d/1.4)*cycles;
+                                    }
+                                    prev = {x, y};
+                                }
                             });
+                            prev = null; 
                         }
                     });
 
@@ -388,76 +396,37 @@
                         const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
                         p.setAttribute("d", pathD); p.style.stroke = op.color; svg.appendChild(p);
                     }
-                    const cost = (opT/3600)*op.cost; tTime += opT; tCost += cost;
-                    out.innerHTML += `<div class="stat-card" style="border-color:${op.color}"><b>${op.name}</b><br>${(opT/60).toFixed(1)} min | ${cost.toFixed(2)}€</div>`;
+                    const load = (opT / (sc.ref*3600)) * 100;
+                    out.innerHTML += `<div class="op-stat-card" style="border-color:${op.color}">
+                        <b>${op.name}</b><br>Temps: ${(opT/60).toFixed(1)} min<br>
+                        Charge: <b>${load.toFixed(1)}%</b>
+                    </div>`;
                 }
-                out.innerHTML = `<div style="background:var(--primary); color:white; padding:10px; border-radius:4px; margin-bottom:10px;"><b>TOTAL</b><br>${(tTime/3600).toFixed(2)}h | ${tCost.toFixed(2)}€</div>` + out.innerHTML;
+                document.getElementById('statsPanel').style.display = hasData ? 'flex' : 'none';
             },
 
-            // --- UI RENDERERS ---
             renderScenarioList: function() {
                 const c = document.getElementById('scenarioList'); c.innerHTML = '';
                 this.data.scenarios.forEach((s, i) => {
                     const div = document.createElement('div');
-                    div.className = `item-row ${i===this.data.activeSc?'active':''}`;
-                    div.innerHTML = `<div><b>${s.name}</b><br><small>${s.date}</small></div>
-                        <div class="row-actions">
-                            <button class="btn-action" onclick="app.duplicateScenario(${i}, event)">📋</button>
-                            <button class="btn-action" onclick="app.renameScenario(${i}, event)">✏️</button>
-                            <button class="btn-action" onclick="app.delScenario(${i}, event)">🗑️</button>
+                    div.className = `sc-item ${i===this.data.currentIdx?'active':''}`;
+                    div.innerHTML = `${s.name}<br><small>${s.date}</small>
+                        <div class="sc-actions">
+                            <button onclick="app.duplicateScenario(${i}, event)">📋</button>
+                            <button onclick="app.renameScenario(${i}, event)">✏️</button>
+                            <button onclick="app.delScenario(${i}, event)">🗑️</button>
                         </div>`;
                     div.onclick = () => this.loadScenario(i);
                     c.appendChild(div);
                 });
             },
 
-            renderWorkshopList: function() {
-                const c = document.getElementById('workshopList'); c.innerHTML = '';
-                this.getSc().workshops.forEach((w, i) => {
-                    const div = document.createElement('div');
-                    div.className = `item-row ${i===this.data.activeWs?'active':''}`;
-                    div.innerText = w.name;
-                    div.onclick = () => this.switchWorkshop(i);
-                    c.appendChild(div);
-                });
-            },
-
-            renderOperators: function() {
-                const c = document.getElementById('configList'); c.innerHTML = '';
-                const sc = this.getSc();
-                for(let id in sc.operators) {
-                    const op = sc.operators[id];
-                    const div = document.createElement('div'); div.className = 'op-card';
-                    let tH = '';
-                    op.tasks.forEach(t => {
-                        const isRec = this.temp.rec && this.temp.rec.tid === t.id;
-                        tH += `<div class="task-row">
-                            <input value="${t.name}" style="flex:1" onchange="app.upd('t','${id}','${t.id}','name',this.value)">
-                            <input type="number" value="${t.time}" style="width:25px" onchange="app.upd('t','${id}','${t.id}','time',this.value)">s
-                            <button class="btn-rec ${isRec?'recording':''}" onclick="app.rec('${id}','${t.id}')">📍</button>
-                        </div>`;
-                    });
-                    div.innerHTML = `<div class="op-head" style="background:${op.color}">${op.name}</div>
-                        <div style="padding:5px;">Cost: <input type="number" value="${op.cost}" style="width:35px" onchange="app.upd('o','${id}',null,'cost',this.value)">€/h ${tH}
-                        <button onclick="app.addTask('${id}')" style="width:100%; font-size:10px;">+ Tâche</button></div>`;
-                    c.appendChild(div);
-                }
-            },
-
-            // --- UTILS ---
-            rec: function(oid, tid) { this.temp.rec = (this.temp.rec && this.temp.rec.tid === tid) ? null : {oid, tid}; this.renderOperators(); },
-            upd: function(type, oid, tid, k, v) {
-                const sc = this.getSc();
-                if(type==='t') sc.operators[oid].tasks.find(x=>x.id===tid)[k] = (k==='name'?v:parseFloat(v));
-                else sc.operators[oid][k] = parseFloat(v);
-                this.save(); this.renderStats();
-            },
             delScenario: function(i, e) { e.stopPropagation(); if(confirm("Supprimer?")) { this.data.scenarios.splice(i,1); this.save(); location.reload(); } },
-            exportData: function() {
+            exportFile: function() {
                 const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.scenarios));
                 a.download = "backup_fabie.json"; a.click();
             },
-            importData: function(input) {
+            importFile: function(input) {
                 const f = input.files[0]; if(!f) return;
                 const r = new FileReader(); r.onload = e => { this.data.scenarios = JSON.parse(e.target.result); this.save(); location.reload(); };
                 r.readAsText(f);
