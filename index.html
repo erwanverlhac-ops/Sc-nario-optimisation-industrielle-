@@ -337,14 +337,19 @@
     <div id="calcInfoModalOverlay" onclick="closeCalcInfo(event)">
         <div class="calc-modal" onclick="event.stopPropagation()">
             <h3 style="margin-top:0; color:var(--box-bg); border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                <i class="fas fa-calculator"></i> Méthode de calcul
+                <i class="fas fa-info-circle"></i> Guide des paramètres
             </h3>
-            <p>Le paramètre <b>Répétition</b> multiplie automatiquement vos données (temps fixe, trajet, gâteaux emballés) selon la logique suivante :</p>
-            <ul style="padding-left: 20px; background: #f8f9fa; padding: 15px 15px 15px 35px; border-radius: 5px; border-left: 3px solid #3498db;">
-                <li style="margin-bottom: 8px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
-                <li style="margin-bottom: 8px;"><b>/ Grille :</b> Si un objectif <b>Gâteaux / Grille</b> est défini, il est divisé par le nombre de <b>Gâteaux par action (🎂)</b>, puis multiplié par 17 (grilles) et l'Objectif d'Échelles. Sinon, la quantité est multipliée par 17 et par l'Objectif d'Échelles.</li>
-                <li style="margin-bottom: 8px;"><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
-                <li><b>/ Palette :</b> L'objectif <b>Gâteaux / Palette</b> est divisé par le nombre de <b>Gâteaux emballés par action (🎂)</b>, puis le tout est multiplié par la quantité saisie. <br><i>Ex: Si 1 palette = 1000 gâteaux et 1 action = 10 gâteaux, l'action sera calculée 100 fois.</i></li>
+            <div style="margin-bottom: 10px; font-size: 12px;">
+                <p style="margin: 5px 0;"><b>🎯 Objectif Prod :</b> Définit le nombre total d'échelles à produire. Impacte les actions configurées en "/ Grille" ou "/ Échelle".</p>
+                <p style="margin: 5px 0;"><b>🧇 Gâteaux / Grille :</b> Permet de déduire les actions. <i>Ex: Si 1 grille = 30 gâteaux et 1 action = 10 gâteaux, l'action est répétée 3 fois/grille.</i></p>
+                <p style="margin: 5px 0;"><b>📦 Gâteaux / Palette :</b> Permet de déduire les actions. <i>Ex: Si 1 palette = 1000 gâteaux et 1 action = 10, l'action est répétée 100 fois/palette.</i></p>
+            </div>
+            <p style="margin-bottom: 5px;"><b>🔄 Répétition :</b> Multiplie automatiquement vos données selon la logique suivante :</p>
+            <ul style="padding-left: 20px; background: #f8f9fa; padding: 10px 15px 10px 35px; border-radius: 5px; border-left: 3px solid #3498db; margin-top: 5px; margin-bottom: 0;">
+                <li style="margin-bottom: 5px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
+                <li style="margin-bottom: 5px;"><b>/ Grille :</b> Utilisera "Gâteaux/Grille", multiplié par 17 (grilles/échelle) et par l'Objectif d'Échelles.</li>
+                <li style="margin-bottom: 5px;"><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
+                <li><b>/ Palette :</b> Utilisera "Gâteaux/Palette" divisé par l'objectif par action.</li>
             </ul>
             <button onclick="document.getElementById('calcInfoModalOverlay').style.display='none'" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
         </div>
@@ -1026,20 +1031,20 @@
                     <div class="op-config-header" style="background-color: ${data.color}"><span>${data.name}</span></div>
                     <div style="padding: 5px 10px; background:#f1f2f6; border-bottom:1px solid #ddd; font-size:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod:</strong>
+                            <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</strong>
                             <div>
                                 <input type="number" value="${data.targetRacks}" min="1" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateTargetRacks('${opId}', this.value)">
                                 Échelles
                             </div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <strong title="Nombre de gâteaux par grille">🧇 Gâteaux / Grille:</strong>
+                            <strong title="Nombre de gâteaux par grille">🧇 Gâteaux / Grille <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</strong>
                             <div>
                                 <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakesGrid('${opId}', this.value)">
                             </div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <strong title="Gâteaux nécessaires pour compléter une palette">📦 Gâteaux / Palette:</strong>
+                            <strong title="Gâteaux nécessaires pour compléter une palette">📦 Gâteaux / Palette <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</strong>
                             <div>
                                 <input type="number" value="${data.cakesPerPalette || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakes('${opId}', this.value)">
                             </div>
