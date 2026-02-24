@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Atelier FABIE - Gammes Opératoires</title>
+    <title>Simulateur Atelier FABIE - V2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --grid-color: #cccccc;
@@ -19,7 +20,7 @@
             --scale: 30px; 
             --room-w: 19.9;  
             --room-h: 11.74; 
-            --panel-width: 300px;
+            --panel-width: 320px;
         }
 
         body {
@@ -33,11 +34,37 @@
             overflow: hidden;
         }
 
+        /* --- LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 8px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 300px;
+        }
+        .login-box h2 { margin-top: 0; color: var(--box-bg); }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 15px 0; box-sizing: border-box;
+            border: 2px solid #ddd; border-radius: 4px; font-size: 16px; text-align: center;
+        }
+        .login-box button {
+            width: 100%; padding: 12px; background: var(--box-bg); color: white;
+            border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold;
+        }
+        .login-box button:hover { background: var(--box-border); }
+        .error-msg { color: var(--accent); margin-top: 10px; display: none; font-weight: bold; }
+
         .main-wrapper {
             display: flex;
             flex: 1;
             overflow: hidden;
             width: 100%;
+            filter: blur(5px); /* Flou tant que pas connecté */
+            pointer-events: none;
+            transition: filter 0.5s;
         }
 
         /* --- COLONNE GAUCHE (SCENARIOS) --- */
@@ -50,7 +77,7 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.05);
             z-index: 20;
             flex-shrink: 0;
-            display: none; /* Caché par défaut */
+            display: none; 
             height: 100vh;
             overflow-y: auto;
         }
@@ -68,9 +95,7 @@
             width: 100%;
         }
 
-        .bottom-panel.collapsed {
-            display: none;
-        }
+        .bottom-panel.collapsed { display: none; }
 
         /* --- COLONNE CENTRALE (ATELIER) --- */
         .main-content {
@@ -104,27 +129,12 @@
 
         /* BANNIÈRE CONTROLS */
         .top-bar {
-            background: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 15px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            z-index: 100;
-            width: fit-content;
-            flex-shrink: 0;
+            background: white; padding: 8px 15px; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+            align-items: center; position: relative; z-index: 100;
+            width: fit-content; flex-shrink: 0;
         }
-
-        .prod-settings {
-            display: flex; gap: 10px; background: #f8f9fa; padding: 4px 10px;
-            border-radius: 5px; border: 1px solid #e0e0e0; align-items: center; font-size: 12px; font-weight: bold;
-        }
-        .prod-settings input { width: 50px; padding: 2px 5px; border: 1px solid #ccc; border-radius: 3px; font-weight: bold; color: var(--accent); }
 
         .trash-zone {
             display: flex; align-items: center; justify-content: center; background-color: #ffebee;
@@ -163,7 +173,7 @@
 
         .op-config-card {
             background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 0;
-            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 320px; max-width: 340px; display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 330px; max-width: 350px; display: flex; flex-direction: column;
         }
         .op-stat-card {
             background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 15px;
@@ -239,11 +249,8 @@
         }
 
         /* STATS PANEL */
-        .op-stat-card { border-left: 4px solid #ccc; background: #fafafa; padding: 10px; }
-        .op-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
         .task-detail { font-size: 0.85em; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 5px; margin-bottom: 5px; }
         .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 2px; align-items: center; }
-        .stat-value { font-weight: bold; color: #333; }
         
         .step-badge {
             position: absolute; top: -8px; right: -8px; color: white; border-radius: 50%; width: 18px; height: 18px;
@@ -260,12 +267,25 @@
         
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
+        
+        /* Boutons Scenarios */
+        .sc-btn { width: 100%; padding: 8px; margin-bottom: 5px; border-radius: 4px; border:none; text-align: left; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .sc-btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
-    <div class="main-wrapper">
-        <!-- COLONNE GAUCHE: SCENARIOS -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2><i class="fas fa-industry"></i> FABIE 2026</h2>
+            <p>Accès au Simulateur</p>
+            <input type="password" id="passwordInput" placeholder="Mot de passe...">
+            <button onclick="checkLogin()">Entrer</button>
+            <div id="loginError" class="error-msg">Mot de passe incorrect</div>
+        </div>
+    </div>
+
+    <div class="main-wrapper" id="mainWrapper">
         <div class="scenarios-sidebar" id="scenariosPanel">
             <div class="panel-header">
                 <span>📂 Scénarios</span>
@@ -278,29 +298,37 @@
                 </div>
                 
                 <div class="form-group" style="padding-bottom:15px; border-bottom:1px solid #eee;">
-                    <label>Renommer le scénario :</label>
+                    <label>Renommer :</label>
                     <div style="display:flex; gap:5px;">
                         <input type="text" id="scenarioNameInput" style="flex:1; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-                        <button class="btn-save" onclick="renameCurrentScenario()" style="padding:6px 10px;" title="Valider le nom">✏️</button>
+                        <button class="btn-save" onclick="renameCurrentScenario()" style="padding:6px 10px;" title="Valider">✏️</button>
                     </div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
-                    <button id="btnManualSave" class="btn-save" onclick="manualSaveScenario()" style="justify-content:center; padding:10px;">💾 Enregistrer</button>
-                    <button onclick="newScenario()" style="background:#3498db; color:white; justify-content:center; padding:10px;">➕ Nouveau (Dupliquer)</button>
-                    <button onclick="deleteCurrentScenario()" style="background:#e74c3c; color:white; justify-content:center; padding:10px; margin-top:20px;">🗑️ Supprimer</button>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px;">
+                    <label>Gestion :</label>
+                    <button id="btnManualSave" class="sc-btn" style="background:#27ae60; color:white;" onclick="manualSaveScenario()"><i class="fas fa-save"></i> Enregistrer (Site)</button>
+                    <button class="sc-btn" style="background:#3498db; color:white;" onclick="newScenario()"><i class="fas fa-copy"></i> Nouveau (Dupliquer)</button>
+                    
+                    <div style="height:1px; background:#eee; margin:5px 0;"></div>
+                    
+                    <button class="sc-btn" style="background:#34495e; color:white;" onclick="exportJson()"><i class="fas fa-file-download"></i> Exporter (Bureau .json)</button>
+                    <button class="sc-btn" style="background:#95a5a6; color:white;" onclick="document.getElementById('importFile').click()"><i class="fas fa-file-upload"></i> Importer (.json)</button>
+                    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJson(this)">
+                    
+                    <div style="height:1px; background:#eee; margin:5px 0;"></div>
+
+                    <button class="sc-btn" style="background:#e74c3c; color:white;" onclick="deleteCurrentScenario()"><i class="fas fa-trash"></i> Supprimer</button>
                 </div>
             </div>
         </div>
 
-        <!-- COLONNE CENTRALE: ATELIER -->
         <div class="main-content">
             <header>
                 <h1>Simulateur Atelier FABIE</h1>
             </header>
 
             <div class="top-bar">
-                <!-- BOUTON POUR OUVRIR LE PANNEAU SCENARIO -->
                 <button onclick="toggleScenarios()" style="background: #34495e; color: white;">📂 Gérer Scénarios</button>
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
@@ -323,7 +351,6 @@
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
                 
-                <!-- PARAMETRE GLOBAL: TEMPS DE TRAVAIL -->
                 <div style="display:flex; align-items:center; gap:3px;" title="Temps de travail global pour le calcul de charge">
                     <label style="font-size:12px; font-weight:bold; color:#555;">Temps Ref :</label>
                     <input type="number" id="globalWorkHours" value="7" min="0" onchange="updateGlobalTime()" style="width:40px; padding:4px; font-size:12px; border:1px solid #ddd; border-radius:4px; text-align:center;"> <span style="font-size:12px; color:#555;">h</span>
@@ -333,11 +360,9 @@
 
             <div class="workshop-container" id="workshop">
                 <svg id="connections"></svg>
-                <!-- Initial objects created dynamically now via Scenarios -->
-            </div>
+                </div>
         </div>
 
-        <!-- COLONNE DROITE: RESULTATS -->
         <div class="stats-sidebar" id="statsPanel">
             <div class="panel-header">
                 <span>📊 Analyse Charge</span>
@@ -347,15 +372,31 @@
         </div>
     </div>
 
-    <!-- PANNEAU BAS: CONFIGURATION -->
     <div class="bottom-panel">
         <div class="panel-header">⚙️ Gammes Opératoires</div>
         <div class="config-list" id="configList">
-            <!-- Dynamically populated -->
-        </div>
+            </div>
     </div>
 
     <script>
+        // --- LOGIN LOGIC ---
+        function checkLogin() {
+            const pass = document.getElementById('passwordInput').value;
+            if (pass === "FABIE2026") {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('mainWrapper').style.filter = 'none';
+                document.getElementById('mainWrapper').style.pointerEvents = 'all';
+                // Charge les scénarios du localStorage si existent
+                loadScenariosFromStorage();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+        document.getElementById('passwordInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkLogin();
+        });
+
+        // --- CONSTANTES ---
         const workshop = document.getElementById('workshop');
         const svg = document.getElementById('connections');
         const statsPanel = document.getElementById('statsPanel');
@@ -376,8 +417,31 @@
         let scenarios = {};
         let currentScenarioId = null;
 
+        function loadScenariosFromStorage() {
+            const saved = localStorage.getItem('fabie_scenarios_v2');
+            if (saved) {
+                scenarios = JSON.parse(saved);
+                // Si on a des scénarios, on charge le premier, sinon init
+                const keys = Object.keys(scenarios);
+                if (keys.length > 0) {
+                    currentScenarioId = keys[0];
+                    updateScenarioSelect();
+                    loadScenario(currentScenarioId);
+                } else {
+                    initInitialScenario();
+                }
+            } else {
+                initInitialScenario();
+            }
+        }
+
+        function saveScenariosToStorage() {
+            localStorage.setItem('fabie_scenarios_v2', JSON.stringify(scenarios));
+        }
+
         function initInitialScenario() {
             // Création du layout de base par défaut
+            workshop.innerHTML = '<svg id="connections"></svg>';
             createObj("m1", "Entrée", 45, 30, 30, 250);
             createObj("m3", "Sortie", 45, 30, 500, 30);
             
@@ -388,6 +452,7 @@
                 globalTime: { h: 7, m: 0 }
             };
             currentScenarioId = 'sc_default';
+            saveScenariosToStorage();
             updateScenarioSelect();
             calculateAndDraw();
         }
@@ -427,11 +492,12 @@
             };
             
             scenarios[currentScenarioId] = {
-                name: scenarios[currentScenarioId].name,
+                name: scenarios[currentScenarioId] ? scenarios[currentScenarioId].name : "Nouveau",
                 machines: machines,
                 opData: JSON.parse(opDataStr),
                 globalTime: globalTime
             };
+            saveScenariosToStorage(); // Persistance auto
         }
 
         function loadScenario(id) {
@@ -476,8 +542,7 @@
 
         function newScenario() {
             saveCurrentScenario(); // Save current before cloning
-            const defaultName = "Scénario " + (Object.keys(scenarios).length + 1);
-            
+            const defaultName = scenarios[currentScenarioId].name + " (Copie)";
             const newId = 'sc_' + Date.now();
             
             // Clone l'état actuel
@@ -515,6 +580,7 @@
             const newName = document.getElementById('scenarioNameInput').value.trim();
             if (newName && currentScenarioId) {
                 scenarios[currentScenarioId].name = newName;
+                saveScenariosToStorage();
                 updateScenarioSelect();
             }
         }
@@ -523,24 +589,64 @@
             saveCurrentScenario();
             const btn = document.getElementById('btnManualSave');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '✅ Enregistré !';
-            btn.style.background = '#27ae60';
+            btn.innerHTML = '<i class="fas fa-check"></i> Enregistré !';
             setTimeout(() => {
                 btn.innerHTML = originalText;
-                btn.style.background = ''; // Remet le fond par défaut (CSS)
             }, 2000);
         }
 
         function deleteCurrentScenario() {
             if (Object.keys(scenarios).length <= 1) {
-                alert("Vous ne pouvez pas supprimer le dernier scénario. Créez-en un nouveau d'abord.");
+                alert("Impossible de supprimer le dernier scénario.");
                 return;
             }
             if (confirm("Voulez-vous vraiment supprimer ce scénario ?")) {
                 delete scenarios[currentScenarioId];
-                currentScenarioId = Object.keys(scenarios)[0];
+                saveScenariosToStorage();
+                const keys = Object.keys(scenarios);
+                currentScenarioId = keys[0];
                 loadScenario(currentScenarioId);
             }
+        }
+
+        // --- EXPORT / IMPORT JSON ---
+        function exportJson() {
+            saveCurrentScenario();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scenarios));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            const fileName = "FABIE_Scenarios_" + new Date().toISOString().slice(0,10) + ".json";
+            downloadAnchorNode.setAttribute("download", fileName);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importJson(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    // Merge or Replace? Ici on remplace pour simplicité ou on merge
+                    // On va merger : ajouter les scénarios importés
+                    let count = 0;
+                    for (let id in imported) {
+                        // Générer nouvel ID pour éviter conflit
+                        const newId = 'import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                        scenarios[newId] = imported[id];
+                        count++;
+                    }
+                    saveScenariosToStorage();
+                    updateScenarioSelect();
+                    alert(count + " scénarios importés !");
+                } catch(err) {
+                    alert("Erreur fichier invalide.");
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
         }
 
         function updateGlobalTime() {
@@ -607,7 +713,11 @@
             activeItem = null;
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', dragEnd);
-            saveCurrentScenario(); // Sauvegarde automatique lors d'un déplacement
+            saveCurrentScenario(); 
+        }
+
+        function isOverlap(rect1, rect2) {
+            return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
         }
 
         function deleteItem(item) {
@@ -639,9 +749,8 @@
         }
 
         // --- GESTION GAMMES (SIDEBAR BAS) ---
-
         function addConfigCard(opId, opName, color) {
-            operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15, tasks: [] };
+            operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, tasks: [] };
             rebuildConfigUI();
             addTask(opId, "Remplir grille", 10, 'per_grid');
         }
@@ -718,7 +827,7 @@
                                 <input type="number" id="freqVal-${task.id}" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)" title="Quantité">
                                 <select id="freqType-${task.id}" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)" title="Mode de répétition">
                                     <option value="total" ${selTotal}>/ Jour</option>
-                                    <option value="per_grid" ${selGrid}>/ Grille (17/éch)</option>
+                                    <option value="per_grid" ${selGrid}>/ Grille</option>
                                     <option value="per_rack" ${selRack}>/ Échelle</option>
                                 </select>
                             </div>
@@ -906,14 +1015,14 @@
 
                 card.innerHTML = `
                     <div class="op-title" style="color:${data.color}">${opName} 
-                        <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Échelles</span>
+                        <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Éch.</span>
                     </div>
                     ${tasksHtml}
                     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;">
                         <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(totalDistMeters/1000).toFixed(2)} km</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Trajet Total:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût de l'opération:</span> <span>${laborCost.toFixed(2)} €</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO:</span> <span>${laborCost.toFixed(2)} €</span></div>
                         
                         <div style="margin-top:10px;">
                             <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:#555;">
@@ -935,9 +1044,9 @@
                 globalCard.style.borderLeftColor = '#2c3e50';
                 globalCard.style.backgroundColor = '#e8f6f3';
                 globalCard.innerHTML = `
-                    <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL</div>
-                    <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Total:</span> <span>${formatTime(grandTotalTime)}</span></div>
-                    <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
+                    <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL ATELIER</div>
+                    <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Cumulé:</span> <span>${formatTime(grandTotalTime)}</span></div>
+                    <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total Prod:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
                 `;
                 statsContent.appendChild(globalCard);
             }
@@ -986,8 +1095,7 @@
                 const newName = extractTextContent(element);
                 if(element.classList.contains('person') && operatorData[element.id]) { 
                     operatorData[element.id].name = newName;
-                    const header = document.querySelector(`#config-${element.id} .op-config-header span`); 
-                    if(header) header.textContent = newName; 
+                    rebuildConfigUI(); // Refresh header
                 }
                 saveCurrentScenario();
                 calculateAndDraw();
@@ -1015,10 +1123,12 @@
             else btn.innerHTML = '👁️ Cacher Gammes';
         }
 
-        // Lancement au démarrage
-        window.onload = function() {
-            initInitialScenario();
-        };
+        function addBadge(el, index, color) {
+            const badge = document.createElement('span'); badge.className = 'step-badge'; badge.innerText = index;
+            badge.style.backgroundColor = color; el.appendChild(badge);
+        }
+        function getCenter(el) { return { x: parseInt(el.style.left) + el.offsetWidth/2, y: parseInt(el.style.top) + el.offsetHeight/2 }; }
+
     </script>
 </body>
 </html>
