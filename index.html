@@ -40,6 +40,21 @@
             width: 100%;
         }
 
+        /* --- COLONNE GAUCHE (SCENARIOS) --- */
+        .scenarios-sidebar {
+            width: var(--panel-width);
+            background: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            z-index: 20;
+            flex-shrink: 0;
+            display: none; /* Caché par défaut */
+            height: 100vh;
+            overflow-y: auto;
+        }
+
         /* --- PANNEAU DU BAS (CONFIG) --- */
         .bottom-panel {
             height: 280px;
@@ -105,20 +120,6 @@
             flex-shrink: 0;
         }
 
-        /* SECTION SCENARIOS */
-        .scenario-controls {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            background: #e8f5e9;
-            padding: 4px 10px;
-            border-radius: 5px;
-            border: 1px solid #c8e6c9;
-        }
-        .scenario-controls select {
-            padding: 4px; border-radius: 3px; border: 1px solid #aaa; font-weight:bold; color: #2c3e50;
-        }
-
         .prod-settings {
             display: flex; gap: 10px; background: #f8f9fa; padding: 4px 10px;
             border-radius: 5px; border: 1px solid #e0e0e0; align-items: center; font-size: 12px; font-weight: bold;
@@ -153,7 +154,7 @@
             font-weight: bold; color: var(--text); font-size: 1.1em;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .panel-body { flex: 1; overflow-y: auto; padding: 10px; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 15px; }
         
         .config-list { 
             display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; 
@@ -256,11 +257,42 @@
         svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
         path { fill: none; stroke-width: 3; stroke-dasharray: 5; animation: dash 30s linear infinite; opacity: 0.8; }
         @keyframes dash { to { stroke-dashoffset: -1000; } }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
     <div class="main-wrapper">
+        <!-- COLONNE GAUCHE: SCENARIOS -->
+        <div class="scenarios-sidebar" id="scenariosPanel">
+            <div class="panel-header">
+                <span>📂 Scénarios</span>
+                <button class="btn-sm" onclick="toggleScenarios()" style="color:#777; font-size: 14px; border:none; background:transparent;">×</button>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label>Scénario Actif :</label>
+                    <select id="sidebarScenarioSelect" onchange="switchScenario(this.value)" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; font-weight:bold;"></select>
+                </div>
+                
+                <div class="form-group" style="padding-bottom:15px; border-bottom:1px solid #eee;">
+                    <label>Renommer le scénario :</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="scenarioNameInput" style="flex:1; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+                        <button class="btn-save" onclick="renameCurrentScenario()" style="padding:6px 10px;" title="Valider le nom">✏️</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                    <button id="btnManualSave" class="btn-save" onclick="manualSaveScenario()" style="justify-content:center; padding:10px;">💾 Enregistrer</button>
+                    <button onclick="newScenario()" style="background:#3498db; color:white; justify-content:center; padding:10px;">➕ Nouveau (Dupliquer)</button>
+                    <button onclick="deleteCurrentScenario()" style="background:#e74c3c; color:white; justify-content:center; padding:10px; margin-top:20px;">🗑️ Supprimer</button>
+                </div>
+            </div>
+        </div>
+
         <!-- COLONNE CENTRALE: ATELIER -->
         <div class="main-content">
             <header>
@@ -268,11 +300,8 @@
             </header>
 
             <div class="top-bar">
-                <!-- GESTION SCENARIOS -->
-                <div class="scenario-controls">
-                    <select id="scenarioSelect" onchange="switchScenario(this.value)" title="Changer de scénario"></select>
-                    <button onclick="newScenario()" title="Dupliquer et créer un nouveau scénario" class="btn-save">➕ Nouveau</button>
-                </div>
+                <!-- BOUTON POUR OUVRIR LE PANNEAU SCENARIO -->
+                <button onclick="toggleScenarios()" style="background: #34495e; color: white;">📂 Gérer Scénarios</button>
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
                 
@@ -312,7 +341,7 @@
         <div class="stats-sidebar" id="statsPanel">
             <div class="panel-header">
                 <span>📊 Analyse Charge</span>
-                <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px;">×</button>
+                <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px; border:none; background:transparent;">×</button>
             </div>
             <div class="panel-body" id="statsContent"></div>
         </div>
@@ -333,6 +362,7 @@
         const statsContent = document.getElementById('statsContent');
         const trashBin = document.getElementById('trashBin');
         const configList = document.getElementById('configList');
+        const scenariosPanel = document.getElementById('scenariosPanel');
         
         const PIXELS_PER_METER = 30; // 30px = 1m
         const WALKING_SPEED_M_S = 1.4;
@@ -365,7 +395,7 @@
         function extractTextContent(element) {
             let txt = '';
             for (let node of element.childNodes) {
-                if (node.nodeType === 3) txt += node.textContent; // Text nodes only (ignore badges/handles)
+                if (node.nodeType === 3) txt += node.textContent; // Text nodes only
             }
             return txt.trim();
         }
@@ -397,7 +427,7 @@
             };
             
             scenarios[currentScenarioId] = {
-                name: scenarios[currentScenarioId].name, // keep existing name
+                name: scenarios[currentScenarioId].name,
                 machines: machines,
                 opData: JSON.parse(opDataStr),
                 globalTime: globalTime
@@ -408,11 +438,11 @@
             currentScenarioId = id;
             const sc = scenarios[id];
             
-            // 1. Restore time
+            // Restore time
             document.getElementById('globalWorkHours').value = sc.globalTime.h;
             document.getElementById('globalWorkMinutes').value = sc.globalTime.m;
             
-            // 2. Clear & Restore Machines
+            // Clear & Restore Machines
             workshop.innerHTML = '<svg id="connections"></svg>';
             sc.machines.forEach(m => {
                 const div = document.createElement('div');
@@ -430,11 +460,12 @@
                 initMachine(div);
             });
             
-            // 3. Restore operator data & UI
+            // Restore operator data & UI
             operatorData = JSON.parse(JSON.stringify(sc.opData));
             recordingState = null;
             rebuildConfigUI();
             
+            updateScenarioSelect();
             calculateAndDraw();
         }
 
@@ -446,26 +477,24 @@
         function newScenario() {
             saveCurrentScenario(); // Save current before cloning
             const defaultName = "Scénario " + (Object.keys(scenarios).length + 1);
-            const name = prompt("Nom du nouveau scénario ?", defaultName);
-            if (!name) return; // Annulé
-
+            
             const newId = 'sc_' + Date.now();
             
             // Clone l'état actuel
             const currentStateStr = JSON.stringify(scenarios[currentScenarioId]);
             const newState = JSON.parse(currentStateStr);
-            newState.name = name;
+            newState.name = defaultName;
             
             scenarios[newId] = newState;
             updateScenarioSelect();
             
             // On switch dessus
-            document.getElementById('scenarioSelect').value = newId;
+            document.getElementById('sidebarScenarioSelect').value = newId;
             loadScenario(newId);
         }
 
         function updateScenarioSelect() {
-            const select = document.getElementById('scenarioSelect');
+            const select = document.getElementById('sidebarScenarioSelect');
             select.innerHTML = '';
             for (let id in scenarios) {
                 const opt = document.createElement('option');
@@ -474,11 +503,57 @@
                 if (id === currentScenarioId) opt.selected = true;
                 select.appendChild(opt);
             }
+            
+            // Mise à jour de l'input de renommage
+            const renameInput = document.getElementById('scenarioNameInput');
+            if (renameInput && scenarios[currentScenarioId]) {
+                renameInput.value = scenarios[currentScenarioId].name;
+            }
+        }
+
+        function renameCurrentScenario() {
+            const newName = document.getElementById('scenarioNameInput').value.trim();
+            if (newName && currentScenarioId) {
+                scenarios[currentScenarioId].name = newName;
+                updateScenarioSelect();
+            }
+        }
+
+        function manualSaveScenario() {
+            saveCurrentScenario();
+            const btn = document.getElementById('btnManualSave');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Enregistré !';
+            btn.style.background = '#27ae60';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = ''; // Remet le fond par défaut (CSS)
+            }, 2000);
+        }
+
+        function deleteCurrentScenario() {
+            if (Object.keys(scenarios).length <= 1) {
+                alert("Vous ne pouvez pas supprimer le dernier scénario. Créez-en un nouveau d'abord.");
+                return;
+            }
+            if (confirm("Voulez-vous vraiment supprimer ce scénario ?")) {
+                delete scenarios[currentScenarioId];
+                currentScenarioId = Object.keys(scenarios)[0];
+                loadScenario(currentScenarioId);
+            }
         }
 
         function updateGlobalTime() {
             saveCurrentScenario();
             calculateAndDraw();
+        }
+
+        function toggleScenarios() {
+            if (scenariosPanel.style.display === 'none' || scenariosPanel.style.display === '') {
+                scenariosPanel.style.display = 'flex';
+            } else {
+                scenariosPanel.style.display = 'none';
+            }
         }
 
         // --- INIT & DRAG MACHINES ---
@@ -532,11 +607,7 @@
             activeItem = null;
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', dragEnd);
-            saveCurrentScenario(); // Auto-save after moving
-        }
-
-        function isOverlap(rect1, rect2) {
-            return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
+            saveCurrentScenario(); // Sauvegarde automatique lors d'un déplacement
         }
 
         function deleteItem(item) {
@@ -707,7 +778,7 @@
             btn.innerHTML = (task && task.steps.length > 0) ? "✅ OK" : "📍 Trajet";
             btn.className = (task && task.steps.length > 0) ? "btn-record has-path" : "btn-record";
             recordingState = null; workshop.style.cursor = "default";
-            saveCurrentScenario(); // Auto-save after recording
+            saveCurrentScenario(); 
         }
 
         function handleFluxClick(item) {
@@ -715,7 +786,6 @@
             const { opId, taskId } = recordingState;
             const task = operatorData[opId].tasks.find(t => t.id === taskId);
             if (task) {
-                // Stocker l'ID de l'élément pour sérialisation
                 if(task.steps.length > 0 && task.steps[task.steps.length-1] === item.id) return;
                 task.steps.push(item.id);
                 calculateAndDraw();
@@ -739,7 +809,6 @@
 
             for (const [opId, data] of Object.entries(operatorData)) {
                 let opEl = document.getElementById(opId);
-                // Tolérance si l'opérateur a été supprimé du canvas
                 const opName = data.name || (opEl ? extractTextContent(opEl) : "Opérateur");
                 const targetRacks = data.targetRacks || 1;
                 const hourlyRate = data.hourlyRate || 15;
@@ -777,7 +846,7 @@
 
                     for (let i = 0; i < task.steps.length; i++) {
                         const el = document.getElementById(task.steps[i]);
-                        if(!el) continue; // Si objet supprimé
+                        if(!el) continue;
                         
                         const pos = getCenter(el);
                         
@@ -938,6 +1007,7 @@
         }
 
         function closeStats() { statsPanel.style.display = 'none'; }
+        
         function toggleConfigPanel() {
             const panel = document.querySelector('.bottom-panel'); const btn = document.getElementById('btnToggleConfig');
             panel.classList.toggle('collapsed');
