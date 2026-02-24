@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Atelier FABIE - Expert</title>
+    <title>Simulateur Atelier FABIE - Advanced</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --grid-color: #cccccc;
@@ -19,7 +20,7 @@
             --scale: 30px; 
             --room-w: 19.9;  
             --room-h: 11.74; 
-            --panel-width: 340px;
+            --panel-width: 320px;
         }
 
         body {
@@ -33,407 +34,86 @@
             overflow: hidden;
         }
 
-        /* --- LOGIN OVERLAY --- */
-        #loginOverlay {
-            position: fixed; inset: 0; background: rgba(44, 62, 80, 0.98);
-            z-index: 9999; display: flex; justify-content: center; align-items: center;
+        /* --- ECRAN DE CONNEXION --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .login-box {
-            background: white; padding: 40px; border-radius: 12px; width: 320px;
-            text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            background: white; padding: 30px; border-radius: 8px; text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); width: 300px;
         }
-        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
-        .login-btn { width: 100%; padding: 10px; background: var(--box-bg); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-
-        .main-wrapper { display: flex; flex: 1; overflow: hidden; width: 100%; }
-
-        /* --- SIDEBAR GAUCHE (SCENARIOS) --- */
-        .sidebar-left {
-            width: 280px; background: white; border-right: 1px solid #ddd;
-            display: flex; flex-direction: column; z-index: 30;
+        .login-box h2 { margin-top: 0; color: #333; }
+        .login-box input {
+            width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box;
+            border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
         }
-        .sidebar-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
-        .sc-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .sc-item { 
-            padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer;
-            font-size: 12px; transition: 0.2s;
+        .login-box button {
+            width: 100%; padding: 10px; background: var(--box-bg); color: white;
+            border: none; border-radius: 4px; font-size: 16px; cursor: pointer;
         }
-        .sc-item:hover { background: #f0f7ff; border-color: var(--box-bg); }
-        .sc-item.active { border-color: var(--box-bg); background: #e3f2fd; font-weight: bold; }
-        .sc-actions { display: flex; gap: 4px; margin-top: 5px; }
+        .login-box button:hover { background: var(--box-border); }
+        .error-msg { color: var(--accent); font-size: 14px; margin-top: 10px; display: none; }
 
-        /* --- CONTENU CENTRAL --- */
-        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; background: #eaeded; }
+        /* --- WRAPPER PRINCIPAL --- */
+        .main-wrapper {
+            display: flex; flex: 1; overflow: hidden; width: 100%;
+            filter: blur(5px); /* Flou tant que pas connecté */
+            pointer-events: none;
+            transition: filter 0.3s;
+        }
 
+        /* --- SCENARIO BAR --- */
+        .scenario-bar {
+            background: #2c3e50; color: white; padding: 8px 15px; display: flex;
+            justify-content: space-between; align-items: center; font-size: 14px;
+        }
+        .scenario-controls { display: flex; gap: 10px; }
+        .scenario-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .scenario-btn:hover { background: rgba(255,255,255,0.2); }
+        .file-input { display: none; }
+
+        /* --- PANNEAU DU BAS (CONFIG) --- */
+        .bottom-panel {
+            height: 280px; background: white; border-top: 1px solid #ddd;
+            display: flex; flex-direction: column;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05); z-index: 20; flex-shrink: 0; width: 100%;
+        }
+        .bottom-panel.collapsed { display: none; }
+
+        /* --- COLONNE CENTRALE (ATELIER) --- */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            padding: 10px; overflow-y: auto; position: relative; background: #f4f7f6;
+        }
+
+        /* --- COLONNE DROITE (STATS) --- */
+        .stats-sidebar {
+            width: var(--panel-width); background: white; border-left: 1px solid #ddd;
+            display: flex; flex-direction: column;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05); z-index: 20; flex-shrink: 0;
+            display: none; height: 100vh; overflow-y: auto;
+        }
+
+        header { text-align: center; margin-bottom: 10px; flex-shrink: 0; }
+        h1 { font-size: 1.3rem; margin: 5px 0; color: var(--text); font-weight: 600; }
+
+        /* BANNIÈRE CONTROLS */
         .top-bar {
             background: white; padding: 8px 15px; border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
-            display: flex; gap: 8px; align-items: center; z-index: 100;
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+            align-items: center; position: relative; z-index: 100; width: fit-content; flex-shrink: 0;
         }
 
         .trash-zone {
             display: flex; align-items: center; justify-content: center;
             background-color: #ffebee; border: 2px dashed #e57373; color: #c62828;
-            padding: 5px 15px; border-radius: 5px; font-weight: bold; font-size: 13px;
-        }
-        .trash-zone.drag-over { background-color: #c62828; color: white; transform: scale(1.05); }
-
-        button.btn-tool { padding: 6px 10px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; background: white; }
-        button.btn-tool:hover { background: #f1f1f1; }
-        .btn-add-person { background: #e74c3c; color: white; border: none; }
-
-        /* --- WORKSHOP --- */
-        .workshop-container {
-            position: relative;
-            width: calc(var(--room-w) * var(--scale)); 
-            height: calc(var(--room-h) * var(--scale));
-            background-color: white;
-            border: 4px solid var(--wall-color);
-            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: var(--scale) var(--scale);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            margin-bottom: 50px;
-        }
-
-        .machine {
-            position: absolute; background: rgba(52, 152, 219, 0.9);
-            border: 2px solid var(--box-border); border-radius: 4px; color: white;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; cursor: grab; user-select: none; z-index: 10;
-        }
-        .machine.person { border-radius: 50%; border: 2px solid white; }
-        .machine.palette { background: var(--palette-bg); border-color: #a04000; }
-        .machine.scale-machine { background: var(--scale-bg); border-color: #1e8449; border-style: dashed; }
-        .machine.waypoint { background: var(--waypoint-bg); border-radius: 50%; font-size: 0; border: 2px solid white; }
-        .machine.waypoint::after { content: "+"; font-size: 14px; }
-        .machine.pillar { background: #000000; border: none; border-radius: 0; }
-        
-        .resize-handle { width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0; cursor: se-resize; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
-
-        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        path { fill: none; stroke-width: 3; stroke-dasharray: 8, 5; animation: dash 30s linear infinite; opacity: 0.8; }
-        @keyframes dash { to { stroke-dashoffset: -1000; } }
-
-        /* --- STATS & CONFIG --- */
-        .bottom-panel { height: 260px; background: white; border-top: 1px solid #ddd; display: flex; flex-direction: column; }
-        .config-list { display: flex; flex-direction: row; overflow-x: auto; gap: 15px; padding: 10px; background: #fafafa; flex: 1; }
-        .op-config-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; min-width: 320px; display: flex; flex-direction: column; }
-        .action-row { display: flex; flex-direction: column; gap: 5px; padding: 8px; border-bottom: 1px solid #f0f0f0; }
-        .action-inputs { display: flex; gap: 5px; align-items: center; font-size: 11px; }
-        .action-inputs input { padding: 3px; border: 1px solid #ddd; border-radius: 3px; }
-
-        .stats-sidebar { width: var(--panel-width); background: white; border-left: 1px solid #ddd; display: none; flex-direction: column; overflow-y: auto; }
-        .op-stat-card { border-left: 4px solid #ccc; background: #fafafa; padding: 10px; margin-bottom: 10px; font-size: 12px; }
-    </style>
-</head>
-<body>
-
-    <div id="loginOverlay">
-        <div class="login-box">
-            <h2>🏭 Accès FABIE Expert</h2>
-            <input type="text" id="username" placeholder="Identifiant">
-            <input type="password" id="password" placeholder="Mot de passe">
-            <button class="login-btn" onclick="app.login()">Entrer</button>
-        </div>
-    </div>
-
-    <div class="main-wrapper">
-        <aside class="sidebar-left">
-            <div class="sidebar-header">
-                📂 Scénarios
-                <div>
-                    <button onclick="app.exportFile()" title="Exporter">📤</button>
-                    <button onclick="document.getElementById('importInput').click()" title="Importer">📥</button>
-                    <input type="file" id="importInput" hidden onchange="app.importFile(this)">
-                </div>
-            </div>
-            <div style="padding:10px;"><button onclick="app.newScenario()" style="width:100%;">+ Nouveau Scénario</button></div>
-            <div id="scenarioList" class="sc-list"></div>
-        </aside>
-
-        <div class="main-content">
-            <div class="top-bar">
-                <div id="trashBin" class="trash-zone">🗑️ Corbeille</div>
-                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
-                <button class="btn-tool" onclick="app.addItem('machine')">+ Machine</button>
-                <button class="btn-tool" onclick="app.addItem('palette')">+ Palette</button>
-                <button class="btn-tool" onclick="app.addItem('scale')">+ Échelle</button>
-                <button class="btn-tool" onclick="app.addItem('pillar')">+ Pilier</button>
-                <button class="btn-tool" onclick="app.addItem('waypoint')">+ Point</button>
-                <button class="btn-tool btn-add-person" onclick="app.addPerson()">+ Opérateur</button>
-                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 10px;"></div>
-                <button class="btn-tool" onclick="app.quickSave()" style="background:var(--success); color:white; border:none;">💾 Sauver</button>
-                <div style="display:flex; align-items:center; gap:3px; font-size:12px;">
-                    Ref: <input type="number" id="globalWorkHours" value="7" style="width:35px" onchange="app.draw()"> h
-                </div>
-            </div>
-
-            <div class="workshop-container" id="workshop">
-                <svg id="connections"></svg>
-                <div id="items-layer"></div>
-            </div>
-        </div>
-
-        <div class="stats-sidebar" id="statsPanel">
-            <div style="padding:15px; font-weight:bold; border-bottom:1px solid #eee;">📊 Analyse Charge</div>
-            <div id="statsContent" style="padding:10px;"></div>
-        </div>
-    </div>
-
-    <div class="bottom-panel">
-        <div style="padding:8px 15px; background:#f8f9fa; font-weight:bold; font-size:13px; border-bottom:1px solid #ddd;">⚙️ Gammes Opératoires (Grilles / Échelles / Jour)</div>
-        <div class="config-list" id="configList"></div>
-    </div>
-
-    <script>
-        const app = {
-            data: { scenarios: [], currentIdx: null },
-            temp: { dragEl: null, rec: null },
-
-            login: function() {
-                if(document.getElementById('password').value === "FABIE2026") {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    this.init();
-                }
-            },
-
-            init: function() {
-                const saved = localStorage.getItem('fabie_expert_v7');
-                if(saved) this.data.scenarios = JSON.parse(saved);
-                if(this.data.scenarios.length === 0) {
-                    this.data.scenarios.push({
-                        id: 'sc1', name: "Scénario Initial", ref: 7, operators: {}, items: [
-                            {id:'m1', type:'machine', x:30, y:250, w:45, h:30, txt:'Entrée'},
-                            {id:'m3', type:'machine', x:500, y:30, w:45, h:30, txt:'Sortie'}
-                        ]
-                    });
-                }
-                this.loadScenario(0);
-            },
-
-            save: function() {
-                localStorage.setItem('fabie_expert_v7', JSON.stringify(this.data.scenarios));
-                this.renderScenarioList();
-            },
-
-            getSc: function() { return this.data.scenarios[this.data.currentIdx]; },
-
-            loadScenario: function(idx) {
-                this.data.currentIdx = idx;
-                const sc = this.getSc();
-                document.getElementById('globalWorkHours').value = sc.ref;
-                document.getElementById('items-layer').innerHTML = '';
-                sc.items.forEach(it => this.createDOM(it));
-                this.renderScenarioList();
-                this.renderOperators();
-                this.draw();
-            },
-
-            newScenario: function() {
-                const n = prompt("Nom :"); if(!n) return;
-                this.data.scenarios.push({ id:'sc'+Date.now(), name:n, ref:7, operators:{}, items:[{id:'m1', type:'machine', x:30, y:250, w:45, h:30, txt:'Entrée'}] });
-                this.loadScenario(this.data.scenarios.length-1);
-                this.save();
-            },
-
-            quickSave: function() { this.save(); alert("Sauvegardé !"); },
-
-            // --- ITEMS ---
-            createDOM: function(it) {
-                const div = document.createElement('div');
-                div.className = `machine ${it.type}`; div.id = it.id;
-                div.style.left = it.x+'px'; div.style.top = it.y+'px';
-                div.style.width = it.w+'px'; div.style.height = it.h+'px';
-                div.innerText = it.txt || '';
-                if(it.bg) div.style.backgroundColor = it.bg;
-
-                div.onmousedown = (e) => this.startDrag(e, it.id);
-                div.onclick = () => this.handlePointClick(it.id);
-
-                if(!['waypoint','person'].includes(it.type)) {
-                    const r = document.createElement('div'); r.className='resize-handle';
-                    r.onmousedown = (e) => this.startResize(e, it.id);
-                    div.appendChild(r);
-                }
-                document.getElementById('items-layer').appendChild(div);
-            },
-
-            addItem: function(type) {
-                let w=45, h=30, txt="M";
-                if(type==='palette') { w=36; h=24; txt="Pal"; }
-                if(type==='scale') { w=24; h=24; txt="Ech"; }
-                if(type==='pillar' || type==='waypoint') { w=15; h=15; txt=""; }
-                const it = { id:type+Date.now(), type, x:100, y:100, w, h, txt };
-                this.getSc().items.push(it); this.createDOM(it); this.save();
-            },
-
-            addPerson: function() {
-                const sc = this.getSc(); const id = 'op'+Date.now();
-                const cols = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'];
-                const col = cols[Object.keys(sc.operators).length % cols.length];
-                sc.operators[id] = { name:"Op "+(Object.keys(sc.operators).length+1), color:col, tasks:[] };
-                const it = { id, type:'person', x:50, y:50, w:24, h:24, txt:'', bg:col };
-                sc.items.push(it); this.createDOM(it); this.renderOperators(); this.save();
-            },
-
-            // --- DRAG / RESIZE ---
-            startDrag: function(e, id) {
-                if(e.target.className.includes('resize')) return;
-                e.stopPropagation(); const el = document.getElementById(id);
-                const offX = e.clientX - el.offsetLeft; const offY = e.clientY - el.offsetTop;
-                document.onmousemove = (ev) => {
-                    const x = ev.clientX - offX; const y = ev.clientY - offY;
-                    el.style.left = x+'px'; el.style.top = y+'px';
-                    const trash = document.getElementById('trashBin'); const r = trash.getBoundingClientRect();
-                    if(ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom) trash.classList.add('drag-over');
-                    else trash.classList.remove('drag-over');
-                    this.draw();
-                };
-                document.onmouseup = () => {
-                    document.onmousemove = null; document.onmouseup = null;
-                    const trash = document.getElementById('trashBin');
-                    if(trash.classList.contains('drag-over')) {
-                        trash.classList.remove('drag-over');
-                        this.getSc().items = this.getSc().items.filter(i=>i.id!==id); el.remove();
-                    } else {
-                        const it = this.getSc().items.find(i=>i.id===id);
-                        if(it) { it.x = parseInt(el.style.left); it.y = parseInt(el.style.top); }
-                    }
-                    this.save(); this.draw();
-                };
-            },
-
-            startResize: function(e, id) {
-                e.stopPropagation(); const el = document.getElementById(id);
-                const sw = el.offsetWidth, sh = el.offsetHeight, sx = e.clientX, sy = e.clientY;
-                document.onmousemove = (ev) => {
-                    el.style.width = (sw + (ev.clientX - sx))+'px'; el.style.height = (sh + (ev.clientY - sy))+'px';
-                };
-                document.onmouseup = () => {
-                    const it = this.getSc().items.find(i=>i.id===id);
-                    if(it) { it.w = el.offsetWidth; it.h = el.offsetHeight; }
-                    document.onmousemove = null; document.onmouseup = null; this.save();
-                };
-            },
-
-            // --- LOGIQUE METIER ---
-            renderOperators: function() {
-                const sc = this.getSc(); const box = document.getElementById('configList'); box.innerHTML = '';
-                for(let id in sc.operators) {
-                    const op = sc.operators[id]; const div = document.createElement('div'); div.className = 'op-config-card';
-                    let tH = '';
-                    op.tasks.forEach(t => {
-                        const isR = this.temp.rec && this.temp.rec.tid === t.id;
-                        tH += `<div class="action-row">
-                            <div class="action-inputs">
-                                <input value="${t.name}" style="flex:1" onchange="app.updTask('${id}','${t.id}','name',this.value)">
-                                <input type="number" value="${t.time}" style="width:30px" onchange="app.updTask('${id}','${t.id}','time',this.value)">s
-                                <span>x</span>
-                                <input type="number" value="${t.qty}" style="width:30px" onchange="app.updTask('${id}','${t.id}','qty',this.value)">
-                                <select onchange="app.updTask('${id}','${t.id}','type',this.value)">
-                                    <option value="total" ${t.type==='total'?'selected':''}>/ Jour</option>
-                                    <option value="grid" ${t.type==='grid'?'selected':''}>/ Grille</option>
-                                    <option value="scale" ${t.type==='scale'?'selected':''}>/ Échelle</option>
-                                </select>
-                            </div>
-                            <div style="display:flex; gap:5px; margin-top:5px;">
-                                <button class="btn-tool btn-rec ${isR?'recording':''}" onclick="app.toggleRec('${id}','${t.id}')">📍 Trajet</button>
-                                <button class="btn-tool" onclick="app.delTask('${id}','${t.id}')" style="color:red">🗑️</button>
-                            </div>
-                        </div>`;
-                    });
-                    div.innerHTML = `<div style="background:${op.color}; color:white; padding:8px; font-weight:bold;">${op.name}</div>
-                        <div style="padding:5px;">${tH}<button onclick="app.addTask('${id}')" style="width:100%; font-size:10px; margin-top:5px;">+ Ajouter Tâche</button></div>`;
-                    box.appendChild(div);
-                }
-            },
-
-            addTask: function(oid) { this.getSc().operators[oid].tasks.push({id:'t'+Date.now(), name:'Tâche', time:10, qty:1, type:'grid', steps:[]}); this.save(); this.renderOperators(); },
-            updTask: function(oid, tid, k, v) { this.getSc().operators[oid].tasks.find(x=>x.id===tid)[k] = (k==='name'||k==='type'?v:parseFloat(v)); this.save(); this.draw(); },
-            delTask: function(oid, tid) { this.getSc().operators[oid].tasks = this.getSc().operators[oid].tasks.filter(t=>t.id!==tid); this.save(); this.renderOperators(); },
-            toggleRec: function(oid, tid) { this.temp.rec = (this.temp.rec && this.temp.rec.tid === tid) ? null : {oid, tid}; this.renderOperators(); },
-            handlePointClick: function(iid) {
-                if(!this.temp.rec) return;
-                const t = this.getSc().operators[this.temp.rec.oid].tasks.find(x=>x.id===this.temp.rec.tid);
-                t.steps.push(iid); this.save(); this.draw();
-            },
-
-            draw: function() {
-                const sc = this.getSc(); if(!sc) return;
-                sc.ref = parseFloat(document.getElementById('globalWorkHours').value) || 7;
-                const svg = document.getElementById('connections'); svg.innerHTML = '';
-                const out = document.getElementById('statsContent'); out.innerHTML = '';
-                let hasData = false;
-
-                for(let oid in sc.operators) {
-                    const op = sc.operators[oid]; let opT = 0, pathD = "", prev = null;
-                    op.tasks.forEach(t => {
-                        let cycles = t.qty;
-                        if(t.type === 'grid') cycles = t.qty * 17; // 17 grilles par échelle
-                        // Ajout du calcul temps
-                        opT += (t.time * cycles);
-
-                        if(t.steps.length > 1) {
-                            hasData = true;
-                            t.steps.forEach(sid => {
-                                const el = document.getElementById(sid);
-                                if(el) {
-                                    const x = el.offsetLeft + el.offsetWidth/2;
-                                    const y = el.offsetTop + el.offsetHeight/2;
-                                    if(prev) {
-                                        pathD += `M${prev.x},${prev.y} L${x},${y} `;
-                                        const d = Math.sqrt(Math.pow(x-prev.x,2)+Math.pow(y-prev.y,2))/30;
-                                        opT += (d/1.4)*cycles;
-                                    }
-                                    prev = {x, y};
-                                }
-                            });
-                            prev = null; 
-                        }
-                    });
-
-                    if(pathD) {
-                        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                        p.setAttribute("d", pathD); p.style.stroke = op.color; svg.appendChild(p);
-                    }
-                    const load = (opT / (sc.ref*3600)) * 100;
-                    out.innerHTML += `<div class="op-stat-card" style="border-color:${op.color}">
-                        <b>${op.name}</b><br>Temps: ${(opT/60).toFixed(1)} min<br>
-                        Charge: <b>${load.toFixed(1)}%</b>
-                    </div>`;
-                }
-                document.getElementById('statsPanel').style.display = hasData ? 'flex' : 'none';
-            },
-
-            renderScenarioList: function() {
-                const c = document.getElementById('scenarioList'); c.innerHTML = '';
-                this.data.scenarios.forEach((s, i) => {
-                    const div = document.createElement('div');
-                    div.className = `sc-item ${i===this.data.currentIdx?'active':''}`;
-                    div.innerHTML = `${s.name}<br><small>${s.date}</small>
-                        <div class="sc-actions">
-                            <button onclick="app.duplicateScenario(${i}, event)">📋</button>
-                            <button onclick="app.renameScenario(${i}, event)">✏️</button>
-                            <button onclick="app.delScenario(${i}, event)">🗑️</button>
-                        </div>`;
-                    div.onclick = () => this.loadScenario(i);
-                    c.appendChild(div);
-                });
-            },
-
-            delScenario: function(i, e) { e.stopPropagation(); if(confirm("Supprimer?")) { this.data.scenarios.splice(i,1); this.save(); location.reload(); } },
-            exportFile: function() {
-                const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.scenarios));
-                a.download = "backup_fabie.json"; a.click();
-            },
-            importFile: function(input) {
-                const f = input.files[0]; if(!f) return;
-                const r = new FileReader(); r.onload = e => { this.data.scenarios = JSON.parse(e.target.result); this.save(); location.reload(); };
-                r.readAsText(f);
-            }
-        };
-
-        window.onload = () => { if(document.getElementById('loginOverlay').style.display === 'none') app.init(); };
-    </script>
-</body>
-</html>
+            padding: 5px 15px; border-radius: 5px; font-weight: bold;
+            transition: all 0
