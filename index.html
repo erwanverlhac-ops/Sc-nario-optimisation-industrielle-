@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulateur Atelier FABIE - V2</title>
+    <!-- FontAwesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -275,6 +276,7 @@
 </head>
 <body>
 
+    <!-- OVERLAY LOGIN -->
     <div id="login-overlay">
         <div class="login-box">
             <h2><i class="fas fa-industry"></i> FABIE 2026</h2>
@@ -286,6 +288,7 @@
     </div>
 
     <div class="main-wrapper" id="mainWrapper">
+        <!-- COLONNE GAUCHE: SCENARIOS -->
         <div class="scenarios-sidebar" id="scenariosPanel">
             <div class="panel-header">
                 <span>📂 Scénarios</span>
@@ -323,12 +326,14 @@
             </div>
         </div>
 
+        <!-- COLONNE CENTRALE: ATELIER -->
         <div class="main-content">
             <header>
                 <h1>Simulateur Atelier FABIE</h1>
             </header>
 
             <div class="top-bar">
+                <!-- BOUTON POUR OUVRIR LE PANNEAU SCENARIO -->
                 <button onclick="toggleScenarios()" style="background: #34495e; color: white;">📂 Gérer Scénarios</button>
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
@@ -351,6 +356,7 @@
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
                 
+                <!-- PARAMETRE GLOBAL: TEMPS DE TRAVAIL -->
                 <div style="display:flex; align-items:center; gap:3px;" title="Temps de travail global pour le calcul de charge">
                     <label style="font-size:12px; font-weight:bold; color:#555;">Temps Ref :</label>
                     <input type="number" id="globalWorkHours" value="7" min="0" onchange="updateGlobalTime()" style="width:40px; padding:4px; font-size:12px; border:1px solid #ddd; border-radius:4px; text-align:center;"> <span style="font-size:12px; color:#555;">h</span>
@@ -360,9 +366,11 @@
 
             <div class="workshop-container" id="workshop">
                 <svg id="connections"></svg>
-                </div>
+                <!-- Initial objects created dynamically now via Scenarios -->
+            </div>
         </div>
 
+        <!-- COLONNE DROITE: RESULTATS -->
         <div class="stats-sidebar" id="statsPanel">
             <div class="panel-header">
                 <span>📊 Analyse Charge</span>
@@ -372,10 +380,12 @@
         </div>
     </div>
 
+    <!-- PANNEAU BAS: CONFIGURATION -->
     <div class="bottom-panel">
         <div class="panel-header">⚙️ Gammes Opératoires</div>
         <div class="config-list" id="configList">
-            </div>
+            <!-- Dynamically populated -->
+        </div>
     </div>
 
     <script>
@@ -936,6 +946,12 @@
                     else taskCycles = task.freqValue;
 
                     if(task.steps.length < 2) {
+                        // AFFICHER LE BADGE "1" MÊME SI LE TRAJET N'A QU'UNE ÉTAPE
+                        if (task.steps.length === 1 && recordingState && recordingState.taskId === task.id) {
+                            const el = document.getElementById(task.steps[0]);
+                            if (el) addBadge(el, 1, data.color);
+                        }
+
                         opTotalFixedTime += task.time * taskCycles;
                         const taskTotalTime = task.time * taskCycles;
                         tasksHtml += `
