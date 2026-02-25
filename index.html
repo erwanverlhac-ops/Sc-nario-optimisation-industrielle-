@@ -895,7 +895,7 @@
             const svgEl = document.getElementById('connections'); if(!svgEl) return;
             svgEl.innerHTML = ''; document.querySelectorAll('.step-badge').forEach(b => b.remove()); statsContent.innerHTML = '';
             
-            let hasAnyData = false; let grandTotalTime = 0; let grandTotalCost = 0; let grandTotalCakes = 0;
+            let hasAnyData = false; let grandTotalTime = 0; let grandTotalCost = 0; let grandTotalCakes = 0; let grandTotalWalkTime = 0;
             const globalTimeSeconds = (parseInt(document.getElementById('globalWorkHours').value) || 0) * 3600 + (parseInt(document.getElementById('globalWorkMinutes').value) || 0) * 60;
 
             for (const [opId, data] of Object.entries(operatorData)) {
@@ -944,7 +944,9 @@
                 });
 
                 const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime; const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
-                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += opTotalCakes;
+                const totalWalkTimeSeconds = opTotalWalkTime;
+                
+                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += opTotalCakes; grandTotalWalkTime += totalWalkTimeSeconds;
 
                 let loadPercent = 0; let loadColor = "#2ecc71";
                 if (globalTimeSeconds > 0) { loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100; if (loadPercent > 100) loadColor = "#e74c3c"; else if (loadPercent > 85) loadColor = "#f39c12"; }
@@ -957,6 +959,7 @@
                     ${tasksHtml}
                     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;">
                         <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(opTotalDist/1000).toFixed(2)} km</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Temps de marche:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#8e44ad;"><span>Vitesse estimée:</span> <span>${Math.round(operatorCadence)} u/h</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Emballés:</span> <span>${Math.round(opTotalCakes)}</span></div>
@@ -990,6 +993,7 @@
                 globalCard.innerHTML = `
                     <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL ATELIER</div>
                     <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Cumulé:</span> <span>${formatTime(grandTotalTime)}</span></div>
+                    <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps de marche:</span> <span>${formatTime(grandTotalWalkTime)}</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Gâteaux Total:</span> <span>${Math.round(grandTotalCakes)} 🎂</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total Prod:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
                     ${bottleneckHtml}
