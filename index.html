@@ -822,7 +822,7 @@
                                 <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés">🎂
                             </div>
                             <div class="action-inputs" style="margin-top:4px; align-items:center;">
-                                <span style="font-size:12px; color:#555;">Répétition <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</span>
+                                <span style="font-size:12px; color:#555;">Répétition <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</span>
                                 <input type="number" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)">
                                 <select onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)">
                                     <option value="total" ${selTotal}>/ Jour</option><option value="per_grid" ${selGrid}>/ Grille</option>
@@ -839,10 +839,24 @@
                 card.innerHTML = `
                     <div class="op-config-header" style="background-color: ${data.color}"><span>${data.name}</span></div>
                     <div style="padding: 5px 10px; background:#f1f2f6; border-bottom:1px solid #ddd; font-size:12px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>🎯 Objectif Prod:</strong> <input type="number" value="${data.targetRacks}" min="1" style="width:40px; text-align:center;" onchange="updateTargetRacks('${opId}', this.value)"></div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>🧇 Gâteaux/Grille:</strong> <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:40px; text-align:center;" onchange="updateOperatorCakesGrid('${opId}', this.value)"></div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>📦 Gâteaux/Palette:</strong> <input type="number" value="${data.cakesPerPalette || 0}" min="0" style="width:40px; text-align:center;" onchange="updateOperatorCakes('${opId}', this.value)"></div>
-                        <div style="display:flex; justify-content:space-between;"><strong>💶 Taux Horaire:</strong> <input type="number" value="${data.hourlyRate}" min="0" step="0.5" style="width:40px; text-align:center;" onchange="updateHourlyRate('${opId}', this.value)"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</strong>
+                            <input type="number" value="${data.targetRacks}" min="1" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateTargetRacks('${opId}', this.value)">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong title="Nombre de gâteaux par grille">🧇 Gâteaux/Grille <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</strong>
+                            <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakesGrid('${opId}', this.value)">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong title="Gâteaux nécessaires pour compléter une palette">📦 Gâteaux/Palette <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</strong>
+                            <input type="number" value="${data.cakesPerPalette || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakes('${opId}', this.value)">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>💶 Taux Horaire :</strong>
+                            <div style="display:flex; align-items:center; gap:3px;">
+                                <input type="number" value="${data.hourlyRate}" min="0" step="0.5" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateHourlyRate('${opId}', this.value)"> €/h
+                            </div>
+                        </div>
                     </div>
                     <div class="op-config-body"><div id="tasks-${opId}">${tasksHTML}</div><button class="btn-sm btn-add-action" onclick="addTask('${opId}')">+ Ajouter Tâche</button></div>
                 `;
