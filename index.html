@@ -6,6 +6,8 @@
     <title>Simulateur Atelier FABIE - V2</title>
     <!-- FontAwesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas pour l'export photo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --grid-color: #cccccc;
@@ -363,6 +365,7 @@
 
                     <div style="height:1px; background:#eee; margin:5px 0;"></div>
                     
+                    <button class="sc-btn" style="background:#2c3e50; color:white;" onclick="exportPhotoReport(event)"><i class="fas fa-camera"></i> Exporter Image (Rapport)</button>
                     <button class="sc-btn" style="background:#34495e; color:white;" onclick="exportJson()"><i class="fas fa-file-download"></i> Exporter (Bureau .json)</button>
                     <button class="sc-btn" style="background:#95a5a6; color:white;" onclick="document.getElementById('importFile').click()"><i class="fas fa-file-upload"></i> Importer (.json)</button>
                     <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJson(this)">
@@ -472,6 +475,76 @@
                 document.body.style.cursor = ''; document.getElementById('mainWrapper').style.pointerEvents = 'auto';
             }
         });
+
+        // --- EXPORT PHOTO RAPPORT ---
+        async function exportPhotoReport(event) {
+            const btn = event.currentTarget;
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
+
+            // Sauvegarder les styles originaux
+            const leftPanel = document.getElementById('scenariosPanel');
+            const rightPanel = document.getElementById('configPanel');
+            const topBar = document.querySelector('.top-bar');
+            const resizerXEl = document.getElementById('resizerX');
+            const resizerYEl = document.getElementById('resizerY');
+            const statsPanelEl = document.getElementById('statsPanel');
+            const statsContentEl = document.getElementById('statsContent');
+
+            const origLeftDisplay = leftPanel.style.display;
+            const origRightDisplay = rightPanel.style.display;
+            const origStatsHeight = statsPanelEl.style.height;
+
+            // Cacher les éléments UI non nécessaires pour le rapport PDF/Image
+            leftPanel.style.display = 'none';
+            rightPanel.style.display = 'none';
+            topBar.style.display = 'none';
+            resizerXEl.style.display = 'none';
+            resizerYEl.style.display = 'none';
+            
+            // Agrandir le panneau des stats pour tout capturer (si ouvert)
+            if (statsPanelEl.style.display !== 'none') {
+                statsPanelEl.style.height = 'auto';
+                statsPanelEl.style.overflow = 'visible';
+                statsContentEl.style.overflow = 'visible';
+                statsContentEl.style.flexWrap = 'wrap'; // Permet d'afficher toutes les cartes stats
+            }
+
+            // Laisser le temps au navigateur de recalculer le layout
+            await new Promise(r => setTimeout(r, 200));
+
+            try {
+                const canvas = await html2canvas(document.body, {
+                    scale: 2, // Meilleure résolution pour vos rapports
+                    useCORS: true,
+                    backgroundColor: '#f4f7f6'
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'Rapport_FABIE_' + new Date().toISOString().slice(0,10) + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch(e) {
+                console.error("Erreur lors de l'exportation:", e);
+                alert("Erreur lors de l'exportation du rapport photo.");
+            }
+
+            // Restaurer l'UI comme avant
+            leftPanel.style.display = origLeftDisplay;
+            rightPanel.style.display = origRightDisplay;
+            topBar.style.display = 'flex';
+            resizerXEl.style.display = 'block';
+            resizerYEl.style.display = 'block';
+            
+            if (statsPanelEl.style.display !== 'none') {
+                statsPanelEl.style.height = origStatsHeight;
+                statsPanelEl.style.overflow = '';
+                statsContentEl.style.overflow = '';
+                statsContentEl.style.flexWrap = '';
+            }
+            
+            btn.innerHTML = origText;
+        }
 
         // --- LOGIN ---
         function checkLogin() {
