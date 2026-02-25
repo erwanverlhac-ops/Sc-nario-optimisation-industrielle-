@@ -685,7 +685,7 @@
         function updateGlobalTime() { saveCurrentScenario(); calculateAndDraw(); }
         function toggleScenarios() { document.getElementById('scenariosPanel').style.display = document.getElementById('scenariosPanel').style.display === 'flex' ? 'none' : 'flex'; }
 
-        // --- DRAG & DROP & SNAP TO GRID ---
+        // --- DRAG & DROP ---
         let activeItem = null; let initialX, initialY, initialLeft, initialTop;
 
         function initMachine(item) {
@@ -762,13 +762,6 @@
             if (activeItem) {
                 const trashRect = trashBin.getBoundingClientRect();
                 if (isOverlap(trashRect, activeItem.getBoundingClientRect())) deleteItem(activeItem);
-                else {
-                    // AIMANTATION SUR GRILLE (Snap to Grid de 15px = demi-mètre)
-                    let left = parseInt(activeItem.style.left);
-                    let top = parseInt(activeItem.style.top);
-                    activeItem.style.left = (Math.round(left / 15) * 15) + "px";
-                    activeItem.style.top = (Math.round(top / 15) * 15) + "px";
-                }
             }
             trashBin.classList.remove('drag-over'); activeItem = null;
             document.removeEventListener('mousemove', drag); document.removeEventListener('mouseup', dragEnd);
