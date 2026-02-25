@@ -327,7 +327,7 @@
     <!-- OVERLAY LOGIN -->
     <div id="login-overlay">
         <div class="login-box">
-            <h2><i class="fas fa-industry"></i> SIMULATEUR FABIE </h2>
+            <h2><i class="fas fa-industry"></i> SIMULATEUR D'ATELIER</h2>
             <p>Accès au Simulateur</p>
             <input type="password" id="passwordInput" placeholder="Mot de passe...">
             <button onclick="checkLogin()">Entrer</button>
@@ -1033,7 +1033,7 @@
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
             const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
             operatorData[opId].tasks.push({ 
-                id: taskId, name: defaultName, time: defaultTime, cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] 
+                id: taskId, name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] 
             });
             rebuildConfigUI();
             saveCurrentScenario();
@@ -1078,15 +1078,25 @@
                     const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
                     const selRack = task.freqType === 'per_rack' ? 'selected' : '';
                     const selPalette = task.freqType === 'per_palette' ? 'selected' : '';
+                    const selUnitS = (!task.timeUnit || task.timeUnit === 's') ? 'selected' : '';
+                    const selUnitMin = (task.timeUnit === 'min') ? 'selected' : '';
                     const btnClass = task.steps.length > 0 ? 'btn-record has-path' : 'btn-record';
                     const btnText = task.steps.length > 0 ? '✅ OK' : '📍 Trajet';
 
                     tasksHTML += `
                         <div class="action-row" id="row-${task.id}">
-                            <div class="action-inputs" style="flex-wrap: wrap;">
+                            <div class="action-inputs" style="flex-wrap: wrap; align-items:center;">
                                 <input type="text" id="name-${task.id}" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)" style="flex:1; min-width:80px;" title="Nom de la tâche">
-                                <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps (sec)">s
-                                <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés par action">🎂
+                                <div style="display:flex; align-items:center; gap:2px;">
+                                    <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" style="width:40px;" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps">
+                                    <select id="timeUnit-${task.id}" onchange="updateTaskMeta('${opId}', '${task.id}', 'timeUnit', this.value)" style="padding:2px; font-size:11px; border-radius:3px; border:1px solid #ccc; height:26px;">
+                                        <option value="s" ${selUnitS}>s</option>
+                                        <option value="min" ${selUnitMin}>min</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:2px;">
+                                    <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" style="width:40px;" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés par action">🎂
+                                </div>
                             </div>
                             <div class="action-inputs" style="margin-top:4px; align-items:center;">
                                 <span style="font-size:12px; color:#555; display:flex; align-items:center; gap:4px;">
@@ -1241,20 +1251,22 @@
                     const taskCakes = (task.cakesPerAction || 0) * taskCycles;
                     opTotalCakes += taskCakes;
 
+                    const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
+
                     if(task.steps.length < 2) {
                         if (task.steps.length === 1 && recordingState && recordingState.taskId === task.id) {
                             const el = document.getElementById(task.steps[0]);
                             if (el) addBadge(el, 1, data.color);
                         }
 
-                        opTotalFixedTime += task.time * taskCycles;
-                        const taskTotalTime = task.time * taskCycles;
+                        opTotalFixedTime += taskTimeSec * taskCycles;
+                        const taskTotalTime = taskTimeSec * taskCycles;
                         tasksHtml += `
                             <div class="task-detail" style="color:#777">
                                 <div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">
                                     ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTotalTime)}</span>
                                 </div>
-                                <div style="font-size: 11px;">${task.time}s fixe / act. | 🎂 ${Math.round(taskCakes)}</div>
+                                <div style="font-size: 11px;">${task.time}${task.timeUnit === 'min' ? 'min' : 's'} fixe / act. | 🎂 ${Math.round(taskCakes)}</div>
                             </div>`;
                         return;
                     }
@@ -1292,9 +1304,9 @@
                     
                     opTotalDist += (distM * taskCycles); 
                     opTotalWalkTime += (walkT * taskCycles); 
-                    opTotalFixedTime += (task.time * taskCycles);
+                    opTotalFixedTime += (taskTimeSec * taskCycles);
                     
-                    const taskCycleTime = walkT + task.time;
+                    const taskCycleTime = walkT + taskTimeSec;
                     const taskTotalTime = taskCycleTime * taskCycles;
                     
                     tasksHtml += `
@@ -1303,7 +1315,7 @@
                                 ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTotalTime)}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>🚶 Trajet (${distM.toFixed(1)}m) :</span> <span>${formatTime(walkT)} / act.</span></div>
-                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(task.time)} / act. | 🎂 ${Math.round(taskCakes)}</span></div>
+                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(taskTimeSec)} / act. | 🎂 ${Math.round(taskCakes)}</span></div>
                         </div>`;
                 });
 
