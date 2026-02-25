@@ -22,7 +22,7 @@
             --room-w: 19.9;  
             --room-h: 11.74; 
             --panel-width: 320px;
-            --config-width: 340px; /* Largeur dynamique du panneau de droite */
+            --config-width: 340px; 
         }
 
         body {
@@ -84,107 +84,39 @@
             overflow-y: auto;
         }
 
-        /* --- REDIMENSIONNEMENT X (Panneau Droite) --- */
-        .resizer-x {
-            width: 6px;
-            background: #e0e0e0;
-            cursor: col-resize;
-            z-index: 30;
-            transition: background 0.2s;
-            flex-shrink: 0;
-        }
+        /* --- REDIMENSIONNEMENT --- */
+        .resizer-x { width: 6px; background: #e0e0e0; cursor: col-resize; z-index: 30; transition: background 0.2s; flex-shrink: 0; }
         .resizer-x:hover, .resizer-x.resizing { background: #3498db; }
-
-        /* --- REDIMENSIONNEMENT Y (Panneau Bas) --- */
-        .resizer-y {
-            height: 6px;
-            background: #e0e0e0;
-            cursor: row-resize;
-            z-index: 30;
-            transition: background 0.2s;
-            flex-shrink: 0;
-            display: none; /* Rendu visible par JS */
-        }
+        .resizer-y { height: 6px; background: #e0e0e0; cursor: row-resize; z-index: 30; transition: background 0.2s; flex-shrink: 0; display: none; }
         .resizer-y:hover, .resizer-y.resizing { background: #3498db; }
 
         /* --- COLONNE DROITE (GAMMES OPÉRATOIRES) --- */
         .config-sidebar {
-            width: var(--config-width);
-            background: white;
-            border-left: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-            z-index: 20;
-            flex-shrink: 0;
-            height: 100vh;
+            width: var(--config-width); background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05); z-index: 20; flex-shrink: 0; height: 100vh;
         }
         .config-sidebar.collapsed { display: none; }
-
-        .config-list-col {
-            display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; 
-            gap: 15px; flex: 1; padding: 10px; background: #fafafa;
-        }
+        .config-list-col { display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; gap: 15px; flex: 1; padding: 10px; background: #fafafa; }
 
         /* --- PANNEAU DU BAS (ANALYSE CHARGE) --- */
-        .stats-bottom-panel {
-            height: 280px;
-            background: white;
-            border-top: 1px solid #ddd;
-            display: none; 
-            flex-direction: column;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-            z-index: 20;
-            flex-shrink: 0;
-            width: 100%;
-        }
-
-        .stats-content-row {
-            display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; 
-            gap: 15px; flex: 1; padding: 10px; background: #fafafa; align-items: flex-start;
-        }
+        .stats-bottom-panel { height: 280px; background: white; border-top: 1px solid #ddd; display: none; flex-direction: column; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); z-index: 20; flex-shrink: 0; width: 100%; }
+        .stats-content-row { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 15px; flex: 1; padding: 10px; background: #fafafa; align-items: flex-start; }
 
         /* --- COLONNE CENTRALE (ATELIER) --- */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-            overflow-y: auto;
-            position: relative;
-            background: #f4f7f6;
-            min-width: 400px;
-        }
-
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; position: relative; background: #f4f7f6; min-width: 400px; }
         header { text-align: center; margin-bottom: 10px; flex-shrink: 0; }
         h1 { font-size: 1.3rem; margin: 5px 0; color: var(--text); font-weight: 600; }
 
         /* BANNIÈRE CONTROLS */
-        .top-bar {
-            background: white; padding: 8px 15px; border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
-            align-items: center; position: relative; z-index: 100;
-            width: fit-content; flex-shrink: 0;
-        }
-
-        .trash-zone {
-            display: flex; align-items: center; justify-content: center; background-color: #ffebee;
-            border: 2px dashed #e57373; color: #c62828; padding: 5px 15px; border-radius: 5px;
-            font-weight: bold; transition: all 0.2s; cursor: default; font-size: 0.9rem;
-        }
+        .top-bar { background: white; padding: 8px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; position: relative; z-index: 100; width: fit-content; flex-shrink: 0; }
+        .trash-zone { display: flex; align-items: center; justify-content: center; background-color: #ffebee; border: 2px dashed #e57373; color: #c62828; padding: 5px 15px; border-radius: 5px; font-weight: bold; transition: all 0.2s; cursor: default; font-size: 0.9rem; }
         .trash-zone.drag-over { background-color: #c62828; color: white; transform: scale(1.05); }
 
-        button {
-            padding: 6px 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;
-            transition: transform 0.1s; display: flex; align-items: center; gap: 5px; font-size: 12px;
-        }
+        button { padding: 6px 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; gap: 5px; font-size: 12px; }
         button:active { transform: scale(0.95); }
-
         .btn-add { background: var(--box-bg); color: white; }
-        .btn-add-entry { background: #16a085; color: white; } /* Bouton ajout entrée */
-        .btn-add-exit { background: #d35400; color: white; } /* Bouton ajout sortie */
+        .btn-add-entry { background: #16a085; color: white; } 
+        .btn-add-exit { background: #d35400; color: white; } 
         .btn-add-person { background: #e74c3c; color: white; } 
         .btn-add-palette { background: var(--palette-bg); color: white; }
         .btn-add-scale { background: var(--scale-bg); color: white; }
@@ -193,48 +125,23 @@
         .btn-clear { background: #95a5a6; color: white; }
         .btn-save { background: #27ae60; color: white; }
 
-        /* PANNEAUX GENERAL */
-        .panel-header {
-            padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee;
-            font-weight: bold; color: var(--text); font-size: 1.1em;
-            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
-        }
+        .panel-header { padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: var(--text); font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .panel-body { flex: 1; overflow-y: auto; padding: 15px; }
 
-        /* CARTES OPÉRATEURS (GAMMES - DROITE) */
-        .op-config-card {
-            background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 0;
-            overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; display: flex; flex-direction: column;
-            flex-shrink: 0;
-        }
-        .op-config-header {
-            padding: 8px 12px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;
-        }
+        .op-config-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 0; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; display: flex; flex-direction: column; flex-shrink: 0; }
+        .op-config-header { padding: 8px 12px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .op-config-body { padding: 10px; flex: 1; }
         
-        /* CARTES STATS (ANALYSE - BAS) */
-        .op-stat-card {
-            background: white; border: 1px solid #e0e0e0; border-radius: 6px; 
-            overflow-y: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #ccc; padding: 10px;
-            min-width: 320px; max-width: 350px; flex-shrink: 0; max-height: 100%;
-        }
+        .op-stat-card { background: white; border: 1px solid #e0e0e0; border-radius: 6px; overflow-y: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #ccc; padding: 10px; min-width: 320px; max-width: 350px; flex-shrink: 0; max-height: 100%; }
 
-        /* ACTION ROWS */
-        .action-row {
-            display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;
-        }
+        .action-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
         .action-row:last-child { border-bottom: none; }
         .action-inputs { display: flex; gap: 5px; width: 100%; align-items: center; }
-        
         .action-row input[type="text"] { flex: 1; padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; min-width: 50px; }
         .action-row input[type="number"] { padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; text-align: center; }
-        .action-row input.time-input { width: 45px; flex-shrink: 0; } 
-        .action-row input.cakes-input { width: 40px; flex-shrink: 0; }
-        .action-row input.cycles-input { width: 45px; flex-shrink: 0; } 
+        .action-row input.time-input, .action-row input.cakes-input, .action-row input.cycles-input { width: 45px; flex-shrink: 0; } 
         .action-row select { padding: 4px; font-size: 11px; border: 1px solid #ddd; border-radius: 3px; flex-shrink: 0; }
-        
         .action-controls { display: flex; gap: 5px; width: 100%; justify-content: flex-end; margin-top: 4px; }
-        
         .btn-record { background: white; border: 1px solid #ccc; color: #555; flex: 1; justify-content: center; font-size: 11px; }
         .btn-record.recording { background: #ffebee; color: #e74c3c; border-color: #e74c3c; animation: pulse 1.5s infinite; }
         .btn-record.has-path { background: #e8f5e9; color: #27ae60; border-color: #27ae60; }
@@ -245,11 +152,7 @@
         .info-dot { font-size: 12px; color: #3498db; cursor: pointer; transition: transform 0.2s; }
         .info-dot:hover { transform: scale(1.2); color: #2980b9; }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
         /* ATELIER */
         .workshop-container {
@@ -258,6 +161,7 @@
             height: calc(var(--room-h) * var(--scale));
             background-color: white;
             border: 4px solid var(--wall-color);
+            /* Grille de 1m x 1m (basée sur --scale) */
             background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: var(--scale) var(--scale); 
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -269,7 +173,7 @@
             position: absolute; background: rgba(52, 152, 219, 0.9); border: 2px solid var(--box-border);
             border-radius: 4px; color: white; display: flex; align-items: center; justify-content: center;
             font-size: 12px; text-align: center; cursor: grab; user-select: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 10; min-width: 20px; min-height: 20px;
+            z-index: 10; min-width: 20px; min-height: 20px; flex-direction: column;
         }
         
         .machine.person { border-radius: 50%; font-size: 10px; border: 2px solid white; }
@@ -279,15 +183,15 @@
         .machine.waypoint::after { content: "+"; font-size: 14px; color: white; font-weight: bold; }
         .machine.pillar { background: #000000; border: 2px solid #333; color: white; border-radius: 0; }
         .machine.selected { box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.8); }
-        .machine.editing { cursor: text; background: white !important; color: #333 !important; border-color: var(--accent) !important; z-index: 50; }
         .machine:active { cursor: grabbing; z-index: 1000 !important; }
+
+        .cadence-badge { font-size: 9px; opacity: 0.8; margin-top: 2px; }
 
         .resize-handle {
             width: 10px; height: 10px; background: #555; position: absolute; right: 0; bottom: 0;
             cursor: se-resize; z-index: 15; clip-path: polygon(100% 0, 100% 100%, 0 100%);
         }
 
-        /* STATS PANEL Details */
         .task-detail { font-size: 0.85em; margin-left: 10px; border-left: 2px solid #ddd; padding-left: 5px; margin-bottom: 5px; }
         .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 2px; align-items: center; }
         
@@ -306,20 +210,16 @@
         
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
-        
-        /* Boutons Scenarios */
         .sc-btn { width: 100%; padding: 8px; margin-bottom: 5px; border-radius: 4px; border:none; text-align: left; display: flex; align-items: center; gap: 8px; font-size: 12px; }
         .sc-btn:hover { opacity: 0.9; }
 
-        /* OVERLAY MODAL INFO */
-        #calcInfoModalOverlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;
-        }
-        .calc-modal {
-            background: white; padding: 20px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-width: 450px; width: 90%; font-size: 13px; line-height: 1.5; color: var(--text);
-        }
+        /* OVERLAY MODALS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+        .calc-modal { background: white; padding: 20px 25px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 450px; width: 90%; font-size: 13px; line-height: 1.5; color: var(--text); }
+        
+        /* Goulot d'étranglement alert */
+        .bottleneck-alert { background: #fdf2e9; border: 1px solid #f5b041; padding: 8px; border-radius: 4px; margin-top: 10px; font-size: 12px; color: #d35400; }
+        .bottleneck-alert.critical { background: #fdedec; border-color: #e74c3c; color: #c0392b; }
     </style>
 </head>
 <body>
@@ -335,8 +235,8 @@
         </div>
     </div>
 
-    <!-- OVERLAY MODAL CALCULS -->
-    <div id="calcInfoModalOverlay" onclick="closeCalcInfo(event)">
+    <!-- MODAL CALCULS -->
+    <div id="calcInfoModalOverlay" class="modal-overlay" onclick="closeModal('calcInfoModalOverlay')">
         <div class="calc-modal" onclick="event.stopPropagation()">
             <h3 style="margin-top:0; color:var(--box-bg); border-bottom: 2px solid #eee; padding-bottom: 10px;">
                 <i class="fas fa-info-circle"></i> Guide des paramètres
@@ -346,19 +246,19 @@
                 <p style="margin: 5px 0;"><b>🧇 Gâteaux / Grille :</b> Permet de déduire les actions. <i>Ex: Si 1 grille = 30 gâteaux et 1 action = 10 gâteaux, l'action est répétée 3 fois/grille.</i></p>
                 <p style="margin: 5px 0;"><b>📦 Gâteaux / Palette :</b> Permet de déduire les actions. <i>Ex: Si 1 palette = 1000 gâteaux et 1 action = 10, l'action est répétée 100 fois/palette.</i></p>
             </div>
-            <p style="margin-bottom: 5px;"><b>🔄 Répétition :</b> Multiplie automatiquement vos données selon la logique suivante :</p>
+            <p style="margin-bottom: 5px;"><b>🔄 Répétition :</b> Multiplie automatiquement vos données selon la logique :</p>
             <ul style="padding-left: 20px; background: #f8f9fa; padding: 10px 15px 10px 35px; border-radius: 5px; border-left: 3px solid #3498db; margin-top: 5px; margin-bottom: 0;">
                 <li style="margin-bottom: 5px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
                 <li style="margin-bottom: 5px;"><b>/ Grille :</b> Utilisera "Gâteaux/Grille", multiplié par 17 (grilles/échelle) et par l'Objectif d'Échelles.</li>
                 <li style="margin-bottom: 5px;"><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
                 <li><b>/ Palette :</b> Utilisera "Gâteaux/Palette" divisé par l'objectif par action.</li>
             </ul>
-            <button onclick="document.getElementById('calcInfoModalOverlay').style.display='none'" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
+            <button onclick="closeModal('calcInfoModalOverlay')" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
         </div>
     </div>
 
-    <!-- OVERLAY MODAL NOUVEL ATELIER -->
-    <div id="newWorkshopModalOverlay" onclick="closeNewWorkshopModal(event)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;">
+    <!-- MODAL NOUVEL ATELIER -->
+    <div id="newWorkshopModalOverlay" class="modal-overlay" onclick="closeModal('newWorkshopModalOverlay')">
         <div class="calc-modal" onclick="event.stopPropagation()">
             <h3 style="margin-top:0; color:var(--box-bg); border-bottom: 2px solid #eee; padding-bottom: 10px;">
                 <i class="fas fa-vector-square"></i> Nouvel Atelier Sur Mesure
@@ -372,8 +272,30 @@
                 <input type="number" id="newRoomH" value="12" min="5" step="0.5" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
             </div>
             <div style="display:flex; gap:10px; margin-top: 15px;">
-                <button onclick="confirmNewWorkshop()" style="flex:1; padding:10px; background:var(--box-bg); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Créer l'atelier</button>
-                <button onclick="document.getElementById('newWorkshopModalOverlay').style.display='none'" style="flex:1; padding:10px; background:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Annuler</button>
+                <button onclick="confirmNewWorkshop()" style="flex:1; padding:10px; background:var(--box-bg); color:white; border:none; border-radius:4px; cursor:pointer;">Créer l'atelier</button>
+                <button onclick="closeModal('newWorkshopModalOverlay')" style="flex:1; padding:10px; background:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIG MACHINE -->
+    <div id="machineConfigOverlay" class="modal-overlay" onclick="closeModal('machineConfigOverlay')">
+        <div class="calc-modal" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0; color:var(--box-bg); border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                <i class="fas fa-cogs"></i> Configuration Équipement
+            </h3>
+            <input type="hidden" id="configMachineId">
+            <div class="form-group">
+                <label>Nom de l'équipement :</label>
+                <input type="text" id="configMachineName" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            </div>
+            <div class="form-group">
+                <label>Cadence (Gâteaux / heure) : <br><small style="color:#777; font-weight:normal;">Laissez à 0 si non applicable.</small></label>
+                <input type="number" id="configMachineCadence" value="0" min="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            </div>
+            <div style="display:flex; gap:10px; margin-top: 15px;">
+                <button onclick="saveMachineConfig()" style="flex:1; padding:10px; background:var(--box-bg); color:white; border:none; border-radius:4px; cursor:pointer;">Enregistrer</button>
+                <button onclick="closeModal('machineConfigOverlay')" style="flex:1; padding:10px; background:#95a5a6; color:white; border:none; border-radius:4px; cursor:pointer;">Annuler</button>
             </div>
         </div>
     </div>
@@ -403,7 +325,7 @@
                     <label>Gestion :</label>
                     <button id="btnManualSave" class="sc-btn" style="background:#27ae60; color:white;" onclick="manualSaveScenario()"><i class="fas fa-save"></i> Enregistrer (Site)</button>
                     <button class="sc-btn" style="background:#8e44ad; color:white;" onclick="createNewBlankScenario()"><i class="fas fa-file"></i> Nouveau (Vierge)</button>
-                    <button class="sc-btn" style="background:#9b59b6; color:white;" onclick="openNewWorkshopModal()"><i class="fas fa-vector-square"></i> Nouvel Atelier (Mesure)</button>
+                    <button class="sc-btn" style="background:#9b59b6; color:white;" onclick="openModal('newWorkshopModalOverlay')"><i class="fas fa-vector-square"></i> Nouvel Atelier (Mesure)</button>
                     <button class="sc-btn" style="background:#3498db; color:white;" onclick="newScenario()"><i class="fas fa-copy"></i> Dupliquer (Actuel)</button>
                     
                     <div style="height:1px; background:#eee; margin:5px 0;"></div>
@@ -426,13 +348,10 @@
             </header>
 
             <div class="top-bar">
-                <!-- BOUTON POUR OUVRIR LE PANNEAU SCENARIO -->
-                <button onclick="toggleScenarios()" style="background: #34495e; color: white;">📂 Gérer Scénarios</button>
+                <button onclick="toggleScenarios()" style="background: #34495e; color: white;" title="Raccourcis: Ctrl+Z (Annuler) / Ctrl+Y (Rétablir)">📂 Gérer Scénarios</button>
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
-                
                 <div id="trashBin" class="trash-zone">🗑️</div>
-                
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
 
                 <button class="btn-add-entry" onclick="addEntry()">+ Entrée</button>
@@ -451,7 +370,6 @@
 
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
                 
-                <!-- PARAMETRE GLOBAL: TEMPS DE TRAVAIL -->
                 <div style="display:flex; align-items:center; gap:3px;" title="Temps de travail global pour le calcul de charge">
                     <label style="font-size:12px; font-weight:bold; color:#555;">Temps Ref :</label>
                     <input type="number" id="globalWorkHours" value="7" min="0" onchange="updateGlobalTime()" style="width:40px; padding:4px; font-size:12px; border:1px solid #ddd; border-radius:4px; text-align:center;"> <span style="font-size:12px; color:#555;">h</span>
@@ -461,11 +379,10 @@
 
             <div class="workshop-container" id="workshop">
                 <svg id="connections"></svg>
-                <!-- Initial objects created dynamically now via Scenarios -->
             </div>
         </div>
 
-        <!-- RESIZER HORIZONTAL (Droite) -->
+        <!-- RESIZER HORIZONTAL -->
         <div class="resizer-x" id="resizerX"></div>
 
         <!-- COLONNE DROITE: GAMMES OPÉRATOIRES -->
@@ -477,7 +394,7 @@
         </div>
     </div>
 
-    <!-- RESIZER VERTICAL (Bas) -->
+    <!-- RESIZER VERTICAL -->
     <div class="resizer-y" id="resizerY"></div>
 
     <!-- PANNEAU BAS: ANALYSE CHARGE -->
@@ -492,89 +409,47 @@
     </div>
 
     <script>
-        // --- RESIZERS LOGIC ---
+        // --- MODALS ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- RESIZERS ---
         const resizerX = document.getElementById('resizerX');
         const resizerY = document.getElementById('resizerY');
-        let isResizingX = false;
-        let isResizingY = false;
+        let isResizingX = false, isResizingY = false;
 
-        resizerX.addEventListener('mousedown', (e) => {
-            isResizingX = true;
-            resizerX.classList.add('resizing');
-            document.body.style.cursor = 'col-resize';
-            document.getElementById('mainWrapper').style.pointerEvents = 'none'; // Empêche iframe/svg de bloquer la souris
-        });
-
-        resizerY.addEventListener('mousedown', (e) => {
-            isResizingY = true;
-            resizerY.classList.add('resizing');
-            document.body.style.cursor = 'row-resize';
-            document.getElementById('mainWrapper').style.pointerEvents = 'none';
-        });
+        resizerX.addEventListener('mousedown', () => { isResizingX = true; resizerX.classList.add('resizing'); document.body.style.cursor = 'col-resize'; document.getElementById('mainWrapper').style.pointerEvents = 'none'; });
+        resizerY.addEventListener('mousedown', () => { isResizingY = true; resizerY.classList.add('resizing'); document.body.style.cursor = 'row-resize'; document.getElementById('mainWrapper').style.pointerEvents = 'none'; });
 
         document.addEventListener('mousemove', (e) => {
             if (isResizingX) {
                 let newWidth = document.body.clientWidth - e.clientX;
-                newWidth = Math.max(250, Math.min(newWidth, 800)); // Limites min/max
-                document.documentElement.style.setProperty('--config-width', `${newWidth}px`);
+                document.documentElement.style.setProperty('--config-width', `${Math.max(250, Math.min(newWidth, 800))}px`);
             }
             if (isResizingY) {
                 let newHeight = document.body.clientHeight - e.clientY;
-                newHeight = Math.max(150, Math.min(newHeight, 800));
-                document.getElementById('statsPanel').style.height = `${newHeight}px`;
+                document.getElementById('statsPanel').style.height = `${Math.max(150, Math.min(newHeight, 800))}px`;
             }
         });
 
         document.addEventListener('mouseup', () => {
-            if (isResizingX) {
-                isResizingX = false;
-                resizerX.classList.remove('resizing');
-                document.body.style.cursor = '';
-                document.getElementById('mainWrapper').style.pointerEvents = 'auto';
-            }
-            if (isResizingY) {
-                isResizingY = false;
-                resizerY.classList.remove('resizing');
-                document.body.style.cursor = '';
-                document.getElementById('mainWrapper').style.pointerEvents = 'auto';
+            if(isResizingX || isResizingY) {
+                isResizingX = false; isResizingY = false;
+                resizerX.classList.remove('resizing'); resizerY.classList.remove('resizing');
+                document.body.style.cursor = ''; document.getElementById('mainWrapper').style.pointerEvents = 'auto';
             }
         });
 
-        // --- BULLE D'INFO ---
-        function showCalcInfo() {
-            document.getElementById('calcInfoModalOverlay').style.display = 'flex';
-        }
-        function closeCalcInfo(e) {
-            if (e.target.id === 'calcInfoModalOverlay') {
-                document.getElementById('calcInfoModalOverlay').style.display = 'none';
-            }
-        }
-
-        function openNewWorkshopModal() {
-            document.getElementById('newWorkshopModalOverlay').style.display = 'flex';
-        }
-        function closeNewWorkshopModal(e) {
-            if (e.target.id === 'newWorkshopModalOverlay') {
-                document.getElementById('newWorkshopModalOverlay').style.display = 'none';
-            }
-        }
-
-        // --- LOGIN LOGIC ---
+        // --- LOGIN ---
         function checkLogin() {
-            const pass = document.getElementById('passwordInput').value;
-            if (pass === "FABIE2026") {
+            if (document.getElementById('passwordInput').value === "FABIE2026") {
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('mainWrapper').style.filter = 'none';
                 document.getElementById('mainWrapper').style.pointerEvents = 'auto';
-                // Charge les scénarios du localStorage si existent
                 loadScenariosFromStorage();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-            }
+            } else document.getElementById('loginError').style.display = 'block';
         }
-        document.getElementById('passwordInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') checkLogin();
-        });
+        document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') checkLogin(); });
 
         // --- CONSTANTES ---
         const workshop = document.getElementById('workshop');
@@ -583,803 +458,528 @@
         const statsContent = document.getElementById('statsContent');
         const trashBin = document.getElementById('trashBin');
         const configList = document.getElementById('configList');
-        const scenariosPanel = document.getElementById('scenariosPanel');
         
-        const PIXELS_PER_METER = 30; // 30px = 1m
+        const PIXELS_PER_METER = 30; // 1 mètre = 30px
         const WALKING_SPEED_M_S = 1.4;
         const OP_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c', '#34495e'];
         
-        // --- ETAT GLOBAL ---
+        // --- ETAT & HISTORIQUE (UNDO/REDO) ---
         let operatorData = {}; 
         let recordingState = null; 
-
-        // --- GESTION DES SCENARIOS ---
         let scenarios = {};
         let currentScenarioId = null;
 
-        function loadScenariosFromStorage() {
-            const saved = localStorage.getItem('fabie_scenarios_v4');
-            if (saved) {
-                scenarios = JSON.parse(saved);
-                const keys = Object.keys(scenarios);
-                if (keys.length > 0) {
-                    currentScenarioId = keys[0];
-                    updateScenarioSelect();
-                    loadScenario(currentScenarioId);
-                } else {
-                    initInitialScenario();
-                }
-            } else {
-                initInitialScenario();
-            }
+        // Historique local pour Ctrl+Z
+        let sessionHistory = [];
+        let historyIndex = -1;
+        let isUndoing = false;
+
+        function recordHistoryStep() {
+            if(isUndoing || !currentScenarioId) return;
+            const stateStr = JSON.stringify(scenarios[currentScenarioId]);
+            if(historyIndex >= 0 && sessionHistory[historyIndex] === stateStr) return; // Ne pas doubler
+            
+            sessionHistory = sessionHistory.slice(0, historyIndex + 1); // Coupe le futur si on a fait "Undo" puis une action
+            sessionHistory.push(stateStr);
+            historyIndex++;
         }
 
-        function saveScenariosToStorage() {
-            localStorage.setItem('fabie_scenarios_v4', JSON.stringify(scenarios));
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                if(historyIndex > 0) {
+                    historyIndex--;
+                    restoreHistoryState(sessionHistory[historyIndex]);
+                }
+            }
+            if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+                e.preventDefault();
+                if(historyIndex < sessionHistory.length - 1) {
+                    historyIndex++;
+                    restoreHistoryState(sessionHistory[historyIndex]);
+                }
+            }
+        });
+
+        function restoreHistoryState(stateStr) {
+            isUndoing = true;
+            scenarios[currentScenarioId] = JSON.parse(stateStr);
+            saveScenariosToStorage();
+            loadScenario(currentScenarioId, false); // Reload without adding to history
+            isUndoing = false;
         }
+
+        // --- GESTION SCENARIOS (STORAGE) ---
+        function loadScenariosFromStorage() {
+            const saved = localStorage.getItem('fabie_scenarios_v5');
+            if (saved) {
+                scenarios = JSON.parse(saved);
+                if (Object.keys(scenarios).length > 0) {
+                    currentScenarioId = Object.keys(scenarios)[0];
+                    updateScenarioSelect();
+                    loadScenario(currentScenarioId);
+                } else initInitialScenario();
+            } else initInitialScenario();
+        }
+
+        function saveScenariosToStorage() { localStorage.setItem('fabie_scenarios_v5', JSON.stringify(scenarios)); }
 
         function initInitialScenario() {
             workshop.innerHTML = '<svg id="connections"></svg>';
             createObj("m1", "Entrée", 45, 30, 30, 250);
             createObj("m3", "Sortie", 45, 30, 500, 30);
-            
             document.documentElement.style.setProperty('--room-w', 19.9);
             document.documentElement.style.setProperty('--room-h', 11.74);
 
-            scenarios['sc_default'] = {
-                name: "Scénario Base",
-                machines: serializeMachines(),
-                opData: {},
-                globalTime: { h: 7, m: 0 },
-                roomSize: { w: 19.9, h: 11.74 }
-            };
+            scenarios['sc_default'] = { name: "Scénario Base", machines: serializeMachines(), opData: {}, globalTime: { h: 7, m: 0 }, roomSize: { w: 19.9, h: 11.74 } };
             currentScenarioId = 'sc_default';
-            saveScenariosToStorage();
-            updateScenarioSelect();
-            calculateAndDraw();
-        }
-
-        function extractTextContent(element) {
-            let txt = '';
-            for (let node of element.childNodes) {
-                if (node.nodeType === 3) txt += node.textContent; // Text nodes only
-            }
-            return txt.trim();
+            saveScenariosToStorage(); updateScenarioSelect(); calculateAndDraw();
+            recordHistoryStep();
         }
 
         function serializeMachines() {
             return Array.from(document.querySelectorAll('.machine')).map(m => {
+                let nameOnly = "";
+                for (let node of m.childNodes) if (node.nodeType === 3) nameOnly += node.textContent;
                 return {
-                    id: m.id,
-                    className: m.className.replace(/selected/g, '').replace(/editing/g, '').trim(),
-                    text: extractTextContent(m),
-                    left: m.style.left,
-                    top: m.style.top,
-                    width: m.style.width,
-                    height: m.style.height,
-                    bg: m.style.backgroundColor || '',
-                    datasetColor: m.dataset.color || '',
-                    title: m.title || ''
+                    id: m.id, className: m.className.replace(/selected/g, '').replace(/editing/g, '').trim(),
+                    text: nameOnly.trim(), left: m.style.left, top: m.style.top, width: m.style.width, height: m.style.height,
+                    bg: m.style.backgroundColor || '', datasetColor: m.dataset.color || '', title: m.title || '', cadence: m.dataset.cadence || 0
                 };
             });
         }
 
         function saveCurrentScenario() {
             if(!currentScenarioId) return;
-            const machines = serializeMachines();
-            const opDataStr = JSON.stringify(operatorData);
-            const globalTime = { 
-                h: document.getElementById('globalWorkHours').value, 
-                m: document.getElementById('globalWorkMinutes').value 
-            };
-            
             const currentW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--room-w')) || 19.9;
             const currentH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--room-h')) || 11.74;
 
             scenarios[currentScenarioId] = {
                 name: scenarios[currentScenarioId] ? scenarios[currentScenarioId].name : "Nouveau",
-                machines: machines,
-                opData: JSON.parse(opDataStr),
-                globalTime: globalTime,
+                machines: serializeMachines(), opData: JSON.parse(JSON.stringify(operatorData)),
+                globalTime: { h: document.getElementById('globalWorkHours').value, m: document.getElementById('globalWorkMinutes').value },
                 roomSize: { w: currentW, h: currentH }
             };
             saveScenariosToStorage();
+            recordHistoryStep();
         }
 
-        function loadScenario(id) {
-            currentScenarioId = id;
-            const sc = scenarios[id];
+        function loadScenario(id, resetHistory = true) {
+            currentScenarioId = id; const sc = scenarios[id];
             
             document.getElementById('globalWorkHours').value = sc.globalTime.h;
             document.getElementById('globalWorkMinutes').value = sc.globalTime.m;
-            
-            const rW = sc.roomSize ? sc.roomSize.w : 19.9;
-            const rH = sc.roomSize ? sc.roomSize.h : 11.74;
-            document.documentElement.style.setProperty('--room-w', rW);
-            document.documentElement.style.setProperty('--room-h', rH);
+            document.documentElement.style.setProperty('--room-w', sc.roomSize ? sc.roomSize.w : 19.9);
+            document.documentElement.style.setProperty('--room-h', sc.roomSize ? sc.roomSize.h : 11.74);
 
             workshop.innerHTML = '<svg id="connections"></svg>';
             sc.machines.forEach(m => {
-                const div = document.createElement('div');
-                div.className = m.className;
-                div.id = m.id;
-                div.style.left = m.left;
-                div.style.top = m.top;
-                div.style.width = m.width;
-                div.style.height = m.height;
-                if(m.bg) div.style.backgroundColor = m.bg;
-                if(m.datasetColor) div.dataset.color = m.datasetColor;
-                if(m.title) div.title = m.title;
+                const div = document.createElement('div'); div.className = m.className; div.id = m.id;
+                div.style.left = m.left; div.style.top = m.top; div.style.width = m.width; div.style.height = m.height;
+                if(m.bg) div.style.backgroundColor = m.bg; if(m.datasetColor) div.dataset.color = m.datasetColor;
+                if(m.title) div.title = m.title; if(m.cadence > 0) div.dataset.cadence = m.cadence;
+                
                 div.textContent = m.text;
-                workshop.appendChild(div);
-                initMachine(div);
+                if(m.cadence > 0) {
+                    const span = document.createElement('div'); span.className = 'cadence-badge'; span.innerText = m.cadence + "u/h"; div.appendChild(span);
+                }
+                workshop.appendChild(div); initMachine(div);
             });
             
-            operatorData = JSON.parse(JSON.stringify(sc.opData));
-            recordingState = null;
-            rebuildConfigUI();
+            operatorData = JSON.parse(JSON.stringify(sc.opData)); recordingState = null;
+            rebuildConfigUI(); updateScenarioSelect(); calculateAndDraw();
             
-            updateScenarioSelect();
-            calculateAndDraw();
+            if(resetHistory) { sessionHistory = []; historyIndex = -1; recordHistoryStep(); }
         }
 
-        function switchScenario(id) {
-            saveCurrentScenario();
-            loadScenario(id);
-        }
+        function switchScenario(id) { saveCurrentScenario(); loadScenario(id); }
 
         function newScenario() {
             saveCurrentScenario(); 
-            const defaultName = scenarios[currentScenarioId].name + " (Copie)";
             const newId = 'sc_' + Date.now();
-            
-            const currentStateStr = JSON.stringify(scenarios[currentScenarioId]);
-            const newState = JSON.parse(currentStateStr);
-            newState.name = defaultName;
-            
-            scenarios[newId] = newState;
-            updateScenarioSelect();
-            
-            document.getElementById('sidebarScenarioSelect').value = newId;
-            loadScenario(newId);
+            const newState = JSON.parse(JSON.stringify(scenarios[currentScenarioId]));
+            newState.name = scenarios[currentScenarioId].name + " (Copie)";
+            scenarios[newId] = newState; updateScenarioSelect(); document.getElementById('sidebarScenarioSelect').value = newId; loadScenario(newId);
         }
 
         function createNewBlankScenario() {
-            saveCurrentScenario();
-            const newId = 'sc_' + Date.now();
-            const defaultName = "Scénario Vierge " + (Object.keys(scenarios).length + 1);
-            
+            saveCurrentScenario(); const newId = 'sc_' + Date.now();
             const currentW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--room-w')) || 19.9;
             const currentH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--room-h')) || 11.74;
-
             scenarios[newId] = {
-                name: defaultName,
+                name: "Scénario Vierge",
                 machines: [
-                    { id: "m1", className: "machine", text: "Entrée", left: "30px", top: "250px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "" },
-                    { id: "m3", className: "machine", text: "Sortie", left: "500px", top: "30px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "" }
+                    { id: "m1", className: "machine", text: "Entrée", left: "30px", top: "250px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "", cadence:0 },
+                    { id: "m3", className: "machine", text: "Sortie", left: "500px", top: "30px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "", cadence:0 }
                 ],
-                opData: {},
-                globalTime: { 
-                    h: parseInt(document.getElementById('globalWorkHours').value) || 7, 
-                    m: parseInt(document.getElementById('globalWorkMinutes').value) || 0 
-                },
-                roomSize: { w: currentW, h: currentH }
+                opData: {}, globalTime: { h: 7, m: 0 }, roomSize: { w: currentW, h: currentH }
             };
-            
-            saveScenariosToStorage();
-            updateScenarioSelect();
-            document.getElementById('sidebarScenarioSelect').value = newId;
-            loadScenario(newId);
+            saveScenariosToStorage(); updateScenarioSelect(); document.getElementById('sidebarScenarioSelect').value = newId; loadScenario(newId);
         }
 
         function confirmNewWorkshop() {
             const w = parseFloat(document.getElementById('newRoomW').value) || 20;
             const h = parseFloat(document.getElementById('newRoomH').value) || 12;
-            document.getElementById('newWorkshopModalOverlay').style.display = 'none';
-
-            saveCurrentScenario(); 
+            closeModal('newWorkshopModalOverlay'); saveCurrentScenario(); 
             const newId = 'sc_' + Date.now();
-            const defaultName = "Atelier " + w + "x" + h + "m";
-            
             scenarios[newId] = {
-                name: defaultName,
+                name: "Atelier " + w + "x" + h + "m",
                 machines: [
-                    { id: "m1", className: "machine", text: "Entrée", left: "30px", top: (h * 30 / 2 - 15) + "px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "" },
-                    { id: "m3", className: "machine", text: "Sortie", left: (w * 30 - 80) + "px", top: (h * 30 / 2 - 15) + "px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "" }
+                    { id: "m1", className: "machine", text: "Entrée", left: "30px", top: (h * 30 / 2 - 15) + "px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "", cadence:0 },
+                    { id: "m3", className: "machine", text: "Sortie", left: (w * 30 - 80) + "px", top: (h * 30 / 2 - 15) + "px", width: "45px", height: "30px", bg: "", datasetColor: "", title: "", cadence:0 }
                 ],
-                opData: {},
-                globalTime: { 
-                    h: parseInt(document.getElementById('globalWorkHours').value) || 7, 
-                    m: parseInt(document.getElementById('globalWorkMinutes').value) || 0 
-                },
-                roomSize: { w: w, h: h }
+                opData: {}, globalTime: { h: 7, m: 0 }, roomSize: { w: w, h: h }
             };
-            
-            saveScenariosToStorage();
-            updateScenarioSelect();
-            document.getElementById('sidebarScenarioSelect').value = newId;
-            loadScenario(newId);
+            saveScenariosToStorage(); updateScenarioSelect(); document.getElementById('sidebarScenarioSelect').value = newId; loadScenario(newId);
         }
 
         function updateScenarioSelect() {
-            const select = document.getElementById('sidebarScenarioSelect');
-            select.innerHTML = '';
+            const select = document.getElementById('sidebarScenarioSelect'); select.innerHTML = '';
             for (let id in scenarios) {
-                const opt = document.createElement('option');
-                opt.value = id;
-                opt.textContent = scenarios[id].name;
-                if (id === currentScenarioId) opt.selected = true;
-                select.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = id; opt.textContent = scenarios[id].name;
+                if (id === currentScenarioId) opt.selected = true; select.appendChild(opt);
             }
-            
-            const renameInput = document.getElementById('scenarioNameInput');
-            if (renameInput && scenarios[currentScenarioId]) {
-                renameInput.value = scenarios[currentScenarioId].name;
-            }
+            if (document.getElementById('scenarioNameInput') && scenarios[currentScenarioId]) document.getElementById('scenarioNameInput').value = scenarios[currentScenarioId].name;
         }
 
         function renameCurrentScenario() {
             const newName = document.getElementById('scenarioNameInput').value.trim();
             if (newName && currentScenarioId) {
-                scenarios[currentScenarioId].name = newName;
-                saveScenariosToStorage();
-                updateScenarioSelect();
-                
-                const btn = document.querySelector('button[onclick="renameCurrentScenario()"]');
-                const oldHtml = btn.innerHTML;
-                btn.innerHTML = '✅';
-                setTimeout(() => { btn.innerHTML = oldHtml; }, 1500);
+                scenarios[currentScenarioId].name = newName; saveScenariosToStorage(); updateScenarioSelect();
+                const btn = document.querySelector('button[onclick="renameCurrentScenario()"]'); const oldHtml = btn.innerHTML;
+                btn.innerHTML = '✅'; setTimeout(() => { btn.innerHTML = oldHtml; }, 1500);
             }
         }
 
         function manualSaveScenario() {
-            saveCurrentScenario();
-            const btn = document.getElementById('btnManualSave');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> Enregistré !';
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-            }, 2000);
+            saveCurrentScenario(); const btn = document.getElementById('btnManualSave'); const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Enregistré !'; setTimeout(() => { btn.innerHTML = originalText; }, 2000);
         }
 
         function deleteCurrentScenario() {
-            if (Object.keys(scenarios).length <= 1) {
-                alert("Impossible de supprimer le dernier scénario.");
-                return;
-            }
-            if (confirm("Voulez-vous vraiment supprimer ce scénario ?")) {
-                delete scenarios[currentScenarioId];
-                saveScenariosToStorage();
-                const keys = Object.keys(scenarios);
-                currentScenarioId = keys[0];
-                loadScenario(currentScenarioId);
+            if (Object.keys(scenarios).length <= 1) { alert("Impossible de supprimer le dernier scénario."); return; }
+            if (confirm("Supprimer ce scénario ?")) {
+                delete scenarios[currentScenarioId]; saveScenariosToStorage();
+                currentScenarioId = Object.keys(scenarios)[0]; loadScenario(currentScenarioId);
             }
         }
 
         function exportJson() {
-            saveCurrentScenario();
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scenarios));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            const fileName = "FABIE_Scenarios_" + new Date().toISOString().slice(0,10) + ".json";
-            downloadAnchorNode.setAttribute("download", fileName);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            saveCurrentScenario(); const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scenarios));
+            const node = document.createElement('a'); node.setAttribute("href", dataStr); node.setAttribute("download", "FABIE_Scenarios.json");
+            document.body.appendChild(node); node.click(); node.remove();
         }
 
         function importJson(input) {
-            const file = input.files[0];
-            if (!file) return;
+            const file = input.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    let count = 0;
-                    for (let id in imported) {
-                        const newId = 'import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                        scenarios[newId] = imported[id];
-                        count++;
-                    }
-                    saveScenariosToStorage();
-                    updateScenarioSelect();
-                    alert(count + " scénarios importés !");
-                } catch(err) {
-                    alert("Erreur fichier invalide.");
-                }
-            };
-            reader.readAsText(file);
-            input.value = '';
+                    const imported = JSON.parse(e.target.result); let count = 0;
+                    for (let id in imported) { scenarios['import_' + Date.now() + '_' + count] = imported[id]; count++; }
+                    saveScenariosToStorage(); updateScenarioSelect(); alert(count + " scénarios importés !");
+                } catch(err) { alert("Erreur fichier invalide."); }
+            }; reader.readAsText(file); input.value = '';
         }
 
-        function updateGlobalTime() {
-            saveCurrentScenario();
-            calculateAndDraw();
-        }
+        function updateGlobalTime() { saveCurrentScenario(); calculateAndDraw(); }
+        function toggleScenarios() { document.getElementById('scenariosPanel').style.display = document.getElementById('scenariosPanel').style.display === 'flex' ? 'none' : 'flex'; }
 
-        function toggleScenarios() {
-            if (scenariosPanel.style.display === 'none' || scenariosPanel.style.display === '') {
-                scenariosPanel.style.display = 'flex';
-            } else {
-                scenariosPanel.style.display = 'none';
-            }
-        }
-
-        // --- INIT & DRAG MACHINES ---
-        let activeItem = null;
-        let initialX, initialY, initialLeft, initialTop;
+        // --- DRAG & DROP & SNAP TO GRID ---
+        let activeItem = null; let initialX, initialY, initialLeft, initialTop;
 
         function initMachine(item) {
-            setupDrag(item);
-            makeResizable(item);
-            item.ondblclick = function(e) { if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') makeEditable(this); };
-        }
-
-        function setupDrag(item) {
             item.addEventListener('mousedown', dragStart);
             item.addEventListener('click', (e) => { if(recordingState) handleFluxClick(item); });
+            makeResizable(item);
+            
+            // Double Clic : Configuration de l'équipement (Cadence) ou renommage simple pour Opérateur
+            item.ondblclick = function(e) { 
+                if (recordingState || e.target.tagName === 'INPUT') return;
+                if (item.classList.contains('person')) {
+                    // Les opérateurs ont leur config à droite, on permet juste de renommer
+                    makeEditable(item);
+                } else {
+                    // Ouvre le modal Machine (Nom + Cadence)
+                    document.getElementById('configMachineId').value = item.id;
+                    let text = ""; for (let node of item.childNodes) if (node.nodeType === 3) text += node.textContent;
+                    document.getElementById('configMachineName').value = text.trim();
+                    document.getElementById('configMachineCadence').value = item.dataset.cadence || 0;
+                    openModal('machineConfigOverlay');
+                }
+            };
+        }
+
+        function saveMachineConfig() {
+            const id = document.getElementById('configMachineId').value;
+            const newName = document.getElementById('configMachineName').value;
+            const newCadence = document.getElementById('configMachineCadence').value;
+            
+            const el = document.getElementById(id);
+            if(el) {
+                el.dataset.cadence = newCadence;
+                el.innerHTML = '';
+                el.textContent = newName;
+                if(newCadence > 0) {
+                    const span = document.createElement('div'); span.className = 'cadence-badge'; span.innerText = newCadence + "u/h"; el.appendChild(span);
+                }
+                // Si c'est un waypoint
+                if(el.classList.contains('waypoint') || el.classList.contains('pillar')) el.title = newName;
+                
+                saveCurrentScenario(); calculateAndDraw();
+            }
+            closeModal('machineConfigOverlay');
         }
 
         function dragStart(e) {
-            if (recordingState) return; 
-            if (e.target.isContentEditable || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.classList.contains('resize-handle')) return;
-
-            activeItem = e.currentTarget; 
-            initialX = e.clientX; initialY = e.clientY;
-            initialLeft = parseInt(activeItem.style.left) || 0; 
-            initialTop = parseInt(activeItem.style.top) || 0;
-
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', dragEnd);
+            if (recordingState || e.target.isContentEditable || e.target.classList.contains('resize-handle')) return;
+            activeItem = e.currentTarget; initialX = e.clientX; initialY = e.clientY;
+            initialLeft = parseInt(activeItem.style.left) || 0; initialTop = parseInt(activeItem.style.top) || 0;
+            document.addEventListener('mousemove', drag); document.addEventListener('mouseup', dragEnd);
         }
 
         function drag(e) {
-            if (!activeItem) return;
-            e.preventDefault();
+            if (!activeItem) return; e.preventDefault();
             activeItem.style.left = (initialLeft + e.clientX - initialX) + "px";
             activeItem.style.top = (initialTop + e.clientY - initialY) + "px";
             
-            const trashRect = trashBin.getBoundingClientRect();
-            const itemRect = activeItem.getBoundingClientRect();
-            if (isOverlap(trashRect, itemRect)) trashBin.classList.add('drag-over');
-            else trashBin.classList.remove('drag-over');
-
+            const trashRect = trashBin.getBoundingClientRect(); const itemRect = activeItem.getBoundingClientRect();
+            if (isOverlap(trashRect, itemRect)) trashBin.classList.add('drag-over'); else trashBin.classList.remove('drag-over');
             calculateAndDraw();
         }
 
         function dragEnd() {
             if (activeItem) {
                 const trashRect = trashBin.getBoundingClientRect();
-                const itemRect = activeItem.getBoundingClientRect();
-                if (isOverlap(trashRect, itemRect)) deleteItem(activeItem);
+                if (isOverlap(trashRect, activeItem.getBoundingClientRect())) deleteItem(activeItem);
+                else {
+                    // AIMANTATION SUR GRILLE (Snap to Grid de 15px = demi-mètre)
+                    let left = parseInt(activeItem.style.left);
+                    let top = parseInt(activeItem.style.top);
+                    activeItem.style.left = (Math.round(left / 15) * 15) + "px";
+                    activeItem.style.top = (Math.round(top / 15) * 15) + "px";
+                }
             }
-            trashBin.classList.remove('drag-over');
-            activeItem = null;
-            document.removeEventListener('mousemove', drag);
-            document.removeEventListener('mouseup', dragEnd);
-            saveCurrentScenario(); 
+            trashBin.classList.remove('drag-over'); activeItem = null;
+            document.removeEventListener('mousemove', drag); document.removeEventListener('mouseup', dragEnd);
+            saveCurrentScenario(); calculateAndDraw();
         }
 
-        function isOverlap(rect1, rect2) {
-            return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
-        }
+        function isOverlap(r1, r2) { return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom); }
 
         function deleteItem(item) {
             const id = item.id;
-            if (item.classList.contains('person')) {
-                delete operatorData[id];
-                rebuildConfigUI();
-            } else {
-                for (const opId in operatorData) {
-                    operatorData[opId].tasks.forEach(task => { task.steps = task.steps.filter(stepId => stepId !== id); });
-                }
-            }
-            item.remove();
-            calculateAndDraw();
-            saveCurrentScenario();
+            if (item.classList.contains('person')) { delete operatorData[id]; rebuildConfigUI(); }
+            else { for (const opId in operatorData) operatorData[opId].tasks.forEach(t => { t.steps = t.steps.filter(s => s !== id); }); }
+            item.remove(); saveCurrentScenario(); calculateAndDraw();
         }
 
-        function formatTime(seconds) {
-            if (seconds === 0) return "0s";
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            const s = Math.floor(seconds % 60);
-            let res = "";
-            if (h > 0) res += h + "h ";
-            if (m > 0) res += m + "m ";
-            if (s > 0 || res === "") res += s + "s";
-            return res.trim();
-        }
-
-        // --- GESTION GAMMES (SIDEBAR DROITE) ---
-        function addConfigCard(opId, opName, color) {
-            operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, cakesPerGrid: 30, cakesPerPalette: 1000, tasks: [] };
-            rebuildConfigUI();
-            addTask(opId, "Remplir grille", 10, 'per_grid');
-        }
-
-        function updateTargetRacks(opId, val) {
-            if(operatorData[opId]) {
-                operatorData[opId].targetRacks = parseInt(val) || 1;
-                saveCurrentScenario();
-                calculateAndDraw();
-            }
-        }
-
-        function updateHourlyRate(opId, val) {
-            if(operatorData[opId]) {
-                operatorData[opId].hourlyRate = parseFloat(val) || 0;
-                saveCurrentScenario();
-                calculateAndDraw();
-            }
-        }
-
-        function updateOperatorCakes(opId, val) {
-            if(operatorData[opId]) {
-                operatorData[opId].cakesPerPalette = parseFloat(val) || 0;
-                saveCurrentScenario();
-                calculateAndDraw();
-            }
-        }
-
-        function updateOperatorCakesGrid(opId, val) {
-            if(operatorData[opId]) {
-                operatorData[opId].cakesPerGrid = parseFloat(val) || 0;
-                saveCurrentScenario();
-                calculateAndDraw();
-            }
-        }
+        // --- GESTION GAMMES OPÉRATEURS ---
+        function addConfigCard(opId, opName, color) { operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, cakesPerGrid: 30, cakesPerPalette: 1000, tasks: [] }; rebuildConfigUI(); addTask(opId, "Remplir grille", 10, 'per_grid'); }
+        function updateTargetRacks(opId, val) { if(operatorData[opId]) { operatorData[opId].targetRacks = parseInt(val) || 1; saveCurrentScenario(); calculateAndDraw(); } }
+        function updateHourlyRate(opId, val) { if(operatorData[opId]) { operatorData[opId].hourlyRate = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
+        function updateOperatorCakes(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerPalette = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
+        function updateOperatorCakesGrid(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerGrid = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
 
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
-            const taskId = 'task-' + Date.now() + Math.random().toString(36).substr(2,5);
-            operatorData[opId].tasks.push({ 
-                id: taskId, name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] 
-            });
-            rebuildConfigUI();
-            saveCurrentScenario();
+            operatorData[opId].tasks.push({ id: 'task-' + Date.now() + Math.random().toString(36).substr(2,5), name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] });
+            rebuildConfigUI(); saveCurrentScenario();
         }
 
         function updateTaskMeta(opId, taskId, field, value) {
             const task = operatorData[opId].tasks.find(t => t.id === taskId);
             if(task) {
-                if (field === 'time' || field === 'freqValue' || field === 'cakesPerAction') {
-                    task[field] = parseFloat(value) || 0;
-                    if (field === 'freqValue' && !task[field]) task[field] = 1; 
-                }
+                if (field === 'time' || field === 'freqValue' || field === 'cakesPerAction') { task[field] = parseFloat(value) || 0; if (field === 'freqValue' && !task[field]) task[field] = 1; }
                 else task[field] = value;
-                saveCurrentScenario();
-                calculateAndDraw(); 
+                saveCurrentScenario(); calculateAndDraw(); 
             }
         }
 
-        function deleteTask(opId, taskId) {
-            if(recordingState && recordingState.taskId === taskId) stopRecording();
-            operatorData[opId].tasks = operatorData[opId].tasks.filter(t => t.id !== taskId);
-            rebuildConfigUI();
-            saveCurrentScenario();
-            calculateAndDraw();
-        }
+        function deleteTask(opId, taskId) { if(recordingState && recordingState.taskId === taskId) stopRecording(); operatorData[opId].tasks = operatorData[opId].tasks.filter(t => t.id !== taskId); rebuildConfigUI(); saveCurrentScenario(); calculateAndDraw(); }
 
         function rebuildConfigUI() {
             configList.innerHTML = '';
-            if(Object.keys(operatorData).length === 0) {
-                configList.innerHTML = '<div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">Ajoutez un opérateur pour configurer ses gammes...</div>';
-                return;
-            }
-
+            if(Object.keys(operatorData).length === 0) { configList.innerHTML = '<div style="font-size: 0.9em; color: #777; font-style: italic; padding: 10px;">Ajoutez un opérateur...</div>'; return; }
             for (const [opId, data] of Object.entries(operatorData)) {
-                const card = document.createElement('div');
-                card.className = 'op-config-card';
-                card.id = 'config-' + opId;
-                
+                const card = document.createElement('div'); card.className = 'op-config-card'; card.id = 'config-' + opId;
                 let tasksHTML = '';
                 data.tasks.forEach(task => {
-                    const selTotal = task.freqType === 'total' ? 'selected' : '';
-                    const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
-                    const selRack = task.freqType === 'per_rack' ? 'selected' : '';
-                    const selPalette = task.freqType === 'per_palette' ? 'selected' : '';
-                    const selUnitS = (!task.timeUnit || task.timeUnit === 's') ? 'selected' : '';
-                    const selUnitMin = (task.timeUnit === 'min') ? 'selected' : '';
-                    const btnClass = task.steps.length > 0 ? 'btn-record has-path' : 'btn-record';
-                    const btnText = task.steps.length > 0 ? '✅ OK' : '📍 Trajet';
-
+                    const selTotal = task.freqType === 'total' ? 'selected' : ''; const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
+                    const selRack = task.freqType === 'per_rack' ? 'selected' : ''; const selPalette = task.freqType === 'per_palette' ? 'selected' : '';
+                    const selUnitS = (!task.timeUnit || task.timeUnit === 's') ? 'selected' : ''; const selUnitMin = (task.timeUnit === 'min') ? 'selected' : '';
+                    
                     tasksHTML += `
                         <div class="action-row" id="row-${task.id}">
                             <div class="action-inputs" style="flex-wrap: wrap; align-items:center;">
-                                <input type="text" id="name-${task.id}" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)" style="flex:1; min-width:80px;" title="Nom de la tâche">
+                                <input type="text" id="name-${task.id}" value="${task.name}" onchange="updateTaskMeta('${opId}', '${task.id}', 'name', this.value)" style="flex:1; min-width:80px;" title="Nom">
                                 <div style="display:flex; align-items:center; gap:2px;">
-                                    <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" style="width:40px;" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)" title="Temps">
-                                    <select id="timeUnit-${task.id}" onchange="updateTaskMeta('${opId}', '${task.id}', 'timeUnit', this.value)" style="padding:2px; font-size:11px; border-radius:3px; border:1px solid #ccc; height:26px;">
-                                        <option value="s" ${selUnitS}>s</option>
-                                        <option value="min" ${selUnitMin}>min</option>
-                                    </select>
+                                    <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)">
+                                    <select onchange="updateTaskMeta('${opId}', '${task.id}', 'timeUnit', this.value)" style="padding:2px; height:26px;"><option value="s" ${selUnitS}>s</option><option value="min" ${selUnitMin}>m</option></select>
                                 </div>
-                                <div style="display:flex; align-items:center; gap:2px;">
-                                    <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" style="width:40px;" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés par action">🎂
-                                </div>
+                                <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés">🎂
                             </div>
                             <div class="action-inputs" style="margin-top:4px; align-items:center;">
-                                <span style="font-size:12px; color:#555; display:flex; align-items:center; gap:4px;">
-                                    Répétition <i class="fas fa-info-circle info-dot" title="Cliquez pour comprendre le calcul" onclick="showCalcInfo()"></i> :
-                                </span>
-                                <input type="number" id="freqVal-${task.id}" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)" title="Quantité">
-                                <select id="freqType-${task.id}" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)" title="Mode de répétition">
-                                    <option value="total" ${selTotal}>/ Jour</option>
-                                    <option value="per_grid" ${selGrid}>/ Grille</option>
-                                    <option value="per_rack" ${selRack}>/ Échelle</option>
-                                    <option value="per_palette" ${selPalette}>/ Palette</option>
+                                <span style="font-size:12px; color:#555;">Répétition <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</span>
+                                <input type="number" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)">
+                                <select onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)">
+                                    <option value="total" ${selTotal}>/ Jour</option><option value="per_grid" ${selGrid}>/ Grille</option>
+                                    <option value="per_rack" ${selRack}>/ Échelle</option><option value="per_palette" ${selPalette}>/ Palette</option>
                                 </select>
                             </div>
                             <div class="action-controls">
-                                <button id="btn-rec-${task.id}" class="${btnClass}" onclick="toggleRecord('${opId}', '${task.id}')">${btnText}</button>
+                                <button id="btn-rec-${task.id}" class="btn-record ${task.steps.length > 0 ? 'has-path' : ''}" onclick="toggleRecord('${opId}', '${task.id}')">${task.steps.length > 0 ? '✅ OK' : '📍 Trajet'}</button>
                                 <button class="btn-sm btn-delete-action" onclick="deleteTask('${opId}', '${task.id}')">🗑️</button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
 
                 card.innerHTML = `
                     <div class="op-config-header" style="background-color: ${data.color}"><span>${data.name}</span></div>
                     <div style="padding: 5px 10px; background:#f1f2f6; border-bottom:1px solid #ddd; font-size:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <strong title="1 Échelle = 17 grilles">🎯 Objectif Prod <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</strong>
-                            <div>
-                                <input type="number" value="${data.targetRacks}" min="1" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateTargetRacks('${opId}', this.value)">
-                                Échelles
-                            </div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <strong title="Nombre de gâteaux par grille">🧇 Gâteaux / Grille <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</strong>
-                            <div>
-                                <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakesGrid('${opId}', this.value)">
-                            </div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <strong title="Gâteaux nécessaires pour compléter une palette">📦 Gâteaux / Palette <i class="fas fa-info-circle info-dot" onclick="showCalcInfo()"></i> :</strong>
-                            <div>
-                                <input type="number" value="${data.cakesPerPalette || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakes('${opId}', this.value)">
-                            </div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>💶 Taux Horaire:</strong>
-                            <div>
-                                <input type="number" value="${data.hourlyRate}" min="0" step="0.5" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateHourlyRate('${opId}', this.value)">
-                                € / h
-                            </div>
-                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>🎯 Objectif Prod:</strong> <input type="number" value="${data.targetRacks}" min="1" style="width:40px; text-align:center;" onchange="updateTargetRacks('${opId}', this.value)"></div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>🧇 Gâteaux/Grille:</strong> <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:40px; text-align:center;" onchange="updateOperatorCakesGrid('${opId}', this.value)"></div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><strong>📦 Gâteaux/Palette:</strong> <input type="number" value="${data.cakesPerPalette || 0}" min="0" style="width:40px; text-align:center;" onchange="updateOperatorCakes('${opId}', this.value)"></div>
+                        <div style="display:flex; justify-content:space-between;"><strong>💶 Taux Horaire:</strong> <input type="number" value="${data.hourlyRate}" min="0" step="0.5" style="width:40px; text-align:center;" onchange="updateHourlyRate('${opId}', this.value)"></div>
                     </div>
-                    <div class="op-config-body">
-                        <div id="tasks-${opId}">${tasksHTML}</div>
-                        <button class="btn-sm btn-add-action" onclick="addTask('${opId}')">+ Ajouter Tâche</button>
-                    </div>
+                    <div class="op-config-body"><div id="tasks-${opId}">${tasksHTML}</div><button class="btn-sm btn-add-action" onclick="addTask('${opId}')">+ Ajouter Tâche</button></div>
                 `;
                 configList.appendChild(card);
             }
         }
 
+        // --- ENREGISTREMENT ---
         function toggleRecord(opId, taskId) {
             if (recordingState && recordingState.taskId === taskId) { stopRecording(); return; }
             if (recordingState) stopRecording();
             recordingState = { opId, taskId };
-            const btn = document.getElementById(`btn-rec-${taskId}`);
-            btn.innerHTML = "🔴 Enreg."; btn.classList.add("recording");
+            const btn = document.getElementById(`btn-rec-${taskId}`); btn.innerHTML = "🔴 Enreg."; btn.classList.add("recording");
             workshop.style.cursor = "crosshair";
-            const task = operatorData[opId].tasks.find(t => t.id === taskId);
-            if(task) task.steps = [];
+            const task = operatorData[opId].tasks.find(t => t.id === taskId); if(task) task.steps = [];
             calculateAndDraw();
         }
-
         function stopRecording() {
-            if (!recordingState) return;
-            const { opId, taskId } = recordingState;
-            const btn = document.getElementById(`btn-rec-${taskId}`);
-            const task = operatorData[opId].tasks.find(t => t.id === taskId);
-            btn.innerHTML = (task && task.steps.length > 0) ? "✅ OK" : "📍 Trajet";
-            btn.className = (task && task.steps.length > 0) ? "btn-record has-path" : "btn-record";
-            recordingState = null; workshop.style.cursor = "default";
-            saveCurrentScenario(); 
+            if (!recordingState) return; const { opId, taskId } = recordingState;
+            const btn = document.getElementById(`btn-rec-${taskId}`); const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            btn.innerHTML = (task && task.steps.length > 0) ? "✅ OK" : "📍 Trajet"; btn.className = (task && task.steps.length > 0) ? "btn-record has-path" : "btn-record";
+            recordingState = null; workshop.style.cursor = "default"; saveCurrentScenario(); 
         }
-
         function handleFluxClick(item) {
-            if (!recordingState) return;
-            const { opId, taskId } = recordingState;
-            const task = operatorData[opId].tasks.find(t => t.id === taskId);
-            if (task) {
-                if(task.steps.length > 0 && task.steps[task.steps.length-1] === item.id) return;
-                task.steps.push(item.id);
-                calculateAndDraw();
-            }
+            if (!recordingState) return; const { opId, taskId } = recordingState; const task = operatorData[opId].tasks.find(t => t.id === taskId);
+            if (task) { if(task.steps.length > 0 && task.steps[task.steps.length-1] === item.id) return; task.steps.push(item.id); calculateAndDraw(); }
         }
 
-        // --- DESSIN & CALCUL (BOTTOM PANEL) ---
-        function calculateAndDraw() {
-            const svgEl = document.getElementById('connections');
-            if(!svgEl) return;
-            svgEl.innerHTML = '';
-            document.querySelectorAll('.step-badge').forEach(b => b.remove());
-            statsContent.innerHTML = '';
-            
-            let hasAnyData = false;
-            let grandTotalTime = 0;
-            let grandTotalCost = 0;
-            let grandTotalCakes = 0;
+        function formatTime(seconds) {
+            if (seconds === 0) return "0s"; const h = Math.floor(seconds / 3600); const m = Math.floor((seconds % 3600) / 60); const s = Math.floor(seconds % 60);
+            return (h > 0 ? h + "h " : "") + (m > 0 ? m + "m " : "") + (s > 0 || (h===0&&m===0) ? s + "s" : "").trim();
+        }
 
-            const globalHours = parseInt(document.getElementById('globalWorkHours').value) || 0;
-            const globalMinutes = parseInt(document.getElementById('globalWorkMinutes').value) || 0;
-            const globalTimeSeconds = (globalHours * 3600) + (globalMinutes * 60);
+        // --- DESSIN & CALCULS GLOBAUX ---
+        function calculateAndDraw() {
+            const svgEl = document.getElementById('connections'); if(!svgEl) return;
+            svgEl.innerHTML = ''; document.querySelectorAll('.step-badge').forEach(b => b.remove()); statsContent.innerHTML = '';
+            
+            let hasAnyData = false; let grandTotalTime = 0; let grandTotalCost = 0; let grandTotalCakes = 0;
+            const globalTimeSeconds = (parseInt(document.getElementById('globalWorkHours').value) || 0) * 3600 + (parseInt(document.getElementById('globalWorkMinutes').value) || 0) * 60;
 
             for (const [opId, data] of Object.entries(operatorData)) {
-                let opEl = document.getElementById(opId);
-                const opName = data.name || (opEl ? extractTextContent(opEl) : "Opérateur");
-                const targetRacks = data.targetRacks || 1;
-                const hourlyRate = data.hourlyRate || 15;
-
+                let opEl = document.getElementById(opId); let opName = data.name || "Opérateur";
+                if(opEl) { let text = ""; for (let node of opEl.childNodes) if (node.nodeType === 3) text += node.textContent; opName = text.trim() || opName; }
+                const targetRacks = data.targetRacks || 1; const hourlyRate = data.hourlyRate || 15;
                 let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
-                const card = document.createElement('div');
-                card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
+                const card = document.createElement('div'); card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
                 let tasksHtml = '';
 
                 data.tasks.forEach(task => {
-                    hasAnyData = true;
-                    
-                    let taskCycles = 1;
-                    const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
+                    hasAnyData = true; let taskCycles = 1; const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
+                    if (task.freqType === 'per_grid') taskCycles = ((data.cakesPerGrid || 0) > 0 && cpa > 0) ? ((data.cakesPerGrid / cpa) * 17 * targetRacks * task.freqValue) : (task.freqValue * 17 * targetRacks);
+                    else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
+                    else if (task.freqType === 'per_palette') taskCycles = ((data.cakesPerPalette || 0) > 0 && cpa > 0) ? ((data.cakesPerPalette / cpa) * task.freqValue) : task.freqValue;
+                    else taskCycles = task.freqValue;
 
-                    if (task.freqType === 'per_grid') {
-                        const targetGridCakes = data.cakesPerGrid || 0;
-                        if (targetGridCakes > 0 && cpa > 0) {
-                            taskCycles = (targetGridCakes / cpa) * 17 * targetRacks * task.freqValue;
-                        } else {
-                            taskCycles = task.freqValue * 17 * targetRacks;
-                        }
-                    }
-                    else if (task.freqType === 'per_rack') {
-                        taskCycles = task.freqValue * targetRacks;
-                    }
-                    else if (task.freqType === 'per_palette') {
-                        const targetPalCakes = data.cakesPerPalette || 0;
-                        if (targetPalCakes > 0 && cpa > 0) {
-                            taskCycles = (targetPalCakes / cpa) * task.freqValue;
-                        } else {
-                            taskCycles = task.freqValue;
-                        }
-                    }
-                    else {
-                        taskCycles = task.freqValue;
-                    }
-
-                    const taskCakes = (task.cakesPerAction || 0) * taskCycles;
-                    opTotalCakes += taskCakes;
-
+                    const taskCakes = cpa * taskCycles; opTotalCakes += taskCakes;
                     const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
 
                     if(task.steps.length < 2) {
-                        if (task.steps.length === 1 && recordingState && recordingState.taskId === task.id) {
-                            const el = document.getElementById(task.steps[0]);
-                            if (el) addBadge(el, 1, data.color);
-                        }
-
+                        if (task.steps.length === 1 && recordingState && recordingState.taskId === task.id) { const el = document.getElementById(task.steps[0]); if (el) addBadge(el, 1, data.color); }
                         opTotalFixedTime += taskTimeSec * taskCycles;
-                        const taskTotalTime = taskTimeSec * taskCycles;
-                        tasksHtml += `
-                            <div class="task-detail" style="color:#777">
-                                <div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">
-                                    ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTotalTime)}</span>
-                                </div>
-                                <div style="font-size: 11px;">${task.time}${task.timeUnit === 'min' ? 'min' : 's'} fixe / act. | 🎂 ${Math.round(taskCakes)}</div>
-                            </div>`;
+                        tasksHtml += `<div class="task-detail" style="color:#777"><div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTimeSec * taskCycles)}</span></div><div style="font-size: 11px;">${task.time}${task.timeUnit==='min'?'m':'s'} fixe/act. | 🎂 ${Math.round(taskCakes)}</div></div>`;
                         return;
                     }
                     
-                    let pathString = ""; let taskDistPixels = 0;
-                    const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3;
-                    let prevPos = null;
+                    let pathString = ""; let taskDistPixels = 0; const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3; let prevPos = null;
 
                     for (let i = 0; i < task.steps.length; i++) {
-                        const el = document.getElementById(task.steps[i]);
-                        if(!el) continue;
-                        
+                        const el = document.getElementById(task.steps[i]); if(!el) continue;
                         const pos = getCenter(el);
-                        
                         if (recordingState && recordingState.taskId === task.id) addBadge(el, i+1, data.color);
-
-                        if (pathString === "") pathString += `M ${pos.x + offset} ${pos.y + offset}`;
-                        else pathString += ` L ${pos.x + offset} ${pos.y + offset}`;
-
-                        if (prevPos) {
-                            taskDistPixels += Math.sqrt(Math.pow(pos.x - prevPos.x, 2) + Math.pow(pos.y - prevPos.y, 2));
-                        }
+                        if (pathString === "") pathString += `M ${pos.x + offset} ${pos.y + offset}`; else pathString += ` L ${pos.x + offset} ${pos.y + offset}`;
+                        if (prevPos) taskDistPixels += Math.sqrt(Math.pow(pos.x - prevPos.x, 2) + Math.pow(pos.y - prevPos.y, 2));
                         prevPos = pos;
                     }
-                    
                     if(pathString !== "") {
-                        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                        pathEl.setAttribute("d", pathString); pathEl.style.stroke = data.color;
-                        if(recordingState && recordingState.taskId !== task.id) pathEl.style.opacity = "0.3"; else pathEl.style.opacity = "0.8";
-                        svgEl.appendChild(pathEl);
+                        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path"); pathEl.setAttribute("d", pathString); pathEl.style.stroke = data.color;
+                        pathEl.style.opacity = (recordingState && recordingState.taskId !== task.id) ? "0.3" : "0.8"; svgEl.appendChild(pathEl);
                     }
 
-                    const distM = (taskDistPixels / PIXELS_PER_METER);
-                    const walkT = (distM / WALKING_SPEED_M_S);
-                    
-                    opTotalDist += (distM * taskCycles); 
-                    opTotalWalkTime += (walkT * taskCycles); 
-                    opTotalFixedTime += (taskTimeSec * taskCycles);
-                    
-                    const taskCycleTime = walkT + taskTimeSec;
-                    const taskTotalTime = taskCycleTime * taskCycles;
-                    
-                    tasksHtml += `
-                        <div class="task-detail">
-                            <div style="font-weight:bold; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">
-                                ${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTotalTime)}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>🚶 Trajet (${distM.toFixed(1)}m) :</span> <span>${formatTime(walkT)} / act.</span></div>
-                            <div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(taskTimeSec)} / act. | 🎂 ${Math.round(taskCakes)}</span></div>
-                        </div>`;
+                    const distM = (taskDistPixels / PIXELS_PER_METER); const walkT = (distM / WALKING_SPEED_M_S);
+                    opTotalDist += (distM * taskCycles); opTotalWalkTime += (walkT * taskCycles); opTotalFixedTime += (taskTimeSec * taskCycles);
+                    tasksHtml += `<div class="task-detail"><div style="font-weight:bold; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime((walkT + taskTimeSec) * taskCycles)}</span></div><div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>🚶 Trajet (${distM.toFixed(1)}m) :</span> <span>${formatTime(walkT)} / act.</span></div><div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(taskTimeSec)} / act. | 🎂 ${Math.round(taskCakes)}</span></div></div>`;
                 });
 
-                const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime;
-                const totalDistMeters = opTotalDist;
-                const totalWalkTimeSeconds = opTotalWalkTime;
-                const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
-                
-                grandTotalTime += totalWorkTimeSeconds;
-                grandTotalCost += laborCost;
-                grandTotalCakes += opTotalCakes;
+                const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime; const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
+                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += opTotalCakes;
 
-                let loadPercent = 0;
-                let loadColor = "#2ecc71";
-                if (globalTimeSeconds > 0) {
-                    loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100;
-                    if (loadPercent > 100) loadColor = "#e74c3c"; 
-                    else if (loadPercent > 85) loadColor = "#f39c12"; 
-                }
+                let loadPercent = 0; let loadColor = "#2ecc71";
+                if (globalTimeSeconds > 0) { loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100; if (loadPercent > 100) loadColor = "#e74c3c"; else if (loadPercent > 85) loadColor = "#f39c12"; }
+
+                // Cadence calculée de l'opérateur
+                const operatorCadence = totalWorkTimeSeconds > 0 ? (opTotalCakes / (totalWorkTimeSeconds / 3600)) : 0;
 
                 card.innerHTML = `
-                    <div class="op-title" style="color:${data.color}">${opName} 
-                        <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Éch.</span>
-                    </div>
+                    <div class="op-title" style="color:${data.color}">${opName} <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Éch.</span></div>
                     ${tasksHtml}
                     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;">
-                        <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(totalDistMeters/1000).toFixed(2)} km</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Trajet Total:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(opTotalDist/1000).toFixed(2)} km</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#8e44ad;"><span>Vitesse estimée:</span> <span>${Math.round(operatorCadence)} u/h</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Emballés:</span> <span>${Math.round(opTotalCakes)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO:</span> <span>${laborCost.toFixed(2)} €</span></div>
-                        
-                        <div style="margin-top:10px;">
-                            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:#555;">
-                                <span>Taux de charge</span>
-                                <span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span>
-                            </div>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div>
-                            </div>
-                        </div>
+                        <div style="margin-top:10px;"><div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:#555;"><span>Taux de charge</span><span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div></div></div>
                     </div>
                 `;
                 statsContent.appendChild(card);
             }
             
             if (hasAnyData) {
-                const globalCard = document.createElement('div');
-                globalCard.className = 'op-stat-card';
-                globalCard.style.borderLeftColor = '#2c3e50';
-                globalCard.style.backgroundColor = '#e8f6f3';
+                // Analyse Goulot d'étranglement
+                let minMachineCadence = Infinity; let bottleneckName = "";
+                document.querySelectorAll('.machine').forEach(m => {
+                    let cad = parseFloat(m.dataset.cadence) || 0;
+                    if (cad > 0 && cad < minMachineCadence) { minMachineCadence = cad; bottleneckName = m.textContent.replace(/[0-9]+u\/h/g, '').trim(); }
+                });
+
+                const globalOperatorCadence = grandTotalTime > 0 ? (grandTotalCakes / (grandTotalTime / 3600)) : 0;
+                
+                let bottleneckHtml = "";
+                if(minMachineCadence !== Infinity && globalOperatorCadence > 0) {
+                    if (globalOperatorCadence > minMachineCadence) {
+                        bottleneckHtml = `<div class="bottleneck-alert critical"><i class="fas fa-exclamation-triangle"></i> <b>Goulot identifié : ${bottleneckName}</b><br>La machine (${minMachineCadence} u/h) est plus lente que vos opérateurs (${Math.round(globalOperatorCadence)} u/h). L'opérateur sera en attente.</div>`;
+                    } else {
+                        bottleneckHtml = `<div class="bottleneck-alert" style="border-color:#27ae60; background:#e8f5e9; color:#2c3e50;"><i class="fas fa-check-circle" style="color:#27ae60;"></i> <b>Flux fluide</b><br>L'équipement le plus lent (${bottleneckName} à ${minMachineCadence} u/h) suit la cadence humaine (${Math.round(globalOperatorCadence)} u/h).</div>`;
+                    }
+                }
+
+                const globalCard = document.createElement('div'); globalCard.className = 'op-stat-card'; globalCard.style.borderLeftColor = '#2c3e50'; globalCard.style.backgroundColor = '#e8f6f3';
                 globalCard.innerHTML = `
                     <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL ATELIER</div>
                     <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Cumulé:</span> <span>${formatTime(grandTotalTime)}</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Gâteaux Total:</span> <span>${Math.round(grandTotalCakes)} 🎂</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total Prod:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
+                    ${bottleneckHtml}
                 `;
-                statsContent.appendChild(globalCard);
-                
-                // On affiche aussi les resizers
+                statsContent.insertBefore(globalCard, statsContent.firstChild);
                 document.getElementById('resizerY').style.display = 'block';
-            } else {
-                document.getElementById('resizerY').style.display = 'none';
-            }
+            } else { document.getElementById('resizerY').style.display = 'none'; }
 
             statsPanel.style.display = hasAnyData ? 'flex' : 'none';
         }
@@ -1388,13 +988,7 @@
         function createObj(idPrefix, name, w, h, x=50, y=50) {
             const div = document.createElement('div'); div.className = 'machine'; div.textContent = name;
             div.style.left = x+'px'; div.style.top = y+'px'; div.style.width = w + 'px'; div.style.height = h + 'px';
-            
-            if (idPrefix === "m1" || idPrefix === "m3") {
-                div.id = idPrefix;
-            } else {
-                div.id = 'obj-' + Date.now() + Math.random().toString(36).substr(2, 9);
-            }
-            
+            div.id = (idPrefix === "m1" || idPrefix === "m3") ? idPrefix : 'obj-' + Date.now() + Math.random().toString(36).substr(2, 9);
             workshop.appendChild(div); initMachine(div); return div;
         }
         function addMachine() { createObj("obj", "M" + (document.querySelectorAll('.machine:not(.person):not(.waypoint):not(.pillar):not(.palette):not(.scale-machine)').length + 1), 45, 30); saveCurrentScenario(); }
@@ -1407,8 +1001,7 @@
         function addPerson() {
             const index = document.querySelectorAll('.person').length; const color = OP_COLORS[index % OP_COLORS.length]; const name = "Op" + (index + 1);
             const div = createObj("obj", name, 24, 24); div.classList.add('person'); div.style.backgroundColor = color;
-            addConfigCard(div.id, name, color);
-            saveCurrentScenario();
+            addConfigCard(div.id, name, color); saveCurrentScenario();
         }
 
         function makeResizable(element) {
@@ -1422,6 +1015,7 @@
                 document.addEventListener('mousemove', doResize); document.addEventListener('mouseup', stopResize);
             });
         }
+
         function makeEditable(element) {
             if (recordingState) return;
             const children = Array.from(element.children); element.contentEditable = true; element.focus(); element.classList.add('editing'); children.forEach(c => c.style.display = 'none');
@@ -1430,52 +1024,30 @@
                 element.removeEventListener('blur', finish); element.removeEventListener('keydown', keyHandler);
                 children.forEach(c => c.style.display = ''); children.forEach(c => { if(!element.contains(c)) element.appendChild(c); });
                 
-                const newName = extractTextContent(element);
-                if(element.classList.contains('person') && operatorData[element.id]) { 
-                    operatorData[element.id].name = newName;
-                    rebuildConfigUI(); 
-                }
-                saveCurrentScenario();
-                calculateAndDraw();
+                let text = ""; for (let node of element.childNodes) if (node.nodeType === 3) text += node.textContent;
+                if(element.classList.contains('person') && operatorData[element.id]) { operatorData[element.id].name = text.trim(); rebuildConfigUI(); }
+                saveCurrentScenario(); calculateAndDraw();
             };
             const keyHandler = (e) => { if(e.key === 'Enter') { e.preventDefault(); element.blur(); } };
             element.addEventListener('blur', finish); element.addEventListener('keydown', keyHandler);
         }
 
         function resetAll() { 
-            operatorData = {}; recordingState = null; 
-            document.querySelectorAll('.machine').forEach(m => m.remove());
-            createObj("m1", "Entrée", 45, 30, 30, 250);
-            createObj("m3", "Sortie", 45, 30, 500, 30);
-            rebuildConfigUI(); 
-            saveCurrentScenario();
-            calculateAndDraw(); 
+            operatorData = {}; recordingState = null; document.querySelectorAll('.machine').forEach(m => m.remove());
+            createObj("m1", "Entrée", 45, 30, 30, 250); createObj("m3", "Sortie", 45, 30, 500, 30);
+            rebuildConfigUI(); saveCurrentScenario(); calculateAndDraw(); 
         }
 
-        function closeStats() { 
-            document.getElementById('statsPanel').style.display = 'none'; 
-            document.getElementById('resizerY').style.display = 'none';
-        }
+        function closeStats() { document.getElementById('statsPanel').style.display = 'none'; document.getElementById('resizerY').style.display = 'none'; }
         
         function toggleConfigPanel() {
-            const panel = document.getElementById('configPanel'); 
-            const btn = document.getElementById('btnToggleConfig');
-            const rX = document.getElementById('resizerX');
-
+            const panel = document.getElementById('configPanel'); const btn = document.getElementById('btnToggleConfig'); const rX = document.getElementById('resizerX');
             panel.classList.toggle('collapsed');
-            if (panel.classList.contains('collapsed')) {
-                btn.innerHTML = '👁️ Afficher Gammes';
-                rX.style.display = 'none';
-            } else {
-                btn.innerHTML = '👁️ Cacher Gammes';
-                rX.style.display = 'block';
-            }
+            if (panel.classList.contains('collapsed')) { btn.innerHTML = '👁️ Afficher Gammes'; rX.style.display = 'none'; } 
+            else { btn.innerHTML = '👁️ Cacher Gammes'; rX.style.display = 'block'; }
         }
 
-        function addBadge(el, index, color) {
-            const badge = document.createElement('span'); badge.className = 'step-badge'; badge.innerText = index;
-            badge.style.backgroundColor = color; el.appendChild(badge);
-        }
+        function addBadge(el, index, color) { const badge = document.createElement('span'); badge.className = 'step-badge'; badge.innerText = index; badge.style.backgroundColor = color; el.appendChild(badge); }
         function getCenter(el) { return { x: parseInt(el.style.left) + el.offsetWidth/2, y: parseInt(el.style.top) + el.offsetHeight/2 }; }
 
     </script>
