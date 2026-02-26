@@ -89,7 +89,7 @@
         /* --- REDIMENSIONNEMENT --- */
         .resizer-x { width: 6px; background: #e0e0e0; cursor: col-resize; z-index: 30; transition: background 0.2s; flex-shrink: 0; }
         .resizer-x:hover, .resizer-x.resizing { background: #3498db; }
-        .resizer-y { height: 6px; background: #e0e0e0; cursor: row-resize; z-index: 30; transition: background 0.2s; flex-shrink: 0; display: none; }
+        .resizer-y { width: 100%; height: 6px; background: #e0e0e0; cursor: ns-resize; z-index: 101; transition: background 0.2s; flex-shrink: 0; display: none; }
         .resizer-y:hover, .resizer-y.resizing { background: #3498db; }
 
         /* --- COLONNE DROITE (GAMMES OPÉRATOIRES) --- */
@@ -100,9 +100,9 @@
         .config-sidebar.collapsed { display: none; }
         .config-list-col { display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; gap: 15px; flex: 1; padding: 10px; background: #fafafa; }
 
-        /* --- PANNEAU DU BAS (ANALYSE CHARGE) --- */
-        .stats-bottom-panel { height: 280px; background: white; border-top: 1px solid #ddd; display: none; flex-direction: column; box-shadow: 0 -2px 5px rgba(0,0,0,0.05); z-index: 20; flex-shrink: 0; width: 100%; }
-        .stats-content-row { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 15px; flex: 1; padding: 10px; background: #fafafa; align-items: flex-start; }
+        /* --- PANNEAU DU BAS (ANALYSE CHARGE EN OVERLAY) --- */
+        .stats-bottom-panel { position: absolute; bottom: 0; left: 0; height: 280px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-top: 1px solid #ddd; display: none; flex-direction: column; box-shadow: 0 -10px 25px rgba(0,0,0,0.15); z-index: 100; flex-shrink: 0; width: 100%; }
+        .stats-content-row { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 15px; flex: 1; padding: 10px; background: transparent; align-items: flex-start; }
 
         /* --- COLONNE CENTRALE (ATELIER) --- */
         .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; position: relative; background: #f4f7f6; min-width: 400px; }
@@ -432,12 +432,12 @@
         </div>
     </div>
 
-    <!-- RESIZER VERTICAL -->
-    <div class="resizer-y" id="resizerY"></div>
-
-    <!-- PANNEAU BAS: ANALYSE CHARGE -->
+    <!-- PANNEAU BAS: ANALYSE CHARGE (Overlay) -->
     <div class="stats-bottom-panel" id="statsPanel">
-        <div class="panel-header">
+        <!-- RESIZER VERTICAL DEPLACÉ ICI -->
+        <div class="resizer-y" id="resizerY"></div>
+        
+        <div class="panel-header" style="background: transparent;">
             <span>📊 Analyse Charge & Coûts</span>
             <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px; border:none; background:transparent;">×</button>
         </div>
@@ -496,6 +496,7 @@
             const origLeftDisplay = leftPanel.style.display;
             const origRightDisplay = rightPanel.style.display;
             const origStatsHeight = statsPanelEl.style.height;
+            const origStatsPosition = statsPanelEl.style.position;
 
             // Cacher les éléments UI non nécessaires pour le rapport PDF/Image
             leftPanel.style.display = 'none';
@@ -506,6 +507,7 @@
             
             // Agrandir le panneau des stats pour tout capturer (si ouvert)
             if (statsPanelEl.style.display !== 'none') {
+                statsPanelEl.style.position = 'static'; // Remettre dans le flux classique temporairement pour que html2canvas prenne bien toute la hauteur
                 statsPanelEl.style.height = 'auto';
                 statsPanelEl.style.overflow = 'visible';
                 statsContentEl.style.overflow = 'visible';
@@ -539,6 +541,7 @@
             resizerYEl.style.display = 'block';
             
             if (statsPanelEl.style.display !== 'none') {
+                statsPanelEl.style.position = origStatsPosition;
                 statsPanelEl.style.height = origStatsHeight;
                 statsPanelEl.style.overflow = '';
                 statsContentEl.style.overflow = '';
