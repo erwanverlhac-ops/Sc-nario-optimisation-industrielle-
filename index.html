@@ -824,6 +824,7 @@
                 const targetRacks = data.targetRacks || 1;
                 const hourlyRate = data.hourlyRate || 15;
                 let opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
+                let opProducedCakes = 0;
 
                 const totalCakesGoal = targetRacks * 17 * (data.cakesPerGrid || 0);
                 const totalCartons = (data.cakesPerCarton > 0) ? (totalCakesGoal / data.cakesPerCarton) : 0;
@@ -838,6 +839,7 @@
                     else taskCycles = task.freqValue;
 
                     opTotalCakes += cpa * taskCycles;
+                    if (task.countInTotal !== false) opProducedCakes += cpa * taskCycles;
                     const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
 
                     if(task.steps.length < 2) {
@@ -860,7 +862,7 @@
                 const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime; 
                 grandTotalTime += totalWorkTimeSeconds; 
                 grandTotalCost += (totalWorkTimeSeconds / 3600) * hourlyRate; 
-                grandTotalCakes += opTotalCakes; 
+                grandTotalCakes += opProducedCakes; 
                 grandTotalWalkTime += opTotalWalkTime;
             }
             return { time: grandTotalTime, cost: grandTotalCost, cakes: grandTotalCakes, walkTime: grandTotalWalkTime };
@@ -1025,7 +1027,7 @@
         function updateOperatorCakesCarton(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerCarton = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
 
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
-            operatorData[opId].tasks.push({ id: 'task-' + Date.now() + Math.random().toString(36).substr(2,5), name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] });
+            operatorData[opId].tasks.push({ id: 'task-' + Date.now() + Math.random().toString(36).substr(2,5), name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, countInTotal: true, freqValue: 1, freqType: defaultType, steps: [] });
             rebuildConfigUI(); saveCurrentScenario();
         }
 
@@ -1060,7 +1062,12 @@
                                     <input type="number" id="time-${task.id}" value="${task.time}" min="0" class="time-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'time', this.value)">
                                     <select onchange="updateTaskMeta('${opId}', '${task.id}', 'timeUnit', this.value)" style="padding:2px; height:26px;"><option value="s" ${selUnitS}>s</option><option value="min" ${selUnitMin}>m</option></select>
                                 </div>
-                                <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux emballés">🎂
+                                <div style="display:flex; align-items:center; gap:2px;">
+                                    <input type="number" id="cakes-${task.id}" value="${task.cakesPerAction || 0}" min="0" class="cakes-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'cakesPerAction', this.value)" title="Gâteaux manipulés">🎂
+                                    <label title="Ajouter au Bilan Global" style="font-size:9px; display:flex; align-items:center; cursor:pointer; background:${task.countInTotal !== false ? '#e8f5e9' : '#fdedec'}; padding:2px 4px; border-radius:3px; border:1px solid ${task.countInTotal !== false ? '#c8e6c9' : '#ffcdd2'}; color: ${task.countInTotal !== false ? '#27ae60' : '#e74c3c'};">
+                                        <input type="checkbox" ${task.countInTotal !== false ? 'checked' : ''} onchange="updateTaskMeta('${opId}', '${task.id}', 'countInTotal', this.checked)" style="margin:0 2px 0 0;"> +Total
+                                    </label>
+                                </div>
                             </div>
                             <div class="action-inputs" style="margin-top:4px; align-items:center;">
                                 <span style="font-size:12px; color:#555;">Répétition <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</span>
@@ -1148,6 +1155,7 @@
                 if(opEl) { let text = ""; for (let node of opEl.childNodes) if (node.nodeType === 3) text += node.textContent; opName = text.trim() || opName; }
                 const targetRacks = data.targetRacks || 1; const hourlyRate = data.hourlyRate || 15;
                 let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
+                let opProducedCakes = 0;
                 const card = document.createElement('div'); card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
                 let tasksHtml = '';
 
@@ -1163,6 +1171,7 @@
                     else taskCycles = task.freqValue;
 
                     const taskCakes = cpa * taskCycles; opTotalCakes += taskCakes;
+                    if (task.countInTotal !== false) opProducedCakes += taskCakes;
                     const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
 
                     if(task.steps.length < 2) {
@@ -1195,7 +1204,7 @@
                 const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime; const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
                 const totalWalkTimeSeconds = opTotalWalkTime;
                 
-                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += opTotalCakes; grandTotalWalkTime += totalWalkTimeSeconds;
+                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += opProducedCakes; grandTotalWalkTime += totalWalkTimeSeconds;
 
                 let loadPercent = 0; let loadColor = "#2ecc71";
                 if (globalTimeSeconds > 0) { loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100; if (loadPercent > 100) loadColor = "#e74c3c"; else if (loadPercent > 85) loadColor = "#f39c12"; }
@@ -1210,7 +1219,7 @@
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Temps de marche:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#8e44ad;"><span>Vitesse estimée:</span> <span>${Math.round(operatorCadence)} u/h</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Emballés:</span> <span>${Math.round(opTotalCakes)}</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Manipulés:</span> <span>${Math.round(opTotalCakes)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO:</span> <span>${laborCost.toFixed(2)} €</span></div>
                         <div style="margin-top:10px;"><div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:#555;"><span>Taux de charge</span><span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div></div></div>
                     </div>
