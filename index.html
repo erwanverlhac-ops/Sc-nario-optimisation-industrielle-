@@ -275,6 +275,7 @@
             <div style="margin-bottom: 10px; font-size: 12px;">
                 <p style="margin: 5px 0;"><b>🎯 Objectif Prod :</b> Définit le nombre total d'échelles à produire. Impacte les actions configurées en "/ Grille" ou "/ Échelle".</p>
                 <p style="margin: 5px 0;"><b>🧇 Gâteaux / Grille :</b> Permet de déduire les actions. <i>Ex: Si 1 grille = 30 gâteaux et 1 action = 10 gâteaux, l'action est répétée 3 fois/grille.</i></p>
+                <p style="margin: 5px 0;"><b>🗃️ Gâteaux / Carton :</b> Déduit le nombre de cartons en fonction de l'objectif total (Échelles x 17 x Gâteaux/Grille).</p>
                 <p style="margin: 5px 0;"><b>📦 Gâteaux / Palette :</b> Permet de déduire les actions. <i>Ex: Si 1 palette = 1000 gâteaux et 1 action = 10, l'action est répétée 100 fois/palette.</i></p>
             </div>
             <p style="margin-bottom: 5px;"><b>🔄 Répétition :</b> Multiplie automatiquement vos données selon la logique :</p>
@@ -282,6 +283,7 @@
                 <li style="margin-bottom: 5px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
                 <li style="margin-bottom: 5px;"><b>/ Grille :</b> Utilisera "Gâteaux/Grille", multiplié par 17 (grilles/échelle) et par l'Objectif d'Échelles.</li>
                 <li style="margin-bottom: 5px;"><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
+                <li style="margin-bottom: 5px;"><b>/ Carton :</b> Calculé via l'objectif de production total divisé par la capacité du carton.</li>
                 <li><b>/ Palette :</b> Utilisera "Gâteaux/Palette" divisé par l'objectif par action.</li>
             </ul>
             <button onclick="closeModal('calcInfoModalOverlay')" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
@@ -820,11 +822,15 @@
                 const hourlyRate = data.hourlyRate || 15;
                 let opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
 
+                const totalCakesGoal = targetRacks * 17 * (data.cakesPerGrid || 0);
+                const totalCartons = (data.cakesPerCarton > 0) ? (totalCakesGoal / data.cakesPerCarton) : 0;
+
                 data.tasks.forEach(task => {
                     let taskCycles = 1;
                     const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
                     if (task.freqType === 'per_grid') taskCycles = ((data.cakesPerGrid || 0) > 0 && cpa > 0) ? ((data.cakesPerGrid / cpa) * 17 * targetRacks * task.freqValue) : (task.freqValue * 17 * targetRacks);
                     else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
+                    else if (task.freqType === 'per_carton') taskCycles = ((data.cakesPerCarton || 0) > 0 && cpa > 0) ? ((data.cakesPerCarton / cpa) * totalCartons * task.freqValue) : (totalCartons * task.freqValue);
                     else if (task.freqType === 'per_palette') taskCycles = ((data.cakesPerPalette || 0) > 0 && cpa > 0) ? ((data.cakesPerPalette / cpa) * task.freqValue) : task.freqValue;
                     else taskCycles = task.freqValue;
 
@@ -1008,11 +1014,12 @@
         }
 
         // --- GESTION GAMMES OPÉRATEURS ---
-        function addConfigCard(opId, opName, color) { operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, cakesPerGrid: 30, cakesPerPalette: 1000, tasks: [] }; rebuildConfigUI(); addTask(opId, "Remplir grille", 10, 'per_grid'); }
+        function addConfigCard(opId, opName, color) { operatorData[opId] = { name: opName, color: color, targetRacks: 1, hourlyRate: 15.0, cakesPerGrid: 30, cakesPerCarton: 40, cakesPerPalette: 1000, tasks: [] }; rebuildConfigUI(); addTask(opId, "Remplir grille", 10, 'per_grid'); }
         function updateTargetRacks(opId, val) { if(operatorData[opId]) { operatorData[opId].targetRacks = parseInt(val) || 1; saveCurrentScenario(); calculateAndDraw(); } }
         function updateHourlyRate(opId, val) { if(operatorData[opId]) { operatorData[opId].hourlyRate = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
         function updateOperatorCakes(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerPalette = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
         function updateOperatorCakesGrid(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerGrid = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
+        function updateOperatorCakesCarton(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerCarton = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
 
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
             operatorData[opId].tasks.push({ id: 'task-' + Date.now() + Math.random().toString(36).substr(2,5), name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, freqValue: 1, freqType: defaultType, steps: [] });
@@ -1039,6 +1046,7 @@
                 data.tasks.forEach(task => {
                     const selTotal = task.freqType === 'total' ? 'selected' : ''; const selGrid = task.freqType === 'per_grid' ? 'selected' : '';
                     const selRack = task.freqType === 'per_rack' ? 'selected' : ''; const selPalette = task.freqType === 'per_palette' ? 'selected' : '';
+                    const selCarton = task.freqType === 'per_carton' ? 'selected' : '';
                     const selUnitS = (!task.timeUnit || task.timeUnit === 's') ? 'selected' : ''; const selUnitMin = (task.timeUnit === 'min') ? 'selected' : '';
                     
                     tasksHTML += `
@@ -1056,7 +1064,7 @@
                                 <input type="number" value="${task.freqValue}" min="1" class="cycles-input" onchange="updateTaskMeta('${opId}', '${task.id}', 'freqValue', this.value)">
                                 <select onchange="updateTaskMeta('${opId}', '${task.id}', 'freqType', this.value)">
                                     <option value="total" ${selTotal}>/ Jour</option><option value="per_grid" ${selGrid}>/ Grille</option>
-                                    <option value="per_rack" ${selRack}>/ Échelle</option><option value="per_palette" ${selPalette}>/ Palette</option>
+                                    <option value="per_rack" ${selRack}>/ Échelle</option><option value="per_carton" ${selCarton}>/ Carton</option><option value="per_palette" ${selPalette}>/ Palette</option>
                                 </select>
                             </div>
                             <div class="action-controls">
@@ -1076,6 +1084,10 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                             <strong title="Nombre de gâteaux par grille">🧇 Gâteaux/Grille <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</strong>
                             <input type="number" value="${data.cakesPerGrid || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakesGrid('${opId}', this.value)">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong title="Gâteaux nécessaires pour remplir un carton">🗃️ Gâteaux/Carton <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</strong>
+                            <input type="number" value="${data.cakesPerCarton || 0}" min="0" style="width:45px; padding:3px; text-align:center; border:1px solid #ccc; border-radius:3px;" onchange="updateOperatorCakesCarton('${opId}', this.value)">
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                             <strong title="Gâteaux nécessaires pour compléter une palette">📦 Gâteaux/Palette <i class="fas fa-info-circle info-dot" onclick="openModal('calcInfoModalOverlay')"></i> :</strong>
@@ -1136,10 +1148,14 @@
                 const card = document.createElement('div'); card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
                 let tasksHtml = '';
 
+                const totalCakesGoal = targetRacks * 17 * (data.cakesPerGrid || 0);
+                const totalCartons = (data.cakesPerCarton > 0) ? (totalCakesGoal / data.cakesPerCarton) : 0;
+
                 data.tasks.forEach(task => {
                     hasAnyData = true; let taskCycles = 1; const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
                     if (task.freqType === 'per_grid') taskCycles = ((data.cakesPerGrid || 0) > 0 && cpa > 0) ? ((data.cakesPerGrid / cpa) * 17 * targetRacks * task.freqValue) : (task.freqValue * 17 * targetRacks);
                     else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
+                    else if (task.freqType === 'per_carton') taskCycles = ((data.cakesPerCarton || 0) > 0 && cpa > 0) ? ((data.cakesPerCarton / cpa) * totalCartons * task.freqValue) : (totalCartons * task.freqValue);
                     else if (task.freqType === 'per_palette') taskCycles = ((data.cakesPerPalette || 0) > 0 && cpa > 0) ? ((data.cakesPerPalette / cpa) * task.freqValue) : task.freqValue;
                     else taskCycles = task.freqValue;
 
