@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Atelier FABIE - V2</title>
+    <title>Simulateur Atelier FABIE - V3</title>
     <!-- FontAwesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- html2canvas pour l'export photo -->
@@ -24,7 +24,7 @@
             --room-w: 19.9;  
             --room-h: 11.74; 
             --panel-width: 320px;
-            --config-width: 340px; 
+            --config-width: 360px; /* Légèrement élargi pour la nouvelle interface */
         }
 
         body {
@@ -126,6 +126,12 @@
         .btn-add-pillar { background: var(--pillar-bg); color: white; }
         .btn-clear { background: #95a5a6; color: white; }
         .btn-save { background: #27ae60; color: white; }
+        
+        /* Bouton Simulation */
+        .btn-sim { background: #f39c12; color: white; font-size: 13px; padding: 8px 15px; border-radius: 20px; box-shadow: 0 2px 5px rgba(243, 156, 18, 0.4); }
+        .btn-sim.playing { background: #e74c3c; box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); animation: pulse-sim 1.5s infinite; }
+        
+        @keyframes pulse-sim { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
         .panel-header { padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: var(--text); font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .panel-body { flex: 1; overflow-y: auto; padding: 15px; }
@@ -209,6 +215,20 @@
         path { fill: none; stroke-width: 3; stroke-dasharray: 5; animation: dash 30s linear infinite; opacity: 0.8; }
         @keyframes dash { to { stroke-dashoffset: -1000; } }
         
+        /* --- ELEMENTS DE SIMULATION --- */
+        #sim-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+        .sim-op-dot { 
+            position: absolute; width: 22px; height: 22px; border-radius: 50%; 
+            transform: translate(-50%, -50%); /* Centrage sur les coordonnées x,y */
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4); border: 2px solid white; z-index: 500;
+            transition: opacity 0.5s;
+        }
+        .sim-op-dot.working {
+            animation: sim-work-pulse 0.8s infinite alternate;
+        }
+        @keyframes sim-work-pulse { 0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); } 100% { transform: translate(-50%, -50%) scale(1.3); filter: brightness(1.3); } }
+
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; }
         .sc-btn { width: 100%; padding: 8px; margin-bottom: 5px; border-radius: 4px; border:none; text-align: left; display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; transition: opacity 0.2s;}
@@ -273,18 +293,15 @@
                 <i class="fas fa-info-circle"></i> Guide des paramètres
             </h3>
             <div style="margin-bottom: 10px; font-size: 12px;">
-                <p style="margin: 5px 0;"><b>🎯 Objectif Prod :</b> Définit le nombre total d'échelles à produire. Impacte les actions configurées en "/ Grille" ou "/ Échelle".</p>
-                <p style="margin: 5px 0;"><b>🧇 Gâteaux / Grille :</b> Permet de déduire les actions. <i>Ex: Si 1 grille = 30 gâteaux et 1 action = 10 gâteaux, l'action est répétée 3 fois/grille.</i></p>
-                <p style="margin: 5px 0;"><b>🗃️ Gâteaux / Carton :</b> Déduit le nombre de cartons en fonction de l'objectif total (Échelles x 17 x Gâteaux/Grille).</p>
-                <p style="margin: 5px 0;"><b>📦 Gâteaux / Palette :</b> Permet de déduire les actions. <i>Ex: Si 1 palette = 1000 gâteaux et 1 action = 10, l'action est répétée 100 fois/palette.</i></p>
+                <p style="margin: 5px 0;"><b>🎯 Objectif Prod :</b> Définit le nombre total d'échelles à produire.</p>
+                <p style="margin: 5px 0;"><b>🧇 Gâteaux / Grille :</b> Déduit les actions. <i>Ex: Si 1 grille = 30 gâteaux et 1 action = 10 gâteaux, l'action est répétée 3 fois/grille.</i></p>
+                <p style="margin: 5px 0;"><b>🗃️ Gâteaux / Carton :</b> Déduit le nombre de cartons total en fonction de la production cible.</p>
+                <p style="margin: 5px 0;"><b>📦 Gâteaux / Palette :</b> Déduit les actions par palette.</p>
             </div>
-            <p style="margin-bottom: 5px;"><b>🔄 Répétition :</b> Multiplie automatiquement vos données selon la logique :</p>
+            <p style="margin-bottom: 5px;"><b>🔄 Répétition & Enchaînement :</b></p>
             <ul style="padding-left: 20px; background: #f8f9fa; padding: 10px 15px 10px 35px; border-radius: 5px; border-left: 3px solid #3498db; margin-top: 5px; margin-bottom: 0;">
-                <li style="margin-bottom: 5px;"><b>/ Jour :</b> L'action est comptée exactement le nombre de fois saisi.</li>
-                <li style="margin-bottom: 5px;"><b>/ Grille :</b> Utilisera "Gâteaux/Grille", multiplié par 17 (grilles/échelle) et par l'Objectif d'Échelles.</li>
-                <li style="margin-bottom: 5px;"><b>/ Échelle :</b> La valeur saisie est multipliée par l'<b>Objectif d'Échelles</b>.</li>
-                <li style="margin-bottom: 5px;"><b>/ Carton :</b> Calculé via l'objectif de production total divisé par la capacité du carton.</li>
-                <li><b>/ Palette :</b> Utilisera "Gâteaux/Palette" divisé par l'objectif par action.</li>
+                <li style="margin-bottom: 5px;"><b>Répétition :</b> Nombre total de fois que la tâche doit être effectuée (selon l'unité choisie : Jour, Grille, Échelle...).</li>
+                <li><b>Lot (Enchaînement) :</b> Nombre de fois que l'opérateur <b>répète l'action à la suite</b> avant de passer à la tâche suivante. (ex: Lot = 3 -> L'opérateur fait l'action 3 fois de suite avant d'aller faire la tâche 2).</li>
             </ul>
             <button onclick="closeModal('calcInfoModalOverlay')" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--box-bg); color: white; justify-content: center;">Compris</button>
         </div>
@@ -388,6 +405,21 @@
             <div class="top-bar">
                 <button onclick="toggleScenarios()" style="background: #34495e; color: white;" title="Raccourcis: Ctrl+Z (Annuler) / Ctrl+Y (Rétablir)">📂 Gérer Scénarios</button>
 
+                <!-- BOUTONS DE SIMULATION -->
+                <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
+                <button id="btnPlaySim" onclick="toggleSimulation()" class="btn-sim"><i class="fas fa-play"></i> Lancer la Simulation</button>
+                <div id="simControls" style="display:none; align-items:center; gap:8px; background:#fdf2e9; padding:2px 10px; border-radius:15px; border:1px solid #f39c12;">
+                    <span style="font-size:11px; font-weight:bold; color:#d35400;">Vitesse:</span>
+                    <select id="simSpeedSelect" style="font-size:11px; border-radius:4px; border:1px solid #d35400;">
+                        <option value="1">x1 (Temps Réel)</option>
+                        <option value="10">x10</option>
+                        <option value="50" selected>x50 (Rapide)</option>
+                        <option value="500">x500 (Instantané)</option>
+                    </select>
+                    <div style="width: 1px; height: 15px; background: #d35400; margin: 0 5px;"></div>
+                    <span id="simClock" style="font-family:monospace; font-weight:bold; color:#2c3e50; font-size:13px; min-width:65px;">00:00:00</span>
+                </div>
+
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
                 <div id="trashBin" class="trash-zone">🗑️</div>
                 <div style="width: 1px; height: 30px; background: #ddd; margin: 0 5px;"></div>
@@ -417,6 +449,8 @@
 
             <div class="workshop-container" id="workshop">
                 <svg id="connections"></svg>
+                <!-- LAYER POUR LA SIMULATION (Pastilles Opérateurs) -->
+                <div id="sim-layer"></div>
             </div>
         </div>
 
@@ -434,9 +468,7 @@
 
     <!-- PANNEAU BAS: ANALYSE CHARGE (Overlay) -->
     <div class="stats-bottom-panel" id="statsPanel">
-        <!-- RESIZER VERTICAL DEPLACÉ ICI -->
         <div class="resizer-y" id="resizerY"></div>
-        
         <div class="panel-header" style="background: transparent;">
             <span>📊 Analyse Charge & Coûts</span>
             <button class="btn-sm" onclick="closeStats()" style="color:#777; font-size: 14px; border:none; background:transparent;">×</button>
@@ -457,7 +489,7 @@
         let isResizingX = false, isResizingY = false;
 
         resizerX.addEventListener('mousedown', () => { isResizingX = true; resizerX.classList.add('resizing'); document.body.style.cursor = 'col-resize'; document.getElementById('mainWrapper').style.pointerEvents = 'none'; });
-        resizerY.addEventListener('mousedown', () => { isResizingY = true; resizerY.classList.add('resizing'); document.body.style.cursor = 'row-resize'; document.getElementById('mainWrapper').style.pointerEvents = 'none'; });
+        resizerY.addEventListener('mousedown', () => { isResizingY = true; resizerY.classList.add('resizing'); document.body.style.cursor = 'ns-resize'; document.getElementById('mainWrapper').style.pointerEvents = 'none'; });
 
         document.addEventListener('mousemove', (e) => {
             if (isResizingX) {
@@ -484,7 +516,6 @@
             const origText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
 
-            // Sauvegarder les styles originaux
             const leftPanel = document.getElementById('scenariosPanel');
             const rightPanel = document.getElementById('configPanel');
             const topBar = document.querySelector('.top-bar');
@@ -498,28 +529,25 @@
             const origStatsHeight = statsPanelEl.style.height;
             const origStatsPosition = statsPanelEl.style.position;
 
-            // Cacher les éléments UI non nécessaires pour le rapport PDF/Image
             leftPanel.style.display = 'none';
             rightPanel.style.display = 'none';
             topBar.style.display = 'none';
             resizerXEl.style.display = 'none';
             resizerYEl.style.display = 'none';
             
-            // Agrandir le panneau des stats pour tout capturer (si ouvert)
             if (statsPanelEl.style.display !== 'none') {
-                statsPanelEl.style.position = 'static'; // Remettre dans le flux classique temporairement pour que html2canvas prenne bien toute la hauteur
+                statsPanelEl.style.position = 'static'; 
                 statsPanelEl.style.height = 'auto';
                 statsPanelEl.style.overflow = 'visible';
                 statsContentEl.style.overflow = 'visible';
-                statsContentEl.style.flexWrap = 'wrap'; // Permet d'afficher toutes les cartes stats
+                statsContentEl.style.flexWrap = 'wrap'; 
             }
 
-            // Laisser le temps au navigateur de recalculer le layout
             await new Promise(r => setTimeout(r, 200));
 
             try {
                 const canvas = await html2canvas(document.body, {
-                    scale: 2, // Meilleure résolution pour vos rapports
+                    scale: 2, 
                     useCORS: true,
                     backgroundColor: '#f4f7f6'
                 });
@@ -533,7 +561,6 @@
                 alert("Erreur lors de l'exportation du rapport photo.");
             }
 
-            // Restaurer l'UI comme avant
             leftPanel.style.display = origLeftDisplay;
             rightPanel.style.display = origRightDisplay;
             topBar.style.display = 'flex';
@@ -580,7 +607,6 @@
         let scenarios = {};
         let currentScenarioId = null;
 
-        // Historique local pour Ctrl+Z
         let sessionHistory = [];
         let historyIndex = -1;
         let isUndoing = false;
@@ -588,9 +614,9 @@
         function recordHistoryStep() {
             if(isUndoing || !currentScenarioId) return;
             const stateStr = JSON.stringify(scenarios[currentScenarioId]);
-            if(historyIndex >= 0 && sessionHistory[historyIndex] === stateStr) return; // Ne pas doubler
+            if(historyIndex >= 0 && sessionHistory[historyIndex] === stateStr) return; 
             
-            sessionHistory = sessionHistory.slice(0, historyIndex + 1); // Coupe le futur si on a fait "Undo" puis une action
+            sessionHistory = sessionHistory.slice(0, historyIndex + 1); 
             sessionHistory.push(stateStr);
             historyIndex++;
         }
@@ -616,7 +642,7 @@
             isUndoing = true;
             scenarios[currentScenarioId] = JSON.parse(stateStr);
             saveScenariosToStorage();
-            loadScenario(currentScenarioId, false); // Reload without adding to history
+            loadScenario(currentScenarioId, false);
             isUndoing = false;
         }
 
@@ -636,7 +662,7 @@
         function saveScenariosToStorage() { localStorage.setItem('fabie_scenarios_v5', JSON.stringify(scenarios)); }
 
         function initInitialScenario() {
-            workshop.innerHTML = '<svg id="connections"></svg>';
+            workshop.innerHTML = '<svg id="connections"></svg><div id="sim-layer"></div>';
             createObj("m1", "Entrée", 45, 30, 30, 250);
             createObj("m3", "Sortie", 45, 30, 500, 30);
             document.documentElement.style.setProperty('--room-w', 19.9);
@@ -683,7 +709,7 @@
             document.documentElement.style.setProperty('--room-w', sc.roomSize ? sc.roomSize.w : 19.9);
             document.documentElement.style.setProperty('--room-h', sc.roomSize ? sc.roomSize.h : 11.74);
 
-            workshop.innerHTML = '<svg id="connections"></svg>';
+            workshop.innerHTML = '<svg id="connections"></svg><div id="sim-layer"></div>';
             sc.machines.forEach(m => {
                 const div = document.createElement('div'); div.className = m.className; div.id = m.id;
                 div.style.left = m.left; div.style.top = m.top; div.style.width = m.width; div.style.height = m.height;
@@ -796,6 +822,89 @@
         function updateGlobalTime() { saveCurrentScenario(); calculateAndDraw(); }
         function toggleScenarios() { document.getElementById('scenariosPanel').style.display = document.getElementById('scenariosPanel').style.display === 'flex' ? 'none' : 'flex'; }
 
+        // --- GÉnÉRATEUR DE TIMELINE R&D (Nouveau Moteur de Calcul) ---
+        function generateTimeline(data, machineMap) {
+            let schedule = [];
+            let currentPos = machineMap[data.id] || {x: 50, y: 50}; 
+
+            let allActionBatches = [];
+            let taskIndex = 0;
+            const targetRacks = data.targetRacks || 1;
+            const totalCakesGoal = targetRacks * 17 * (data.cakesPerGrid || 0);
+            const totalCartons = (data.cakesPerCarton > 0) ? (totalCakesGoal / data.cakesPerCarton) : 0;
+
+            // 1. Découpage en lots
+            data.tasks.forEach(task => {
+                let taskCycles = 1;
+                const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
+                if (task.freqType === 'per_grid') taskCycles = ((data.cakesPerGrid || 0) > 0 && cpa > 0) ? ((data.cakesPerGrid / cpa) * 17 * targetRacks * task.freqValue) : (task.freqValue * 17 * targetRacks);
+                else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
+                else if (task.freqType === 'per_carton') taskCycles = ((data.cakesPerCarton || 0) > 0 && cpa > 0) ? ((data.cakesPerCarton / cpa) * totalCartons * task.freqValue) : (totalCartons * task.freqValue);
+                else if (task.freqType === 'per_palette') taskCycles = ((data.cakesPerPalette || 0) > 0 && cpa > 0) ? ((data.cakesPerPalette / cpa) * task.freqValue) : task.freqValue;
+                else taskCycles = task.freqValue;
+
+                taskCycles = Math.round(taskCycles);
+                let batchSize = parseInt(task.batchSize) || 1;
+                if (batchSize < 1) batchSize = 1;
+                
+                let numBatches = Math.ceil(taskCycles / batchSize);
+
+                for(let b = 1; b <= numBatches; b++) {
+                    let cyclesInThisBatch = (b === numBatches && taskCycles % batchSize !== 0) ? (taskCycles % batchSize) : batchSize;
+                    allActionBatches.push({ task: task, cycles: cyclesInThisBatch, progress: b / numBatches, uiIndex: taskIndex });
+                }
+                taskIndex++;
+            });
+
+            // 2. Ordonnancement pour entrelacer les lots naturellement
+            allActionBatches.sort((a, b) => {
+                if (Math.abs(a.progress - b.progress) > 0.00001) return a.progress - b.progress;
+                return a.uiIndex - b.uiIndex;
+            });
+
+            let totalCakes = 0;
+            let producedCakes = 0;
+            let fixedTime = 0;
+            let walkTime = 0;
+            let walkDistPixels = 0;
+
+            // 3. Construction du planning avec prise en compte des allers-retours
+            allActionBatches.forEach(batch => {
+                const task = batch.task;
+                const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
+                const cpa = task.cakesPerAction || 0;
+
+                for(let c = 0; c < batch.cycles; c++) {
+                    totalCakes += cpa;
+                    if(task.countInTotal !== false) producedCakes += cpa;
+
+                    if (task.steps && task.steps.length > 0) {
+                        for (let i = 0; i < task.steps.length; i++) {
+                            const targetM = machineMap[task.steps[i]];
+                            if (!targetM) continue;
+                            const distPx = Math.sqrt(Math.pow(targetM.x - currentPos.x, 2) + Math.pow(targetM.y - currentPos.y, 2));
+                            const distM = distPx / PIXELS_PER_METER;
+                            const wTime = distM / WALKING_SPEED_M_S;
+
+                            if (wTime > 0) {
+                                schedule.push({ type: 'move', startX: currentPos.x, startY: currentPos.y, targetX: targetM.x, targetY: targetM.y, duration: wTime, timeSpent: 0 });
+                                walkTime += wTime;
+                                walkDistPixels += distPx;
+                            }
+                            currentPos = { x: targetM.x, y: targetM.y };
+                        }
+                    }
+
+                    if (taskTimeSec > 0) {
+                        schedule.push({ type: 'work', duration: taskTimeSec, timeSpent: 0, x: currentPos.x, y: currentPos.y, taskId: task.id });
+                        fixedTime += taskTimeSec;
+                    }
+                }
+            });
+
+            return { schedule, totalCakes, producedCakes, fixedTime, walkTime, walkDistPixels };
+        }
+
         // --- COMPARATEUR DE SCÉNARIOS ---
         function openCompareModal() {
             saveCurrentScenario(); 
@@ -821,49 +930,15 @@
             });
 
             for (const [opId, data] of Object.entries(sc.opData)) {
-                const targetRacks = data.targetRacks || 1;
+                data.id = opId;
+                const tl = generateTimeline(data, machineMap);
                 const hourlyRate = data.hourlyRate || 15;
-                let opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
-                let opProducedCakes = 0;
+                const totalWorkTimeSeconds = tl.walkTime + tl.fixedTime;
 
-                const totalCakesGoal = targetRacks * 17 * (data.cakesPerGrid || 0);
-                const totalCartons = (data.cakesPerCarton > 0) ? (totalCakesGoal / data.cakesPerCarton) : 0;
-
-                data.tasks.forEach(task => {
-                    let taskCycles = 1;
-                    const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
-                    if (task.freqType === 'per_grid') taskCycles = ((data.cakesPerGrid || 0) > 0 && cpa > 0) ? ((data.cakesPerGrid / cpa) * 17 * targetRacks * task.freqValue) : (task.freqValue * 17 * targetRacks);
-                    else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
-                    else if (task.freqType === 'per_carton') taskCycles = ((data.cakesPerCarton || 0) > 0 && cpa > 0) ? ((data.cakesPerCarton / cpa) * totalCartons * task.freqValue) : (totalCartons * task.freqValue);
-                    else if (task.freqType === 'per_palette') taskCycles = ((data.cakesPerPalette || 0) > 0 && cpa > 0) ? ((data.cakesPerPalette / cpa) * task.freqValue) : task.freqValue;
-                    else taskCycles = task.freqValue;
-
-                    opTotalCakes += cpa * taskCycles;
-                    if (task.countInTotal !== false) opProducedCakes += cpa * taskCycles;
-                    const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
-
-                    if(task.steps.length < 2) {
-                        opTotalFixedTime += taskTimeSec * taskCycles;
-                        return;
-                    }
-                    
-                    let taskDistPixels = 0; let prevPos = null;
-                    for (let i = 0; i < task.steps.length; i++) {
-                        const m = machineMap[task.steps[i]];
-                        if(!m) continue;
-                        if (prevPos) taskDistPixels += Math.sqrt(Math.pow(m.x - prevPos.x, 2) + Math.pow(m.y - prevPos.y, 2));
-                        prevPos = m;
-                    }
-                    const walkT = (taskDistPixels / PIXELS_PER_METER) / WALKING_SPEED_M_S;
-                    opTotalWalkTime += (walkT * taskCycles); 
-                    opTotalFixedTime += (taskTimeSec * taskCycles);
-                });
-
-                const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime; 
                 grandTotalTime += totalWorkTimeSeconds; 
                 grandTotalCost += (totalWorkTimeSeconds / 3600) * hourlyRate; 
-                grandTotalCakes += opProducedCakes; 
-                grandTotalWalkTime += opTotalWalkTime;
+                grandTotalCakes += tl.producedCakes; 
+                grandTotalWalkTime += tl.walkTime;
             }
             return { time: grandTotalTime, cost: grandTotalCost, cakes: grandTotalCakes, walkTime: grandTotalWalkTime };
         }
@@ -1027,14 +1102,15 @@
         function updateOperatorCakesCarton(opId, val) { if(operatorData[opId]) { operatorData[opId].cakesPerCarton = parseFloat(val) || 0; saveCurrentScenario(); calculateAndDraw(); } }
 
         function addTask(opId, defaultName = "Tâche", defaultTime = 10, defaultType = 'total') {
-            operatorData[opId].tasks.push({ id: 'task-' + Date.now() + Math.random().toString(36).substr(2,5), name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, countInTotal: true, freqValue: 1, freqType: defaultType, steps: [] });
+            // Ajout du paramètre batchSize par défaut
+            operatorData[opId].tasks.push({ id: 'task-' + Date.now() + Math.random().toString(36).substr(2,5), name: defaultName, time: defaultTime, timeUnit: 's', cakesPerAction: 0, countInTotal: true, freqValue: 1, freqType: defaultType, batchSize: 1, steps: [] });
             rebuildConfigUI(); saveCurrentScenario();
         }
 
         function updateTaskMeta(opId, taskId, field, value) {
             const task = operatorData[opId].tasks.find(t => t.id === taskId);
             if(task) {
-                if (field === 'time' || field === 'freqValue' || field === 'cakesPerAction') { task[field] = parseFloat(value) || 0; if (field === 'freqValue' && !task[field]) task[field] = 1; }
+                if (field === 'time' || field === 'freqValue' || field === 'cakesPerAction' || field === 'batchSize') { task[field] = parseFloat(value) || 0; if (field === 'freqValue' && !task[field]) task[field] = 1; if (field === 'batchSize' && task[field] < 1) task[field] = 1; }
                 else task[field] = value;
                 saveCurrentScenario(); calculateAndDraw(); 
             }
@@ -1076,6 +1152,8 @@
                                     <option value="total" ${selTotal}>/ Jour</option><option value="per_grid" ${selGrid}>/ Grille</option>
                                     <option value="per_rack" ${selRack}>/ Échelle</option><option value="per_carton" ${selCarton}>/ Carton</option><option value="per_palette" ${selPalette}>/ Palette</option>
                                 </select>
+                                <span style="font-size:12px; color:#555; margin-left:8px;" title="Nombre de fois que l'action est répétée à la suite avant de passer à la suivante">Lot :</span>
+                                <input type="number" value="${task.batchSize || 1}" min="1" class="cycles-input" style="width:35px;" onchange="updateTaskMeta('${opId}', '${task.id}', 'batchSize', this.value)">
                             </div>
                             <div class="action-controls">
                                 <button id="btn-rec-${task.id}" class="btn-record ${task.steps.length > 0 ? 'has-path' : ''}" onclick="toggleRecord('${opId}', '${task.id}')">${task.steps.length > 0 ? '✅ OK' : '📍 Trajet'}</button>
@@ -1150,77 +1228,82 @@
             let hasAnyData = false; let grandTotalTime = 0; let grandTotalCost = 0; let grandTotalCakes = 0; let grandTotalWalkTime = 0;
             const globalTimeSeconds = (parseInt(document.getElementById('globalWorkHours').value) || 0) * 3600 + (parseInt(document.getElementById('globalWorkMinutes').value) || 0) * 60;
 
+            const machineMap = {};
+            document.querySelectorAll('.machine').forEach(m => {
+                machineMap[m.id] = { x: parseInt(m.style.left) + parseInt(m.offsetWidth)/2, y: parseInt(m.style.top) + parseInt(m.offsetHeight)/2 };
+            });
+
             for (const [opId, data] of Object.entries(operatorData)) {
+                data.id = opId;
+                hasAnyData = true;
+                
+                // Utilisation du nouveau moteur de Timeline pour les calculs précis (inclut les retours)
+                const tl = generateTimeline(data, machineMap);
+                
                 let opEl = document.getElementById(opId); let opName = data.name || "Opérateur";
                 if(opEl) { let text = ""; for (let node of opEl.childNodes) if (node.nodeType === 3) text += node.textContent; opName = text.trim() || opName; }
                 const targetRacks = data.targetRacks || 1; const hourlyRate = data.hourlyRate || 15;
-                let opTotalDist = 0, opTotalWalkTime = 0, opTotalFixedTime = 0, opTotalCakes = 0;
-                let opProducedCakes = 0;
+                
                 const card = document.createElement('div'); card.className = 'op-stat-card'; card.style.borderLeftColor = data.color;
                 let tasksHtml = '';
 
+                // On boucle sur les tâches juste pour l'affichage visuel et le dessin SVG
                 const totalCakesGoal = targetRacks * 17 * (data.cakesPerGrid || 0);
                 const totalCartons = (data.cakesPerCarton > 0) ? (totalCakesGoal / data.cakesPerCarton) : 0;
 
                 data.tasks.forEach(task => {
-                    hasAnyData = true; let taskCycles = 1; const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
+                    let taskCycles = 1;
+                    const cpa = task.cakesPerAction > 0 ? task.cakesPerAction : 0;
                     if (task.freqType === 'per_grid') taskCycles = ((data.cakesPerGrid || 0) > 0 && cpa > 0) ? ((data.cakesPerGrid / cpa) * 17 * targetRacks * task.freqValue) : (task.freqValue * 17 * targetRacks);
                     else if (task.freqType === 'per_rack') taskCycles = task.freqValue * targetRacks;
                     else if (task.freqType === 'per_carton') taskCycles = ((data.cakesPerCarton || 0) > 0 && cpa > 0) ? ((data.cakesPerCarton / cpa) * totalCartons * task.freqValue) : (totalCartons * task.freqValue);
                     else if (task.freqType === 'per_palette') taskCycles = ((data.cakesPerPalette || 0) > 0 && cpa > 0) ? ((data.cakesPerPalette / cpa) * task.freqValue) : task.freqValue;
                     else taskCycles = task.freqValue;
 
-                    const taskCakes = cpa * taskCycles; opTotalCakes += taskCakes;
-                    if (task.countInTotal !== false) opProducedCakes += taskCakes;
                     const taskTimeSec = task.time * (task.timeUnit === 'min' ? 60 : 1);
 
-                    if(task.steps.length < 2) {
-                        if (task.steps.length === 1 && recordingState && recordingState.taskId === task.id) { const el = document.getElementById(task.steps[0]); if (el) addBadge(el, 1, data.color); }
-                        opTotalFixedTime += taskTimeSec * taskCycles;
-                        tasksHtml += `<div class="task-detail" style="color:#777"><div style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime(taskTimeSec * taskCycles)}</span></div><div style="font-size: 11px;">${task.time}${task.timeUnit==='min'?'m':'s'} fixe/act. | 🎂 ${Math.round(taskCakes)}</div></div>`;
-                        return;
-                    }
-                    
-                    let pathString = ""; let taskDistPixels = 0; const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3; let prevPos = null;
-
-                    for (let i = 0; i < task.steps.length; i++) {
-                        const el = document.getElementById(task.steps[i]); if(!el) continue;
-                        const pos = getCenter(el);
-                        if (recordingState && recordingState.taskId === task.id) addBadge(el, i+1, data.color);
-                        if (pathString === "") pathString += `M ${pos.x + offset} ${pos.y + offset}`; else pathString += ` L ${pos.x + offset} ${pos.y + offset}`;
-                        if (prevPos) taskDistPixels += Math.sqrt(Math.pow(pos.x - prevPos.x, 2) + Math.pow(pos.y - prevPos.y, 2));
-                        prevPos = pos;
-                    }
-                    if(pathString !== "") {
-                        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path"); pathEl.setAttribute("d", pathString); pathEl.style.stroke = data.color;
-                        pathEl.style.opacity = (recordingState && recordingState.taskId !== task.id) ? "0.3" : "0.8"; svgEl.appendChild(pathEl);
+                    // Dessin SVG
+                    let pathString = ""; const offset = (parseInt(task.id.substr(-1), 36) % 10 - 5) * 3;
+                    if (task.steps && task.steps.length > 0) {
+                        for (let i = 0; i < task.steps.length; i++) {
+                            const targetM = machineMap[task.steps[i]];
+                            if (!targetM) continue;
+                            const el = document.getElementById(task.steps[i]);
+                            if (recordingState && recordingState.taskId === task.id && el) addBadge(el, i+1, data.color);
+                            if (pathString === "") pathString += `M ${targetM.x + offset} ${targetM.y + offset}`; else pathString += ` L ${targetM.x + offset} ${targetM.y + offset}`;
+                        }
+                        if(pathString !== "") {
+                            const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path"); pathEl.setAttribute("d", pathString); pathEl.style.stroke = data.color;
+                            pathEl.style.opacity = (recordingState && recordingState.taskId !== task.id) ? "0.3" : "0.8"; svgEl.appendChild(pathEl);
+                        }
+                    } else if (recordingState && recordingState.taskId === task.id && task.steps.length === 1) {
+                         const el = document.getElementById(task.steps[0]); if (el) addBadge(el, 1, data.color);
                     }
 
-                    const distM = (taskDistPixels / PIXELS_PER_METER); const walkT = (distM / WALKING_SPEED_M_S);
-                    opTotalDist += (distM * taskCycles); opTotalWalkTime += (walkT * taskCycles); opTotalFixedTime += (taskTimeSec * taskCycles);
-                    tasksHtml += `<div class="task-detail"><div style="font-weight:bold; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)} = ${formatTime((walkT + taskTimeSec) * taskCycles)}</span></div><div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>🚶 Trajet (${distM.toFixed(1)}m) :</span> <span>${formatTime(walkT)} / act.</span></div><div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action fixe :</span> <span>${formatTime(taskTimeSec)} / act. | 🎂 ${Math.round(taskCakes)}</span></div></div>`;
+                    tasksHtml += `<div class="task-detail"><div style="font-weight:bold; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:2px; margin-bottom:4px;">${task.name} <span style="float:right; color:var(--accent);">x${taskCycles.toFixed(1)}</span></div><div style="display:flex; justify-content:space-between; color:#555; font-size: 11px;"><span>⏱️ Action : ${formatTime(taskTimeSec)} | Lot: ${task.batchSize||1}</span></div></div>`;
                 });
 
-                const totalWorkTimeSeconds = opTotalWalkTime + opTotalFixedTime; const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
-                const totalWalkTimeSeconds = opTotalWalkTime;
+                const totalWorkTimeSeconds = tl.walkTime + tl.fixedTime; 
+                const laborCost = (totalWorkTimeSeconds / 3600) * hourlyRate;
+                const totalWalkTimeSeconds = tl.walkTime;
                 
-                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += opProducedCakes; grandTotalWalkTime += totalWalkTimeSeconds;
+                grandTotalTime += totalWorkTimeSeconds; grandTotalCost += laborCost; grandTotalCakes += tl.producedCakes; grandTotalWalkTime += totalWalkTimeSeconds;
 
                 let loadPercent = 0; let loadColor = "#2ecc71";
                 if (globalTimeSeconds > 0) { loadPercent = (totalWorkTimeSeconds / globalTimeSeconds) * 100; if (loadPercent > 100) loadColor = "#e74c3c"; else if (loadPercent > 85) loadColor = "#f39c12"; }
 
-                const operatorCadence = totalWorkTimeSeconds > 0 ? (opTotalCakes / (totalWorkTimeSeconds / 3600)) : 0;
+                const operatorCadence = totalWorkTimeSeconds > 0 ? (tl.totalCakes / (totalWorkTimeSeconds / 3600)) : 0;
 
                 card.innerHTML = `
                     <div class="op-title" style="color:${data.color}">${opName} <span style="font-size:12px; font-weight:normal; color:#555; float:right;">Cible: ${targetRacks} Éch.</span></div>
                     ${tasksHtml}
                     <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ddd;">
-                        <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Cumulée:</span> <span>${(opTotalDist/1000).toFixed(2)} km</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Temps de marche:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="margin-top:8px; font-weight:bold; color:#2c3e50;"><span>Dist. Totale (incl. retours):</span> <span>${(tl.walkDistPixels/1000).toFixed(2)} km</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Temps de marche total:</span> <span>${formatTime(totalWalkTimeSeconds)}</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#2c3e50;"><span>Charge de travail globale:</span> <span>${formatTime(totalWorkTimeSeconds)}</span></div>
                         <div class="stat-row" style="font-weight:bold; color:#8e44ad;"><span>Vitesse estimée:</span> <span>${Math.round(operatorCadence)} u/h</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Manipulés:</span> <span>${Math.round(opTotalCakes)}</span></div>
-                        <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO:</span> <span>${laborCost.toFixed(2)} €</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#d35400;"><span>Gâteaux Manipulés:</span> <span>${Math.round(tl.totalCakes)}</span></div>
+                        <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size:14px; margin-top:5px;"><span>Coût MO Opérateur:</span> <span>${laborCost.toFixed(2)} €</span></div>
                         <div style="margin-top:10px;"><div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:#555;"><span>Taux de charge</span><span style="color:${loadColor}">${loadPercent.toFixed(1)}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(loadPercent, 100)}%; background:${loadColor};"></div></div></div>
                     </div>
                 `;
@@ -1250,7 +1333,7 @@
                     <div class="op-title" style="color:#2c3e50; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;">📊 BILAN GLOBAL ATELIER</div>
                     <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps Cumulé:</span> <span>${formatTime(grandTotalTime)}</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#2c3e50; font-size: 1.1em;"><span>Temps de marche:</span> <span>${formatTime(grandTotalWalkTime)}</span></div>
-                    <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Gâteaux Total:</span> <span>${Math.round(grandTotalCakes)} 🎂</span></div>
+                    <div class="stat-row" style="font-weight:bold; color:#d35400; font-size: 1.1em;"><span>Production Nette:</span> <span>${Math.round(grandTotalCakes)} 🎂</span></div>
                     <div class="stat-row" style="font-weight:bold; color:#e74c3c; font-size: 1.1em;"><span>Coût Total Prod:</span> <span>${grandTotalCost.toFixed(2)} €</span></div>
                     ${bottleneckHtml}
                 `;
@@ -1326,6 +1409,157 @@
 
         function addBadge(el, index, color) { const badge = document.createElement('span'); badge.className = 'step-badge'; badge.innerText = index; badge.style.backgroundColor = color; el.appendChild(badge); }
         function getCenter(el) { return { x: parseInt(el.style.left) + el.offsetWidth/2, y: parseInt(el.style.top) + el.offsetHeight/2 }; }
+
+        // ============================================================================
+        // MOTEUR DE SIMULATION DYNAMIQUE (Animation)
+        // ============================================================================
+        let isSimulating = false;
+        let simAnimationFrame;
+        let simTimeSec = 0; 
+        let lastRealTime = 0;
+        let simOperators = [];
+
+        function toggleSimulation() {
+            const btn = document.getElementById('btnPlaySim');
+            const simControls = document.getElementById('simControls');
+            const simLayer = document.getElementById('sim-layer');
+
+            if (!isSimulating) {
+                buildSimSchedules();
+                if(simOperators.length === 0) { alert("Ajoutez des opérateurs et des trajets pour lancer la simulation."); return; }
+                
+                isSimulating = true;
+                simTimeSec = 0;
+                lastRealTime = performance.now();
+                
+                btn.innerHTML = '<i class="fas fa-stop"></i> Arrêter Simulation';
+                btn.classList.add('playing');
+                simControls.style.display = 'flex';
+                simLayer.style.display = 'block';
+                
+                simAnimationFrame = requestAnimationFrame(simLoop);
+            } else {
+                isSimulating = false;
+                cancelAnimationFrame(simAnimationFrame);
+                
+                btn.innerHTML = '<i class="fas fa-play"></i> Lancer la Simulation';
+                btn.classList.remove('playing');
+                simControls.style.display = 'none';
+                simLayer.innerHTML = ''; 
+                simLayer.style.display = 'none';
+            }
+        }
+
+        function buildSimSchedules() {
+            const simLayer = document.getElementById('sim-layer');
+            simLayer.innerHTML = ''; 
+            simOperators = [];
+            
+            const machineMap = {};
+            document.querySelectorAll('.machine').forEach(m => {
+                machineMap[m.id] = { x: parseInt(m.style.left) + parseInt(m.offsetWidth)/2, y: parseInt(m.style.top) + parseInt(m.offsetHeight)/2 };
+            });
+
+            for (const [opId, data] of Object.entries(operatorData)) {
+                data.id = opId;
+                const tl = generateTimeline(data, machineMap);
+
+                if (tl.schedule.length > 0) {
+                    const dot = document.createElement('div');
+                    dot.className = 'sim-op-dot';
+                    dot.style.backgroundColor = data.color;
+                    dot.innerHTML = `<i class="fas fa-user"></i>`;
+                    
+                    if(tl.schedule[0].type === 'move') {
+                        dot.style.left = tl.schedule[0].startX + 'px';
+                        dot.style.top = tl.schedule[0].startY + 'px';
+                    } else {
+                        const startPos = machineMap[opId] || {x:50, y:50};
+                        dot.style.left = startPos.x + 'px';
+                        dot.style.top = startPos.y + 'px';
+                    }
+
+                    simLayer.appendChild(dot);
+                    simOperators.push({ id: opId, name: data.name, color: data.color, schedule: tl.schedule, currentActionIdx: 0, el: dot });
+                }
+            }
+        }
+
+        function simLoop(timestamp) {
+            if (!isSimulating) return;
+            
+            const deltaRealMs = timestamp - lastRealTime;
+            lastRealTime = timestamp;
+            
+            const speedMultiplier = parseInt(document.getElementById('simSpeedSelect').value) || 10;
+            const deltaSimSec = (deltaRealMs / 1000) * speedMultiplier;
+            
+            simTimeSec += deltaSimSec;
+            document.getElementById('simClock').textContent = formatSimClock(simTimeSec);
+
+            let allDone = true;
+
+            simOperators.forEach(op => {
+                if (op.currentActionIdx < op.schedule.length) {
+                    allDone = false;
+                    let action = op.schedule[op.currentActionIdx];
+                    action.timeSpent += deltaSimSec;
+                    
+                    while (action && action.timeSpent >= action.duration) {
+                        let overflow = action.timeSpent - action.duration;
+                        
+                        if (action.type === 'move') {
+                            op.el.style.left = action.targetX + 'px';
+                            op.el.style.top = action.targetY + 'px';
+                            op.el.classList.remove('working');
+                        } else if (action.type === 'work') {
+                            op.el.classList.remove('working');
+                        }
+                        
+                        op.currentActionIdx++;
+                        if (op.currentActionIdx < op.schedule.length) {
+                            action = op.schedule[op.currentActionIdx];
+                            action.timeSpent = overflow; 
+                        } else {
+                            action = null; 
+                        }
+                    }
+                    
+                    if (action) {
+                        if (action.type === 'move') {
+                            const progress = action.timeSpent / action.duration;
+                            const currentX = action.startX + (action.targetX - action.startX) * progress;
+                            const currentY = action.startY + (action.targetY - action.startY) * progress;
+                            op.el.style.left = currentX + 'px';
+                            op.el.style.top = currentY + 'px';
+                            op.el.classList.remove('working');
+                        } else if (action.type === 'work') {
+                            op.el.classList.add('working'); 
+                        }
+                    }
+                } else {
+                    op.el.classList.remove('working');
+                    op.el.style.opacity = '0.4'; 
+                }
+            });
+
+            if (!allDone) {
+                simAnimationFrame = requestAnimationFrame(simLoop);
+            } else {
+                const btn = document.getElementById('btnPlaySim');
+                btn.innerHTML = '<i class="fas fa-undo"></i> Simulation Terminée';
+                btn.classList.remove('playing');
+                btn.style.background = '#27ae60';
+                setTimeout(() => { if(isSimulating) toggleSimulation(); }, 3000);
+            }
+        }
+
+        function formatSimClock(totalSec) {
+            const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+            const s = Math.floor(totalSec % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
 
     </script>
 </body>
